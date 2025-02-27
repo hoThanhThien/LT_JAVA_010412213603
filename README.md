@@ -7,3 +7,5 @@ Danh sách thành viên: Thành Thiện, Minh Quang, Minh Chí, Triều Dương.
 
 
 Google sheet: [https://docs.google.com/spreadsheets/d/1P1mIud3xEYwwFXpx0a3xlIqZ4jDERAXeDkaCSHtErfM/edit?usp=sharing](https://docs.google.com/spreadsheets/d/1P1mIud3xEYwwFXpx0a3xlIqZ4jDERAXeDkaCSHtErfM/edit?usp=sharing)
+
+gg meet:[ https://meet.google.com/wxq-kpaa-hps?authuser=2](https://meet.google.com/wxq-kpaa-hps?authuser=2)
