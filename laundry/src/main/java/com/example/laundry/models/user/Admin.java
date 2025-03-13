@@ -10,12 +10,12 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 @Data
-//@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 //@AllArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "admins")
+@Table(name = "admin")
 @DiscriminatorValue("ADMIN")
 public class Admin extends User {
 

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
