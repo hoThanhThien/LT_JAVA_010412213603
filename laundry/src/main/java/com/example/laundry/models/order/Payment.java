@@ -6,9 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 @Builder
@@ -32,20 +31,16 @@ public class Payment {
     private double amount;
 
     @Column(nullable = false)
-    private String status = "PENDING";
+    private String status;
 
     @CreationTimestamp
     @Column(name="payment_date", nullable = false)
-    private LocalDateTime paymentDate;
+    private Date paymentDate;
 
-    @UpdateTimestamp
-    @Column(name="update_at")
-    private LocalDateTime updateAt;
-
-    public Payment(Long id, Order order, String paymentMethod, double amount) {
-        this.id = id;
+    public Payment(Order order, String paymentMethod, double amount, Date paymentDate) {
         this.order = order;
         this.paymentMethod = paymentMethod;
         this.amount = amount;
+        this.paymentDate = new Date();
     }
 }

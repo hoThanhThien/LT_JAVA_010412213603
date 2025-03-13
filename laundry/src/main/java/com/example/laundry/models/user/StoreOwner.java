@@ -19,12 +19,12 @@ import java.util.ArrayList;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-//@EqualsAndHashCode(callSuper = false)
+//@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name="store_owners")
 @DiscriminatorValue("STORE_OWNER")
 public class StoreOwner extends User {
-    @OneToOne(mappedBy = "owner", cascade = CascadeType.ALL)
+    @OneToOne
     private LaundryShop shop;
 
     @OneToMany(mappedBy = "storeOwner", cascade = CascadeType.ALL)
@@ -38,10 +38,6 @@ public class StoreOwner extends User {
     @Override
     public void displayRole() {
         System.out.println("Role: Store Owner of " + shop.getName());
-    }
-
-    public void updateOrderStatus(Long orderId, OrderStatus orderStatus) {
-
     }
 
     public void notifyCustomer(Long orderId, String message){

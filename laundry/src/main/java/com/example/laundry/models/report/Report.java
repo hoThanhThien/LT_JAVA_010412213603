@@ -73,7 +73,6 @@ public class Report {
         return getClass().hashCode();
     }
 
-    // Business logic methods
     public void addDataPoint(String key, String value) {
         this.reportData.put(key, value);
     }
