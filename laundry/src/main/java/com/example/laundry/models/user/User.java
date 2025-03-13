@@ -15,11 +15,11 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Entity
 @Table(name="users")
-@Inheritance(strategy = InheritanceType.JOINED)
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @DiscriminatorColumn(name="user_type")
 public abstract class User implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.TABLE)
     @Column(name="user_id")
     private int id;
 
