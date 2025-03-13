@@ -6,10 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +37,22 @@ public class LaundryShop {
     @Column(name = "average_rating")
     private double averageRating;
 
-    @Column(name = "is_verified")
-    private boolean isVerified = false;
+    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL)
+    private List<Service> services = new ArrayList<>();
+
+    public LaundryShop(String name, String address, String openingHours) {
+        this.name = name;
+        this.address = address;
+        this.openingHours = openingHours;
+    }
+
+    public void addService(Service service){
+        services.add(service);
+        service.setShop(this);
+    }
+
+    public void removeService(Service service){
+        services.remove(service);
+        service.setShop(null);
+    }
 }

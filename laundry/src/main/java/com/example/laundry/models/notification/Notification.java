@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 @Builder
@@ -25,4 +25,18 @@ public class Notification {
 
     @Column(nullable = false, length = 1000)
     private String message;
+
+    @Column
+    @CreationTimestamp
+    private Date sendDate;
+
+    @Column
+    private String notificationType;
+
+    public Notification(String recipient, String message, Date sendDate, String notificationType) {
+        this.recipient = recipient;
+        this.message = message;
+        this.sendDate = sendDate;
+        this.notificationType = notificationType;
+    }
 }

@@ -5,21 +5,19 @@ import jakarta.persistence.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 @Data
-//@EqualsAndHashCode(callSuper = false)
+//@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-@AllArgsConstructor
+//@AllArgsConstructor
 @SuperBuilder
 @Entity
 @Table(name = "admins")
 @DiscriminatorValue("ADMIN")
 public class Admin extends User {
-    public Admin(String username, String password, String email, String phone, String address) {
-        super(username, password, email, phone, address);
-    }
 
     @Override
     public void displayRole() {

@@ -34,6 +34,17 @@ public class Service {
     @Column(name = "estimated_time")
     private String estimatedTime;
 
-    @Column(name = "is_active")
-    private boolean isActive = true;
+    @ManyToOne
+    private LaundryShop shop;
+
+    public Service(String name, double price, String description, String estimatedTime) {
+        this.name = name;
+        this.price = price;
+        this.description = description;
+        this.estimatedTime = estimatedTime;
+    }
+
+    public void updatePrice(double newPrice) {
+        this.price = newPrice;
+    }
 }

@@ -27,8 +27,8 @@ public class Customer extends User {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orderHistory =  new ArrayList<>();
 
-    private boolean emailVerified;
     private String preferredNotificationChannel;
+    private boolean emailVerified;
 
     public Customer(String username, String password, String email, String phone, String address) {
         super(username, password, email, phone, address);
@@ -63,5 +63,13 @@ public class Customer extends User {
 
     public List<LaundryShop> searchShops(LaundryShop shop) {
         return null;
+    }
+
+    public void requestEmailVerification() {
+
+    }
+
+    public boolean emailVerified(String verificationToken) {
+        return true;
     }
 }
