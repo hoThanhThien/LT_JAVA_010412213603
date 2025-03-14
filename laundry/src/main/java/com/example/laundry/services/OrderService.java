@@ -6,5 +6,6 @@ public interface OrderService {
     void findById(int id);
     void save(Order order);
     void deleteById(int id);
-    void updateOrderStatus(Order order, String status);
+    void updateOrderStatus(int orderId, String status);
+    void notifyCustomer(int orderId, String message);
 }

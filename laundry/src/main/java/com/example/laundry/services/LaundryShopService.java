@@ -6,7 +6,7 @@ import com.example.laundry.models.shop.Service;
 import java.util.List;
 
 public interface LaundryShopService {
-    LaundryShop findById(int id);
+    LaundryShop findById(long id);
     List<LaundryShop> findAll();
     LaundryShop save(LaundryShop laundryShop);
     void deleteById(int id);

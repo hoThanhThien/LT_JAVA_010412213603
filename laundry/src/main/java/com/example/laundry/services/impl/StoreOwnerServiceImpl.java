@@ -42,7 +42,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
     }
 
     @Override
-    public User findUserById(Long id) {
+    public User findUserById(long id) {
         return StoreOwnerService.super.findUserById(id);
     }
 
@@ -57,7 +57,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(long id) {
         StoreOwnerService.super.deleteById(id);
     }
 }

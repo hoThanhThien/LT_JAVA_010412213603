@@ -22,7 +22,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void updateOrderStatus(Order order, String status) {
+    public void updateOrderStatus(int orderId, String status) {
+
+    }
+
+    @Override
+    public void notifyCustomer(int orderId, String message) {
 
     }
 }
