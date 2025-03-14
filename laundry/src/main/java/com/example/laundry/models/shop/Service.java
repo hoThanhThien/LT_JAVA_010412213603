@@ -43,8 +43,8 @@ public class Service {
         this.description = description;
         this.estimatedTime = estimatedTime;
     }
-
-    public void updatePrice(double newPrice) {
-        this.price = newPrice;
-    }
+//
+//    public void updatePrice(double newPrice) {
+//        this.price = newPrice;
+//    }
 }

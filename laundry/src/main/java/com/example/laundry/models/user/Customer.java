@@ -40,37 +40,37 @@ public class Customer extends User {
         System.out.println("Role: Customer");
     }
 
-    public Order bookOrder(LaundryShop shop, Service service, String instructions) {
-        Order order = new Order();
-        order.setCustomer(this);
-        order.setLaundryShop(shop);
-        order.setService(service);
-        order.setSpecialInstructions(instructions);
-        orderHistory.add(order);
-        return order;
-    }
-
-    public void trackOrder(Order order) {
-
-    }
-
-    public Payment makePayment(Order order, String paymentMethod, double amount) {
-        Payment payment = new Payment();
-        payment.setOrder(order);
-        payment.setPaymentMethod(paymentMethod);
-        payment.setAmount(amount);
-        return payment;
-    }
-
-    public List<LaundryShop> searchShops(LaundryShop shop) {
-        return null;
-    }
-
-    public void requestEmailVerification() {
-
-    }
-
-    public boolean emailVerified(String verificationToken) {
-        return true;
-    }
+//    public Order bookOrder(LaundryShop shop, Service service, String instructions) {
+//        Order order = new Order();
+//        order.setCustomer(this);
+//        order.setLaundryShop(shop);
+//        order.setService(service);
+//        order.setSpecialInstructions(instructions);
+//        orderHistory.add(order);
+//        return order;
+//    }
+//
+//    public void trackOrder(Order order) {
+//
+//    }
+//
+//    public Payment makePayment(Order order, String paymentMethod, double amount) {
+//        Payment payment = new Payment();
+//        payment.setOrder(order);
+//        payment.setPaymentMethod(paymentMethod);
+//        payment.setAmount(amount);
+//        return payment;
+//    }
+//
+//    public List<LaundryShop> searchShops(LaundryShop shop) {
+//        return null;
+//    }
+//
+//    public void requestEmailVerification() {
+//
+//    }
+//
+//    public boolean emailVerified(String verificationToken) {
+//        return true;
+//    }
 }

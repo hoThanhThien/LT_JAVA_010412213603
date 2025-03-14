@@ -40,20 +40,20 @@ public class StoreOwner extends User {
     public void displayRole() {
         System.out.println("Role: Store Owner of " + shop.getName());
     }
-
-    public void notifyCustomer(Long orderId, String message){
-
-    }
-
-    public void addService(Service service) {
-
-    }
-
-    public void addEmployee(Employee employee) {
-
-    }
-
-    public Report generateFinacialReport() {
-        return new Report();
-    }
+//
+//    public void notifyCustomer(Long orderId, String message){
+//
+//    }
+//
+//    public void addService(Service service) {
+//
+//    }
+//
+//    public void addEmployee(Employee employee) {
+//
+//    }
+//
+//    public Report generateFinacialReport() {
+//        return new Report();
+//    }
 }

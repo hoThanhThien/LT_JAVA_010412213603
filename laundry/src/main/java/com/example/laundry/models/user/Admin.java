@@ -27,20 +27,20 @@ public class Admin extends User {
     public void createStoreOwner(StoreOwner storeOwner) {
         System.out.println("Creating new store owner: " + storeOwner.getUsername());
     }
-
-    public void verifyShopDetails(LaundryShop shop) {
-        System.out.println("Verifying shop: " + shop.getName());
-    }
-
-    public void manageUsers(User user) {
-        System.out.println("Managing user: " + user.getUsername());
-    }
-
-    public void sendPlatformNotification(String message) {
-
-    }
-
-    public void generatePlatformReport() {
-
-    }
+//
+//    public void verifyShopDetails(LaundryShop shop) {
+//        System.out.println("Verifying shop: " + shop.getName());
+//    }
+//
+//    public void manageUsers(User user) {
+//        System.out.println("Managing user: " + user.getUsername());
+//    }
+//
+//    public void sendPlatformNotification(String message) {
+//
+//    }
+//
+//    public void generatePlatformReport() {
+//
+//    }
 }
