@@ -45,14 +45,14 @@ public class LaundryShop {
         this.address = address;
         this.openingHours = openingHours;
     }
-
-    public void addService(Service service){
-        services.add(service);
-        service.setShop(this);
-    }
-
-    public void removeService(Service service){
-        services.remove(service);
-        service.setShop(null);
-    }
+//
+//    public void addService(Service service){
+//        services.add(service);
+//        service.setShop(this);
+//    }
+//
+//    public void removeService(Service service){
+//        services.remove(service);
+//        service.setShop(null);
+//    }
 }

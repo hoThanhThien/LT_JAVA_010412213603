@@ -39,20 +39,20 @@ public class Employee extends User {
         System.out.println("Role: Employee at " + shop.getName());
     }
 
-    public void updateOrderStatus(Long orderId, OrderStatus orderStatus) {
-
-    }
-
-    public void notifyCustomer(Long orderId, String message) {
-
-    }
-
-    private Order findOrderById(Long orderId) {
-        return null;
-    }
-
-    private String getCustomerUsername(Long orderId) {
-        Order order = findOrderById(orderId);
-        return order != null ? order.getCustomerUsername() : null;
-    }
+//    public void updateOrderStatus(Long orderId, OrderStatus orderStatus) {
+//
+//    }
+//
+//    public void notifyCustomer(Long orderId, String message) {
+//
+//    }
+//
+//    private Order findOrderById(Long orderId) {
+//        return null;
+//    }
+//
+//    private String getCustomerUsername(Long orderId) {
+//        Order order = findOrderById(orderId);
+//        return order != null ? order.getCustomerUsername() : null;
+//    }
 }
