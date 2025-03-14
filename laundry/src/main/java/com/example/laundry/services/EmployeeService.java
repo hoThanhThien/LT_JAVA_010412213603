@@ -5,5 +5,5 @@ import com.example.laundry.models.user.Employee;
 
 public interface EmployeeService extends UserService {
     void notifyOrderCompleted(Employee employee, Long orderId);
-    void notifyCustomer(Customer customer, Long orderId, String message);
+    void notifyCustomer(Employee employee, Long orderId, String message, String notificationType);
 }
