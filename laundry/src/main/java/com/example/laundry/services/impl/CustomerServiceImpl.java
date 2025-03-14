@@ -4,15 +4,20 @@ import com.example.laundry.models.order.Order;
 import com.example.laundry.models.shop.LaundryShop;
 import com.example.laundry.models.shop.Service;
 import com.example.laundry.models.user.Customer;
-import com.example.laundry.models.user.User;
+import com.example.laundry.repository.CustomerRepository;
 import com.example.laundry.services.CustomerService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
+@org.springframework.stereotype.Service
 public class CustomerServiceImpl implements CustomerService {
+    @Autowired
+    private CustomerRepository customerRepository;
+
     @Override
     public Order bookOrder(Customer customer, LaundryShop laundryShop, Service service, String instructions) {
-        return null;
+        return customerRepository.bookOrder(customer, laundryShop, service);
     }
 
     @Override
@@ -27,11 +32,11 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public List<Order> getOrderHistory(Customer customer) {
-        return List.of();
+        return null;
     }
 
     @Override
     public List<LaundryShop> searchShops(Customer customer, String location) {
-        return List.of();
+        return null;
     }
 }

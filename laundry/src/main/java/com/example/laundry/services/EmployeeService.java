@@ -1,6 +1,5 @@
 package com.example.laundry.services;
 
-import com.example.laundry.models.user.Customer;
 import com.example.laundry.models.user.Employee;
 
 public interface EmployeeService extends UserService {
