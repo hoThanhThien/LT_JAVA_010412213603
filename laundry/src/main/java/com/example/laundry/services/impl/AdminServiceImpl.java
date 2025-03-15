@@ -42,7 +42,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public User findUserById(long id) {
+    public User findUserById(Long id) {
         return null;
     }
 
@@ -57,7 +57,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public void deleteById(long id) {
+    public void deleteById(Long id) {
 
     }
 }

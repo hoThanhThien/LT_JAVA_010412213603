@@ -10,12 +10,12 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class LaundryShopServiceimpl implements LaundryShopService {
+public class LaundryShopServiceImpl implements LaundryShopService {
     @Autowired
     private LaundryShopRepository laundryShopRepository;
 
     @Override
-    public LaundryShop findById(long id) {
+    public LaundryShop findById(Long id) {
         return laundryShopRepository.findById(id);
     }
 
