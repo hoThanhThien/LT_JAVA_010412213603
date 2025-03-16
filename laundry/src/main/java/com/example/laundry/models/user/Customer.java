@@ -31,8 +31,8 @@ public class Customer extends User {
     private String preferredNotificationChannel;
     private boolean emailVerified;
 
-    public Customer(String username, String password, String email, String phone, String address) {
-        super(username, password, email, phone, address);
+    public Customer(String username, String password, String email, String phone, String address, Roles roles) {
+        super(username, password, email, phone, address, Roles.Customer);
     }
 
     @Override

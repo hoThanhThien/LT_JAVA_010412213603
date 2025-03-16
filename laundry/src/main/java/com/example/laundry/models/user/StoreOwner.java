@@ -31,8 +31,8 @@ public class StoreOwner extends User {
     @OneToMany(mappedBy = "storeOwner", cascade = CascadeType.ALL)
     private List<Employee> employees = new ArrayList<>();
 
-    public StoreOwner(String username, String password, String email, String phone, String address, LaundryShop shop) {
-        super(username, password, email, phone, address);
+    public StoreOwner(String username, String password, String email, String phone, String address, Roles roles, LaundryShop shop) {
+        super(username, password, email, phone, address, Roles.StoreOwner);
         this.shop = shop;
     }
 
