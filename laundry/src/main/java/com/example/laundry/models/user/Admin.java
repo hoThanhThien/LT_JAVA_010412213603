@@ -18,6 +18,9 @@ import lombok.experimental.SuperBuilder;
 @Table(name = "admin")
 @DiscriminatorValue("ADMIN")
 public class Admin extends User {
+    public Admin(String username, String password, String email, String phone, String address, Roles roles) {
+        super(username, password, email, phone, address, Roles.Admin);
+    }
 
     @Override
     public void displayRole() {

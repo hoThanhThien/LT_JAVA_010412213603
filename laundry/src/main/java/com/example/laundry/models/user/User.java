@@ -38,15 +38,20 @@ public abstract class User implements Serializable {
     @Column(length = 50)
     private String address;
 
+    @Enumerated(EnumType.STRING)
+    @Column
+    private Roles roles;
+
     @Column
     private boolean isVerified;
 
-    public User(String username, String password, String email, String phone, String address) {
+    public User(String username, String password, String email, String phone, String address, Roles roles) {
         this.username = username;
         this.password = password;
         this.email = email;
         this.phone = phone;
         this.address = address;
+        this.roles = roles;
     }
 
     public abstract void displayRole();

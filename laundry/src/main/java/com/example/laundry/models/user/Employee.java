@@ -29,8 +29,8 @@ public class Employee extends User {
     @JoinColumn(name = "store_owner_id")
     private StoreOwner storeOwner;
 
-    public Employee(String username, String password, String email, String phone, String address, LaundryShop shop) {
-        super(username, password, email, phone, address);
+    public Employee(String username, String password, String email, String phone, String address, Roles roles, LaundryShop shop) {
+        super(username, password, email, phone, address, Roles.Employee);
         this.shop = shop;
     }
 
