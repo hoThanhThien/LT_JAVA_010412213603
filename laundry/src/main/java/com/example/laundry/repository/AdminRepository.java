@@ -9,9 +9,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AdminRepository extends JpaRepository<Admin, Integer> {
-    void createStoreOwner(Admin admin, StoreOwner storeOwner);
-    void verifyShopDetails(Admin admin, LaundryShop laundryShop);
-    void manageUsers(Admin admin, User user);
-    void sendPlatformNotification(Admin admin, String message);
-    void generatePlatformReport(Admin admin);
+//    void verifyShopDetails(Admin admin, LaundryShop laundryShop);
+//    void createStoreOwner(Admin admin, StoreOwner storeOwner);
+//    void manageUsers(Admin admin, User user);
+//    void sendPlatformNotification(Admin admin, String message);
+//    void generatePlatformReport(Admin admin);
 }

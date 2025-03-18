@@ -2,11 +2,7 @@ package com.example.laundry.models.report;
 
 import jakarta.persistence.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.Builder;
+import lombok.*;
 
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -17,6 +13,8 @@ import java.util.Map;
 @Data
 @Entity
 @Builder
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = "reportData")
@@ -59,25 +57,4 @@ public class Report {
         CUSTOMER_SATISFACTION,
         EMPLOYEE_PERFORMANCE
     }
-
-    // Custom equals/hashCode để tránh vấn đề với proxy Hibernate
-//    @Override
-//    public boolean equals(Object o) {
-//        if (this == o) return true;
-//        if (!(o instanceof Report)) return false;
-//        return id != null && id.equals(((Report) o).getId());
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        return getClass().hashCode();
-//    }
-//
-//    public void addDataPoint(String key, String value) {
-//        this.reportData.put(key, value);
-//    }
-//
-//    public void removeDataPoint(String key) {
-//        this.reportData.remove(key);
-//    }
 }

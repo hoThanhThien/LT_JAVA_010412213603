@@ -11,8 +11,8 @@ public class ReportServiceImpl implements ReportService {
     @Autowired
     private ReportRepository reportRepository;
 
-    @Override
-    public Report generateReport(String shopName, String reportType, String startDate, String endDate) {
-        return reportRepository.generateReport(shopName, reportType, startDate, endDate);
-    }
+//    @Override
+//    public Report generateReport(String shopName, String reportType, String startDate, String endDate) {
+//        return reportRepository.generateReport(shopName, reportType, startDate, endDate);
+//    }
 }

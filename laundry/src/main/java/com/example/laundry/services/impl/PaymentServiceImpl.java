@@ -11,14 +11,14 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     private PaymentRepository paymentRepository;
 
-    @Override
-    public Payment processPayment(Payment payment) {
-        paymentRepository.processPayment(payment);
-        return payment;
-    }
-
-    @Override
-    public void generateReceipt(Payment payment) {
-        paymentRepository.generateReceipt(payment);
-    }
+//    @Override
+//    public Payment processPayment(Payment payment) {
+//        paymentRepository.processPayment(payment);
+//        return payment;
+//    }
+//
+//    @Override
+//    public void generateReceipt(Payment payment) {
+//        paymentRepository.generateReceipt(payment);
+//    }
 }

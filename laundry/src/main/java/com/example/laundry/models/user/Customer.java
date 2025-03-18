@@ -6,10 +6,7 @@ import com.example.laundry.models.shop.LaundryShop;
 import com.example.laundry.models.shop.Service;
 import jakarta.persistence.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
@@ -20,6 +17,8 @@ import java.util.ArrayList;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 //@EqualsAndHashCode(callSuper = false)
 @Entity
 @Table(name="customers")
@@ -39,38 +38,4 @@ public class Customer extends User {
     public void displayRole() {
         System.out.println("Role: Customer");
     }
-
-//    public Order bookOrder(LaundryShop shop, Service service, String instructions) {
-//        Order order = new Order();
-//        order.setCustomer(this);
-//        order.setLaundryShop(shop);
-//        order.setService(service);
-//        order.setSpecialInstructions(instructions);
-//        orderHistory.add(order);
-//        return order;
-//    }
-//
-//    public void trackOrder(Order order) {
-//
-//    }
-//
-//    public Payment makePayment(Order order, String paymentMethod, double amount) {
-//        Payment payment = new Payment();
-//        payment.setOrder(order);
-//        payment.setPaymentMethod(paymentMethod);
-//        payment.setAmount(amount);
-//        return payment;
-//    }
-//
-//    public List<LaundryShop> searchShops(LaundryShop shop) {
-//        return null;
-//    }
-//
-//    public void requestEmailVerification() {
-//
-//    }
-//
-//    public boolean emailVerified(String verificationToken) {
-//        return true;
-//    }
 }

@@ -1,5 +1,5 @@
 package com.example.laundry.services;
 
 public interface NotificationService {
-    boolean send(String receipt, String message);
+//    boolean send(String receipt, String message);
 }

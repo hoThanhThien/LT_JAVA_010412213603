@@ -2,16 +2,15 @@ package com.example.laundry.models.shop;
 
 import jakarta.persistence.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
 @Builder
+@Setter
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -22,6 +21,7 @@ public class LaundryShop {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Getter
     @Column(nullable = false)
     private String name;
 
@@ -45,14 +45,4 @@ public class LaundryShop {
         this.address = address;
         this.openingHours = openingHours;
     }
-//
-//    public void addService(Service service){
-//        services.add(service);
-//        service.setShop(this);
-//    }
-//
-//    public void removeService(Service service){
-//        services.remove(service);
-//        service.setShop(null);
-//    }
 }

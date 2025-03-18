@@ -11,28 +11,28 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private OrderRepository orderRepository;
 
-    @Override
-    public void findById(int id) {
-        orderRepository.findById(id);
-    }
-
-    @Override
-    public void save(Order order) {
-        orderRepository.save(order);
-    }
-
-    @Override
-    public void deleteById(int id) {
-        orderRepository.deleteById(id);
-    }
-
-    @Override
-    public void updateOrderStatus(int orderId, String status) {
-        orderRepository.updateOrderStatus(orderId, status);
-    }
-
-    @Override
-    public void notifyCustomer(int orderId, String message) {
-        orderRepository.notifyCustomer(orderId, message);
-    }
+//    @Override
+//    public void findById(int id) {
+//        orderRepository.findById(id);
+//    }
+//
+//    @Override
+//    public void save(Order order) {
+//        orderRepository.save(order);
+//    }
+//
+//    @Override
+//    public void deleteById(int id) {
+//        orderRepository.deleteById(id);
+//    }
+//
+//    @Override
+//    public void updateOrderStatus(int orderId, String status) {
+//        orderRepository.updateOrderStatus(orderId, status);
+//    }
+//
+//    @Override
+//    public void notifyCustomer(int orderId, String message) {
+//        orderRepository.notifyCustomer(orderId, message);
+//    }
 }

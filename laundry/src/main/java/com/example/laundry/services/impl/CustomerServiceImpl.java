@@ -15,28 +15,28 @@ public class CustomerServiceImpl implements CustomerService {
     @Autowired
     private CustomerRepository customerRepository;
 
-    @Override
-    public Order bookOrder(Customer customer, LaundryShop laundryShop, Service service, String instructions) {
-        return customerRepository.bookOrder(customer, laundryShop, service);
-    }
-
-    @Override
-    public void trackOrder(Customer customer, Order order) {
-
-    }
-
-    @Override
-    public void makePayment(Customer customer, Order order, String paymentMethod, double amount) {
-
-    }
-
-    @Override
-    public List<Order> getOrderHistory(Customer customer) {
-        return null;
-    }
-
-    @Override
-    public List<LaundryShop> searchShops(Customer customer, String location) {
-        return null;
-    }
+//    @Override
+//    public Order bookOrder(Customer customer, LaundryShop laundryShop, Service service, String instructions) {
+//        return customerRepository.bookOrder(customer, laundryShop, service);
+//    }
+//
+//    @Override
+//    public void trackOrder(Customer customer, Order order) {
+//
+//    }
+//
+//    @Override
+//    public void makePayment(Customer customer, Order order, String paymentMethod, double amount) {
+//
+//    }
+//
+//    @Override
+//    public List<Order> getOrderHistory(Customer customer) {
+//        return null;
+//    }
+//
+//    @Override
+//    public List<LaundryShop> searchShops(Customer customer, String location) {
+//        return null;
+//    }
 }
