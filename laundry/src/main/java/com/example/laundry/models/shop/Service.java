@@ -1,16 +1,15 @@
 package com.example.laundry.models.shop;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Data
+@Setter
+@Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -43,8 +42,4 @@ public class Service {
         this.description = description;
         this.estimatedTime = estimatedTime;
     }
-//
-//    public void updatePrice(double newPrice) {
-//        this.price = newPrice;
-//    }
 }

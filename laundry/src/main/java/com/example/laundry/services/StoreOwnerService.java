@@ -8,10 +8,11 @@ import com.example.laundry.models.user.StoreOwner;
 import java.util.List;
 
 public interface StoreOwnerService extends UserService{
-    void addService(StoreOwner storeOwner, Service service);
-    void removeService(StoreOwner storeOwner, Service service);
-    void hireEmployee(StoreOwner storeOwner, Employee employee);
-    void fireEmployee(StoreOwner storeOwner, Employee employee);
-    List<Employee> getEmployees(StoreOwner storeOwner);
-    Report generateFinancialReport(StoreOwner storeOwner, String startDate, String endDate);
+    void addStoreOwner(StoreOwner storeOwner);
+//    void addService(StoreOwner storeOwner, Service service);
+//    void removeService(StoreOwner storeOwner, Service service);
+//    void hireEmployee(StoreOwner storeOwner, Employee employee);
+//    void fireEmployee(StoreOwner storeOwner, Employee employee);
+//    List<Employee> getEmployees(StoreOwner storeOwner);
+//    Report generateFinancialReport(StoreOwner storeOwner, String startDate, String endDate);
 }

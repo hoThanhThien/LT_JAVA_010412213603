@@ -14,8 +14,8 @@ public class ShopSearchServiceImpl implements ShopSearchService {
     @Autowired
     private ShopSearchRepository shopSearchRepository;
 
-    @Override
-    public List<LaundryShop> findShops(String location, String service) {
-        return shopSearchRepository.findShops(location, service);
-    }
+//    @Override
+//    public List<LaundryShop> findShops(String location, String service) {
+//        return shopSearchRepository.findShops(location, service);
+//    }
 }

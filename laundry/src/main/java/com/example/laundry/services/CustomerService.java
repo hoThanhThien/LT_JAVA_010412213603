@@ -8,9 +8,9 @@ import com.example.laundry.models.user.Customer;
 import java.util.List;
 
 public interface CustomerService extends UserService{
-    Order bookOrder(Customer customer, LaundryShop laundryShop, Service service, String instructions);
-    void trackOrder(Customer customer, Order order);
-    void makePayment(Customer customer, Order order, String paymentMethod, double amount);
-    List<Order> getOrderHistory(Customer customer);
-    List<LaundryShop> searchShops(Customer customer, String location);
+//    Order bookOrder(Customer customer, LaundryShop laundryShop, Service service, String instructions);
+//    void trackOrder(Customer customer, Order order);
+//    void makePayment(Customer customer, Order order, String paymentMethod, double amount);
+//    List<Order> getOrderHistory(Customer customer);
+//    List<LaundryShop> searchShops(Customer customer, String location);
 }

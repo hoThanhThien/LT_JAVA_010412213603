@@ -10,19 +10,19 @@ public interface UserService {
 //    void deleteById(Long id);
 
     //Default methods để muốn implements những method mình cần thôi
-    default User findUserById(Long id) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    default List<User> findAllUsers() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    default User save(User user) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    default void deleteById(Long id) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+//    default User findUserById(Long id) {
+//        throw new UnsupportedOperationException("Not supported yet.");
+//    }
+//
+//    default List<User> findAllUsers() {
+//        throw new UnsupportedOperationException("Not supported yet.");
+//    }
+//
+//    default User save(User user) {
+//        throw new UnsupportedOperationException("Not supported yet.");
+//    }
+//
+//    default void deleteById(Long id) {
+//        throw new UnsupportedOperationException("Not supported yet.");
+//    }
 }

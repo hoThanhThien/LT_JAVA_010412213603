@@ -7,8 +7,9 @@ import com.example.laundry.models.user.User;
 
 public interface AdminService extends UserService {
     void createStoreOwner(Admin admin, StoreOwner storeOwner);
-    void verifyShopDetails(Admin admin, LaundryShop laundryShop);
-    void manageUsers(Admin admin, User user);
-    void sendPlatformNotification(Admin admin, String message);
-    void generatePlatformReport(Admin admin);
+//    void createStoreOwner(Admin admin, StoreOwner storeOwner);
+//    void verifyShopDetails(Admin admin, LaundryShop laundryShop);
+//    void manageUsers(Admin admin, User user);
+//    void sendPlatformNotification(Admin admin, String message);
+//    void generatePlatformReport(Admin admin);
 }

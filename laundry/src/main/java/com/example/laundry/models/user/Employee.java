@@ -5,17 +5,17 @@ import com.example.laundry.models.order.OrderStatus;
 import com.example.laundry.models.shop.LaundryShop;
 import jakarta.persistence.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.stereotype.Service;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 //@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name="employees")
@@ -36,23 +36,6 @@ public class Employee extends User {
 
     @Override
     public void displayRole() {
-        System.out.println("Role: Employee at " + shop.getName());
+        System.out.println("Role: Employee at ");
     }
-
-//    public void updateOrderStatus(Long orderId, OrderStatus orderStatus) {
-//
-//    }
-//
-//    public void notifyCustomer(Long orderId, String message) {
-//
-//    }
-//
-//    private Order findOrderById(Long orderId) {
-//        return null;
-//    }
-//
-//    private String getCustomerUsername(Long orderId) {
-//        Order order = findOrderById(orderId);
-//        return order != null ? order.getCustomerUsername() : null;
-//    }
 }

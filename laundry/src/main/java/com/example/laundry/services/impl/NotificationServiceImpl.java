@@ -10,8 +10,8 @@ public class NotificationServiceImpl implements NotificationService {
     @Autowired
     private NotificationRepository notificationRepository;
 
-    @Override
-    public boolean send(String receipt, String message) {
-        return notificationRepository.send(receipt, message);
-    }
+//    @Override
+//    public boolean send(String receipt, String message) {
+//        return notificationRepository.send(receipt, message);
+//    }
 }

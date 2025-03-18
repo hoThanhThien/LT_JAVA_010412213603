@@ -1,25 +1,24 @@
 package com.example.laundry.models.user;
 
 import jakarta.persistence.*;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
 
-@Data
-@SuperBuilder
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name="users")
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @DiscriminatorColumn(name="user_type")
+@Getter
+@Setter
+@NoArgsConstructor
+@SuperBuilder
 public abstract class User implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name="user_id")
     private int id;
 
@@ -41,9 +40,10 @@ public abstract class User implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column
     private Roles roles;
-
-    @Column
-    private boolean isVerified;
+//
+//    public void setRoles(Roles roles) {
+//        this.roles = roles;
+//    }
 
     public User(String username, String password, String email, String phone, String address, Roles roles) {
         this.username = username;
@@ -54,11 +54,13 @@ public abstract class User implements Serializable {
         this.roles = roles;
     }
 
+    public User(String username, String password, String email, String phone, String address) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.phone = phone;
+        this.address = address;
+    }
+
     public abstract void displayRole();
-
-    public boolean isVerified() {
-        return false;
-    };
-
-    public void setVerified(boolean verified) {}
 }

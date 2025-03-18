@@ -4,5 +4,8 @@ public enum Roles {
     Admin,
     Customer,
     Employee,
-    StoreOwner
+    StoreOwner;
+
+    Roles() {
+    }
 }

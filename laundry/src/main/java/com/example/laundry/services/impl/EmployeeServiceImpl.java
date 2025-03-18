@@ -11,13 +11,13 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    @Override
-    public void notifyOrderCompleted(Employee employee, Long orderId) {
-        employeeRepository.notifyOrderCompleted(employee, orderId);
-    }
-
-    @Override
-    public void notifyCustomer(Employee employee, Long orderId, String message, String notificationType) {
-        employeeRepository.notifyCustomer(employee, orderId, message, notificationType);
-    }
+//    @Override
+//    public void notifyOrderCompleted(Employee employee, Long orderId) {
+//        employeeRepository.notifyOrderCompleted(employee, orderId);
+//    }
+//
+//    @Override
+//    public void notifyCustomer(Employee employee, Long orderId, String message, String notificationType) {
+//        employeeRepository.notifyCustomer(employee, orderId, message, notificationType);
+//    }
 }
