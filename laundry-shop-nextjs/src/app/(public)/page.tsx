@@ -1,4 +1,5 @@
 import Comment from "@/components/comment";
+import News from "@/components/news";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -305,12 +306,20 @@ export default function Home() {
             <Image
               src={"/home/top3-startup-text.png"}
               alt="top3-text"
-              width="0"
-              height="0"
+              width="311"
+              height="23"
               sizes="100vw"
-              className="w-[311px] h-[23px] absolute left-0 right-0 bottom-8 mx-auto max-w-[90%]"
+              className="absolute left-0 right-0 bottom-8 mx-auto max-w-[90%]"
             />
           </Link>
+        </div>
+        <div className="mt-10">
+          <News />
+        </div>
+        <div className="flex justify-center items-center mt-10">
+          <button className="bg-black text-white px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%] ">
+            NHẬN TƯ VẤN NGAY
+          </button>
         </div>
       </div>
     </main>
