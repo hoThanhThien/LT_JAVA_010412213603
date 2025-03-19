@@ -1,5 +1,6 @@
 import Comment from "@/components/comment";
 import News from "@/components/news";
+import Stores from "@/components/stores";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -356,6 +357,108 @@ export default function Home() {
                 height="200"
               />
             </div>
+          </div>
+        </div>
+      </div>
+      <div className="max-w-7xl mx-auto px-4 py-20">
+        <div className="text-4xl text-center font-bold">
+          Hệ thống 10 cửa hàng tại HCM của HERAMO
+        </div>
+        <div className="my-20">
+          <Stores />
+        </div>
+        <div className="text-4xl text-center font-bold">
+          Bạn muốn mở một{" "}
+          <span className="text-main"> cửa hàng nhượng quyền?</span>
+        </div>
+        <div className="w-[50%] mx-auto text-center text-xl mt-5 mb-10">
+          Hệ thống cửa hàng nhượng quyền giặt ủi, giặt hấp, giặt giày, vệ sinh
+          cao cấp với 10 chi nhánh tại Hồ Chí Minh. Tiết kiệm 90% thời gian vận
+          hành. Hoàn vốn trong 15-18 tháng. Được cố vấn bởi chuyên gia nhượng
+          quyền Nguyễn Phi Vân
+        </div>
+        <div className="flex justify-center items-center">
+          <button className="bg-black text-white px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%] ">
+            TÌM HIỂU THÊM
+          </button>
+        </div>
+      </div>
+      <div className="bg-[url('/home/bg-2.svg')] bg-repeat-round min-h-[800px] px-10">
+        <div className="flex justify-center items-center">
+          <div className="w-[60%]">
+            <Image
+              src="/home/quality-banner.png"
+              width="733"
+              height="725"
+              alt="bg-2"
+              className="lg:block"
+            />
+          </div>
+          <div className="flex flex-col gap-5 w-[40%]">
+            <div className="text-4xl font-bold">Chất lượng</div>
+            <div className="text-2xl">
+              <div className="font-medium">
+                Được tin dùng bởi hơn{" "}
+                <span className="text-main">136.000+</span> khách hàng.
+              </div>
+              <div className="font-normal">
+                Máy móc dung dịch hiện đại, chuyên gia giặt ủi vệ sinh lành nghề
+                tận tâm
+              </div>
+            </div>
+            <button className="bg-black text-white border border-black hover:bg-transparent hover:text-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[70%] ">
+              ĐẶT DỊCH VỤ NGAY
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="bg-[url('/home/bg-2.svg')] bg-repeat-round h-fit px-10 ">
+        <div className="flex justify-center items-center">
+          <div className="w-[50%]">
+            <Image
+              src="/home/convenient-banner.png"
+              width="733"
+              height="725"
+              alt="bg-2"
+              className="lg:block"
+            />
+          </div>
+          <div className="flex flex-col gap-5 w-[50%]">
+            <div className="text-4xl font-bold">Tiện lợi</div>
+            <div className="text-2xl">
+              <div className="font-medium">
+                Đặt dịch vụ đa kênh, giao nhận tận nơi
+              </div>
+              <div className="font-normal">
+                Giao nhận từ 09:00 - 21:00 khắp các quận Tp.HCM, hoặc tại hệ
+                thống cửa hàng HERAMO
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="bg-[url('/home/bg-3.png')] bg-repeat-round bg-auto px-10 ">
+        <div className="flex justify-evenly items-center">
+          <div className="flex flex-col gap-5 w-[30%]">
+            <div className="text-4xl font-bold">An tâm</div>
+            <div className="text-2xl">
+              <div className="font-normal">
+                Theo dõi đơn hàng mọi lúc mọi nơi. Thảnh thơi tận hưởng cuộc
+                sống
+              </div>
+            </div>
+            <button className="bg-black text-white px-9 py-3 rounded-4xl font-bold cursor-pointer w-[70%] ">
+              TẢI ỨNG DỤNG
+            </button>
+          </div>
+          <div className="w-[50%] flex justify-end">
+            <Image
+              src="/home/hassle-free-banner.png"
+              width="677"
+              height="776"
+              alt="bg-2"
+              className="lg:block"
+            />
           </div>
         </div>
       </div>
