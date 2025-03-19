@@ -29,7 +29,7 @@ export default function Layout({
               />
             </Link>
             <div className="flex items-center gap-12 text-lg text-white">
-              <Link href="/" className="hover:text-main">
+              <Link href="/ve-chung-toi" className="hover:text-main">
                 Về chúng tôi
               </Link>
 
