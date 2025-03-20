@@ -2,12 +2,13 @@ import Comment from "@/components/comment";
 import Stores from "@/components/stores";
 import Image from "next/image";
 import Communication from "@/components/communication";
+import Services from "@/components/services";
 
 export default function Home() {
   return (
     <main className="relative">
       <div className="bg-[url('/home/bg-1.png')] bg-no-repeat min-h-[960px] px-4 bg-[length:100%_1060px]">
-        <div className="max-w-7xl mx-auto px-4 flex justify-between pt-[52px]">
+        <div className="max-w-7xl mx-auto px-4 flex justify-between pt-15">
           <div className="w-[41%] text-left">
             <div className="text-4xl font-bold">
               Hệ thống nhượng quyền & ứng dụng giặt ủi vệ sinh cao cấp 4.0
@@ -61,154 +62,8 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-4 mb-20">
-        <div className="text-4xl text-center font-bold">
-          Các dịch vụ tại <span className="text-main">HERAMO</span>
-        </div>
-        <div className="text-xl mt-2 mb-16 block mx-auto text-center max-w-[600px] text-gray-600">
-          Đặt ngay dịch vụ tại website, mobile app hoặc tại cửa hàng của HERAMO.
-          Giao nhận tận nơi, theo dõi đơn hàng & món đồ mọi lúc.
-        </div>
-        <div className="flex flex-wrap justify-center gap-5 mx-auto">
-          <div className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer">
-            <div className="w-full max-w-[320px]">
-              <Image
-                src="/service-1.png"
-                alt="Giặt hấp, giặt khô"
-                width="0"
-                height="0"
-                sizes="100vw"
-                className="w-full h-[180px]"
-              />
-              <div className="mt-5 text-center text-xl font-bold">
-                Giặt hấp, giặt khô
-              </div>
-              <div className="mt-2 text-center">
-                Chăm sóc tủ đồ với quy trình giặt hấp, giặt khô đúng chuẩn. Máy
-                móc hiện đại và dung dịch chuyên dụng
-              </div>
-              <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
-                Xem chi tiết
-                <Image src="/arrow.svg" alt="Arrow" width={20} height={20} />
-              </button>
-            </div>
-          </div>
-          <div className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer">
-            <div className="w-full max-w-[320px]">
-              <Image
-                src="/service-1.png"
-                alt="Giặt hấp, giặt khô"
-                width="0"
-                height="0"
-                sizes="100vw"
-                className="w-full h-[180px]"
-              />
-              <div className="mt-5 text-center text-xl font-bold">
-                Giặt hấp, giặt khô
-              </div>
-              <div className="mt-2 text-center">
-                Chăm sóc tủ đồ với quy trình giặt hấp, giặt khô đúng chuẩn. Máy
-                móc hiện đại và dung dịch chuyên dụng
-              </div>
-              <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
-                Xem chi tiết
-                <Image src="/arrow.svg" alt="Arrow" width={20} height={20} />
-              </button>
-            </div>
-          </div>
-          <div className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer">
-            <div className="w-full max-w-[320px]">
-              <Image
-                src="/service-1.png"
-                alt="Giặt hấp, giặt khô"
-                width="0"
-                height="0"
-                sizes="100vw"
-                className="w-full h-[180px]"
-              />
-              <div className="mt-5 text-center text-xl font-bold">
-                Giặt hấp, giặt khô
-              </div>
-              <div className="mt-2 text-center">
-                Chăm sóc tủ đồ với quy trình giặt hấp, giặt khô đúng chuẩn. Máy
-                móc hiện đại và dung dịch chuyên dụng
-              </div>
-              <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
-                Xem chi tiết
-                <Image src="/arrow.svg" alt="Arrow" width={20} height={20} />
-              </button>
-            </div>
-          </div>
-          <div className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer">
-            <div className="w-full max-w-[320px]">
-              <Image
-                src="/service-1.png"
-                alt="Giặt hấp, giặt khô"
-                width="0"
-                height="0"
-                sizes="100vw"
-                className="w-full h-[180px]"
-              />
-              <div className="mt-5 text-center text-xl font-bold">
-                Giặt hấp, giặt khô
-              </div>
-              <div className="mt-2 text-center">
-                Chăm sóc tủ đồ với quy trình giặt hấp, giặt khô đúng chuẩn. Máy
-                móc hiện đại và dung dịch chuyên dụng
-              </div>
-              <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
-                Xem chi tiết
-                <Image src="/arrow.svg" alt="Arrow" width={20} height={20} />
-              </button>
-            </div>
-          </div>
-          <div className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer">
-            <div className="w-full max-w-[320px]">
-              <Image
-                src="/service-1.png"
-                alt="Giặt hấp, giặt khô"
-                width="0"
-                height="0"
-                sizes="100vw"
-                className="w-full h-[180px]"
-              />
-              <div className="mt-5 text-center text-xl font-bold">
-                Giặt hấp, giặt khô
-              </div>
-              <div className="mt-2 text-center">
-                Chăm sóc tủ đồ với quy trình giặt hấp, giặt khô đúng chuẩn. Máy
-                móc hiện đại và dung dịch chuyên dụng
-              </div>
-              <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
-                Xem chi tiết
-                <Image src="/arrow.svg" alt="Arrow" width={20} height={20} />
-              </button>
-            </div>
-          </div>
-          <div className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer">
-            <div className="w-full max-w-[320px]">
-              <Image
-                src="/service-1.png"
-                alt="Giặt hấp, giặt khô"
-                width="0"
-                height="0"
-                sizes="100vw"
-                className="w-full h-[180px]"
-              />
-              <div className="mt-5 text-center text-xl font-bold">
-                Giặt hấp, giặt khô
-              </div>
-              <div className="mt-2 text-center">
-                Chăm sóc tủ đồ với quy trình giặt hấp, giặt khô đúng chuẩn. Máy
-                móc hiện đại và dung dịch chuyên dụng
-              </div>
-              <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
-                Xem chi tiết
-                <Image src="/arrow.svg" alt="Arrow" width={20} height={20} />
-              </button>
-            </div>
-          </div>
-        </div>
+      <div>
+        <Services />
       </div>
       <div className="grid lg:grid-cols-2 max-w-7xl mx-auto">
         <div className="lg:col-span-1 lg:col-start-1">
@@ -274,7 +129,7 @@ export default function Home() {
         <Communication />
       </div>
       <div>
-        <div className="grid grid-cols-2 bg-[url('/home/phone-tien-trinh.jpg')] bg-center bg-no-repeat bg-cover h-[1124px] px-24">
+        <div className="grid grid-cols-2 bg-[url('/home/phone-tien-trinh.jpg')] bg-center bg-no-repeat bg-cover h-[1124px] px-24 my-12 mt-[-48px]">
           <div className="col-span-1 col-start-1 self-end">
             <Image
               src={"/home/homescreen.png"}
@@ -310,27 +165,24 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-4 py-20">
-        <div className="text-4xl text-center font-bold">
-          Hệ thống 10 cửa hàng tại HCM của HERAMO
-        </div>
-        <div className="my-20">
-          <Stores />
-        </div>
-        <div className="text-4xl text-center font-bold">
-          Bạn muốn mở một{" "}
-          <span className="text-main"> cửa hàng nhượng quyền?</span>
-        </div>
-        <div className="w-[50%] mx-auto text-center text-xl mt-5 mb-10">
-          Hệ thống cửa hàng nhượng quyền giặt ủi, giặt hấp, giặt giày, vệ sinh
-          cao cấp với 10 chi nhánh tại Hồ Chí Minh. Tiết kiệm 90% thời gian vận
-          hành. Hoàn vốn trong 15-18 tháng. Được cố vấn bởi chuyên gia nhượng
-          quyền Nguyễn Phi Vân
-        </div>
-        <div className="flex justify-center items-center">
-          <button className="bg-black text-white px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%] ">
-            TÌM HIỂU THÊM
-          </button>
+      <div>
+        <Stores />
+        <div className="mb-12">
+          <div className="text-4xl text-center font-bold">
+            Bạn muốn mở một{" "}
+            <span className="text-main"> cửa hàng nhượng quyền?</span>
+          </div>
+          <div className="w-[50%] mx-auto text-center text-xl mt-5 mb-10">
+            Hệ thống cửa hàng nhượng quyền giặt ủi, giặt hấp, giặt giày, vệ sinh
+            cao cấp với 10 chi nhánh tại Hồ Chí Minh. Tiết kiệm 90% thời gian
+            vận hành. Hoàn vốn trong 15-18 tháng. Được cố vấn bởi chuyên gia
+            nhượng quyền Nguyễn Phi Vân
+          </div>
+          <div className="flex justify-center items-center">
+            <button className="bg-black text-white px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%] ">
+              TÌM HIỂU THÊM
+            </button>
+          </div>
         </div>
       </div>
       <div className="bg-[url('/home/bg-2.svg')] bg-repeat-round min-h-[800px] px-10">

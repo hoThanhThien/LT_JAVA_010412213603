@@ -60,35 +60,42 @@ const listStores = [
 
 export default function Stores() {
   return (
-    <Swiper
-      grabCursor={true}
-      slidesPerView={4}
-      navigation={true}
-      spaceBetween={20}
-      pagination={true}
-      modules={[Navigation]}
-    >
-      {listStores.map((item) => {
-        return (
-          <SwiperSlide key={item.id}>
-            <div className="rounded-4xl border border-gray-300 w-fit p-5">
-              <Image
-                src={item.imgge}
-                alt={item.address}
-                width="234"
-                height="187"
-                className="mx-auto mb-5"
-              />
-              <div className="flex items-center gap-2 max-w-[234px]">
-                <span className="text-xl font-bold bg-main rounded-full aspect-square w-10 h-10 flex items-center justify-center">
-                  {item.id}
-                </span>
-                <div className="text-xl font-bold">{item.address}</div>
-              </div>
-            </div>
-          </SwiperSlide>
-        );
-      })}
-    </Swiper>
+    <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="text-4xl text-center font-bold">
+        Hệ thống 10 cửa hàng tại HCM của HERAMO
+      </div>
+      <div className="mt-20">
+        <Swiper
+          grabCursor={true}
+          slidesPerView={4}
+          navigation={true}
+          spaceBetween={20}
+          pagination={true}
+          modules={[Navigation]}
+        >
+          {listStores.map((item) => {
+            return (
+              <SwiperSlide key={item.id}>
+                <div className="rounded-4xl border border-gray-300 w-fit p-5">
+                  <Image
+                    src={item.imgge}
+                    alt={item.address}
+                    width="234"
+                    height="187"
+                    className="mx-auto mb-5"
+                  />
+                  <div className="flex items-center gap-2 max-w-[234px]">
+                    <span className="text-xl font-bold bg-main rounded-full aspect-square w-10 h-10 flex items-center justify-center">
+                      {item.id}
+                    </span>
+                    <div className="text-xl font-bold">{item.address}</div>
+                  </div>
+                </div>
+              </SwiperSlide>
+            );
+          })}
+        </Swiper>
+      </div>
+    </div>
   );
 }
