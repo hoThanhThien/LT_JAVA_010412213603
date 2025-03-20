@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import YouTubeVideos from "./youtube-videos";
 import Image from "next/image";
@@ -5,7 +7,7 @@ import News from "./news";
 
 export default function Communication() {
   return (
-    <div className="py-24 max-w-7xl mx-auto px-4">
+    <div className="py-12 max-w-7xl mx-auto px-4">
       <div className="text-4xl text-center font-bold">
         Truyền thông nói gì về chúng tôi
       </div>

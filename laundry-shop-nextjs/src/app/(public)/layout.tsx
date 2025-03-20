@@ -33,7 +33,7 @@ export default function Layout({
                 Về chúng tôi
               </Link>
 
-              <Link href="/" className="hover:text-main">
+              <Link href="/nhuong-quyen" className="hover:text-main">
                 Nhượng quyền
               </Link>
 
