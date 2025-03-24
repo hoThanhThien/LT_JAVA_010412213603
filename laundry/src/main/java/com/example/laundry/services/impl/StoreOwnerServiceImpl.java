@@ -6,6 +6,7 @@ import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.Roles;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.models.user.User;
+import com.example.laundry.repository.EmployeeRepository;
 import com.example.laundry.repository.StoreOwnerRepository;
 import com.example.laundry.services.StoreOwnerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +17,17 @@ import java.util.List;
 public class StoreOwnerServiceImpl implements StoreOwnerService {
     @Autowired
     private StoreOwnerRepository storeOwnerRepository;
+    @Autowired
+    private EmployeeRepository employeeRepository;
 
     @Override
     public void addStoreOwner(StoreOwner storeOwner) {
         storeOwnerRepository.save(storeOwner);
+    }
+
+    @Override
+    public void createStoreOwner(StoreOwner storeOwner, Employee employee) {
+        employeeRepository.save(employee);
     }
 
 //    @Override

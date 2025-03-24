@@ -7,6 +7,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
-//    void notifyOrderCompleted(Employee employee, Long orderId);
+    boolean existsByPhone(String phone);
+    boolean existsByEmail(String email);
+    //    void notifyOrderCompleted(Employee employee, Long orderId);
 //    void notifyCustomer(Employee employee, Long orderId, String message, String notificationType);
 }
