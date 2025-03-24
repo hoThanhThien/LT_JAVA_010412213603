@@ -11,6 +11,11 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
+    @Override
+    public void addEmployee(Employee employee) {
+        employeeRepository.save(employee);
+    }
+
 //    @Override
 //    public void notifyOrderCompleted(Employee employee, Long orderId) {
 //        employeeRepository.notifyOrderCompleted(employee, orderId);

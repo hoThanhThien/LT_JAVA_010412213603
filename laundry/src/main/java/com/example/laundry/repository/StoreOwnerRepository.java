@@ -11,6 +11,8 @@ import java.util.List;
 
 @Repository
 public interface StoreOwnerRepository extends JpaRepository<StoreOwner,Integer> {
+    boolean existsByPhone(String phone);
+    boolean existsByEmail(String email);
 //    void addService(StoreOwner storeOwner, Service service);
 //    void removeService(StoreOwner storeOwner, Service service);
 //    void hireEmployee(StoreOwner storeOwner, Employee employee);
