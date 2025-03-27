@@ -1,5 +1,3 @@
-"use client";
-
 import Founder from "@/components/founder";
 import Image from "next/image";
 import Communication from "@/components/communication";

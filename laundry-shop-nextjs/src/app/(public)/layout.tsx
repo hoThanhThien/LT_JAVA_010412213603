@@ -15,7 +15,7 @@ export default function Layout({
   const [openLogin, setOpenLogin] = useState<boolean>(false);
   return (
     <div className="flex min-h-screen w-full flex-col relative">
-      <header className="fixed top-0 left-0 right-0 z-50 w-full md:h-24 bg-black flex items-center">
+      <header className="fixed top-0 right-0 z-50 w-full md:h-24 bg-black flex items-center">
         <div className="p-0 mx-auto">
           <nav className="flex py-0 px-11 gap-20">
             <Link href="/">

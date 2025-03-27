@@ -1,5 +1,3 @@
-"use client";
-
 import Communication from "@/components/communication";
 import Number from "@/components/number";
 import Image from "next/image";
