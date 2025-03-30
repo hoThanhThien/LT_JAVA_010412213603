@@ -15,6 +15,11 @@ public class CustomerServiceImpl implements CustomerService {
     @Autowired
     private CustomerRepository customerRepository;
 
+    @Override
+    public void addCustomer(Customer customer) {
+        customerRepository.save(customer);
+    }
+
 //    @Override
 //    public Order bookOrder(Customer customer, LaundryShop laundryShop, Service service, String instructions) {
 //        return customerRepository.bookOrder(customer, laundryShop, service);

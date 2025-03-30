@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AdminRepository extends JpaRepository<Admin, Integer> {
+    Admin findByUsername(String username);
 //    void verifyShopDetails(Admin admin, LaundryShop laundryShop);
 //    void createStoreOwner(Admin admin, StoreOwner storeOwner);
 //    void manageUsers(Admin admin, User user);

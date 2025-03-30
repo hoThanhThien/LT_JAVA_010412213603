@@ -11,7 +11,10 @@ import java.util.List;
 
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Integer> {
-//    Order bookOrder(Customer customer, LaundryShop laundryShop, Service service);
+    boolean existsByPhone(String phone);
+    boolean existsByEmail(String email);
+    Customer findByVerificationToken(String token);
+    //    Order bookOrder(Customer customer, LaundryShop laundryShop, Service service);
 //    void trackOrder(Customer customer, Order order);
 //    void makePayment(Customer customer, Order order, String paymentMethod, double amount);
 //    List<Order> getOrderHistory(Customer customer);

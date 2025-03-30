@@ -14,4 +14,5 @@ public class NotificationServiceImpl implements NotificationService {
 //    public boolean send(String receipt, String message) {
 //        return notificationRepository.send(receipt, message);
 //    }
+
 }

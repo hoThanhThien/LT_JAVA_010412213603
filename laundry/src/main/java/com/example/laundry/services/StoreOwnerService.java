@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface StoreOwnerService extends UserService{
     void addStoreOwner(StoreOwner storeOwner);
+    void createStoreOwner(StoreOwner storeOwner, Employee employee);
 //    void addService(StoreOwner storeOwner, Service service);
 //    void removeService(StoreOwner storeOwner, Service service);
 //    void hireEmployee(StoreOwner storeOwner, Employee employee);
