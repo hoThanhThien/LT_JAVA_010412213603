@@ -2,10 +2,15 @@ package com.example.laundry.services;
 
 import com.example.laundry.models.order.Order;
 
+import java.util.List;
+import java.util.Optional;
+
 public interface OrderService {
-//    void findById(int id);
-//    void save(Order order);
-//    void deleteById(int id);
-//    void updateOrderStatus(int orderId, String status);
-//    void notifyCustomer(int orderId, String message);
+    List<Order> getAllOrders();
+    Optional<Order> getOrderById(Long id);
+    Order createOrder(Order order);
+    void deleteOrderById(Long id);
+    Order updateOrderStatus(Long orderId, String status);
+    void notifyCustomer(Long orderId, String message);
+
 }

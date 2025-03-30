@@ -27,7 +27,7 @@ public class Customer extends User {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orderHistory =  new ArrayList<>();
 
-    private String preferredNotificationChannel;
+    private String verificationToken;
     private boolean emailVerified;
 
     public Customer(String username, String password, String email, String phone, String address, Roles roles) {
