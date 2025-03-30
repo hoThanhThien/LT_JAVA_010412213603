@@ -2,13 +2,18 @@ package com.example.laundry.services.impl;
 
 import com.example.laundry.dto.LoginRequest;
 import com.example.laundry.dto.LoginResponse;
+import com.example.laundry.models.notification.RefreshToken;
+import com.example.laundry.models.user.Customer;
 import com.example.laundry.models.user.User;
 import com.example.laundry.repository.UserRepository;
 import com.example.laundry.security.JwtUtil;
 import com.example.laundry.services.AuthService;
+import com.example.laundry.services.RefreshTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import javax.management.relation.Relation;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -20,8 +25,12 @@ public class AuthServiceImpl implements AuthService {
 
   @Autowired
   private PasswordEncoder passwordEncoder;
+
   @Autowired
   private TokenBlackListServiceImpl tokenBlackListServiceImpl;
+
+  @Autowired
+  private RefreshTokenService refreshTokenService;
 
   @Override
   public LoginResponse login(LoginRequest loginRequest) {
@@ -41,15 +50,34 @@ public class AuthServiceImpl implements AuthService {
           updatePasswordWithEncryption(phone, loginRequest.getPassword());
         }
 
-        // Tạo token
-        String token = jwtUtil.generateToken(phone.getUsername());
+        // Tạo accessToken
+        String accessToken = jwtUtil.generateAccessToken(phone.getUsername());
 
-        if (token == null) {
+        //Tạo refreshToken
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(phone);
+        String refreshTokenString = refreshToken.getToken();
+
+        if (accessToken == null) {
           System.err.println("Generated token is null!");
           throw new RuntimeException("Failed to generate token");
         }
 
-        return new LoginResponse(token, phone.getRoles().name());
+        //Lấy thông tin người dùng
+        Boolean emailVerified = null;
+        if (phone instanceof Customer) {
+          emailVerified = ((Customer) phone).isEmailVerified();
+        }
+        LoginResponse.AccountInfo accountInfo = new LoginResponse.AccountInfo(
+                (long) phone.getId(),
+                phone.getUsername(),
+                phone.getEmail(),
+                phone.getRoles().name(),
+                Boolean.TRUE.equals(emailVerified)
+        );
+
+        LoginResponse.DataInfo dataInfo = new LoginResponse.DataInfo(accessToken, refreshTokenString, accountInfo);
+
+        return new LoginResponse(dataInfo, "Login successful");
       } else {
         System.out.println("Invalid password for user: " + phone.getUsername());
         throw new RuntimeException("Invalid username or password");

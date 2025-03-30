@@ -1,18 +1,17 @@
 package com.example.laundry.repository;
 
-import com.example.laundry.models.report.Report;
-import com.example.laundry.models.shop.Service;
-import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.StoreOwner;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 @Repository
 public interface StoreOwnerRepository extends JpaRepository<StoreOwner,Integer> {
+    StoreOwner findByEmail(String email);
+    StoreOwner findByPhone(String phone);
+    StoreOwner findByUsername(String username);
     boolean existsByPhone(String phone);
     boolean existsByEmail(String email);
+    boolean existsById(Integer id);
 //    void addService(StoreOwner storeOwner, Service service);
 //    void removeService(StoreOwner storeOwner, Service service);
 //    void hireEmployee(StoreOwner storeOwner, Employee employee);

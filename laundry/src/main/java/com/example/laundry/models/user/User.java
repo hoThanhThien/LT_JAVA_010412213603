@@ -20,7 +20,7 @@ public abstract class User implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name="user_id")
-    private int id;
+    private Integer id;
 
     @Column(nullable = false, length = 50)
     private String username;

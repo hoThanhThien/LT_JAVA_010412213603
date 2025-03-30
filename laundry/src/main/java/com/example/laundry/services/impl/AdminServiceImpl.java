@@ -24,6 +24,11 @@ public class AdminServiceImpl implements AdminService {
         storeOwnerRepository.save(storeOwner);
     }
 
+    @Override
+    public void removeStoreOwner(Admin admin, StoreOwner storeOwner) {
+        storeOwnerRepository.delete(storeOwner);
+    }
+
 //    @Override
 //    public void verifyShopDetails(Admin admin, LaundryShop laundryShop) {
 //        adminRepository.verifyShopDetails(admin, laundryShop);

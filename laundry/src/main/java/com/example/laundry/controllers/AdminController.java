@@ -11,10 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/admin")
@@ -72,5 +69,38 @@ public class AdminController {
         storeOwnerService.addStoreOwner(storeOwner);
 
         return ResponseEntity.ok("Tạo tài khoản Store Owner thành công");
+    }
+
+    @DeleteMapping("/storeowner/delete")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> deleteStoreOwner(@RequestBody StoreOwnerDTO storeOwnerDTO){
+        //kiểm tra xem có tồn tại không
+        if (storeOwnerDTO.getEmail() == null && storeOwnerDTO.getPhone() == null && storeOwnerDTO.getUsername() == null && storeOwnerDTO.getPassword() == null) {
+            return ResponseEntity.badRequest().body("Không đủ thông tin để xóa!!!");
+        }
+
+        // Get data
+        StoreOwner storeOwner = null;
+        if(storeOwnerDTO.getEmail() != null){
+            storeOwner = storeOwnerRepository.findByEmail(storeOwnerDTO.getEmail());
+        }
+        if(storeOwner == null &&  storeOwnerDTO.getPhone() != null){
+            storeOwner = storeOwnerRepository.findByPhone(storeOwnerDTO.getPhone());
+        }
+        if(storeOwner == null &&  storeOwnerDTO.getUsername() != null){
+            storeOwner = storeOwnerRepository.findByUsername(storeOwnerDTO.getUsername());
+        }
+
+        if (storeOwner == null) {
+            return ResponseEntity.badRequest().body("Không tìm thấy Store Owner với thông tin đã cung cấp");
+        }
+
+        if(!storeOwnerRepository.existsById(storeOwner.getId())){
+            return ResponseEntity.badRequest().body("Store Owner không tồn tại hoặc đã bị xóa trước đó");
+        }
+
+        storeOwnerService.deleteStoreOwner(storeOwner);
+
+        return ResponseEntity.ok("Đã xóa Store Owner thành công");
     }
 }

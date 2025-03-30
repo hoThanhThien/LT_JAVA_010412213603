@@ -38,6 +38,11 @@ public class Employee extends User {
         super(username, encodedPassword, email, phone, address, Roles.Employee);
     }
 
+    public Employee(String username, String encodedPassword, String email, String phone, String address, Roles roles, StoreOwner storeOwner) {
+        super(username, encodedPassword, email, phone, address, Roles.Employee);
+        this.storeOwner = storeOwner;
+    }
+
     @Override
     public void displayRole() {
         System.out.println("Role: Employee at ");

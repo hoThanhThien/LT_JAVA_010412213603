@@ -18,20 +18,32 @@ public class JwtUtil {
 
     // Token expiration time (30 minutes)
     private static final long EXPIRATION_TIME = 30 * 60 * 1000;
+    private static  final long REFRESH_TOKEN_EXPIRATION = 604800000; //7 days
 
     public JwtUtil(@Value("${jwt.secret}") String secret) {
         // JJWT yêu cầu một SecretKey thay vì một String
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String username) {
+    public String generateAccessToken(String username) {
         return Jwts.builder()
                 .subject("Laundry Management System")
                 .claim("username", username)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .issuer("LAUNDRY")
-                .signWith(key)
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+    }
+
+    public String generateRefreshToken(String username) {
+        return Jwts.builder()
+                .subject("Laundry Management System")
+                .claim("username", username)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION))
+                .issuer("LAUNDRY")
+                .signWith(key, Jwts.SIG.HS256)
                 .compact();
     }
 

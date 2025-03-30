@@ -16,6 +16,16 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeRepository.save(employee);
     }
 
+    @Override
+    public void deleteEmployee(Employee employee) {
+        employeeRepository.delete(employee);
+    }
+
+    @Override
+    public void updateEmployee(Employee employee) {
+        employeeRepository.save(employee);
+    }
+
 //    @Override
 //    public void notifyOrderCompleted(Employee employee, Long orderId) {
 //        employeeRepository.notifyOrderCompleted(employee, orderId);

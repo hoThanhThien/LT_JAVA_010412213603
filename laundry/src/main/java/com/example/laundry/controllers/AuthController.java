@@ -2,8 +2,16 @@ package com.example.laundry.controllers;
 
 import com.example.laundry.dto.LoginRequest;
 import com.example.laundry.dto.LoginResponse;
+import com.example.laundry.dto.RefreshTokenRequest;
+import com.example.laundry.dto.RefreshTokenResponse;
+import com.example.laundry.models.notification.RefreshToken;
+import com.example.laundry.models.user.User;
+import com.example.laundry.repository.RefreshTokenRepository;
+import com.example.laundry.security.JwtUtil;
 import com.example.laundry.services.AuthService;
+import com.example.laundry.services.RefreshTokenService;
 import com.example.laundry.services.impl.TokenBlackListServiceImpl;
+import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -24,6 +32,12 @@ public class AuthController {
 
   @Autowired
   private TokenBlackListServiceImpl tokenBlackListService;
+  @Autowired
+  private RefreshTokenService refreshTokenService;
+  @Autowired
+  private JwtUtil jwtUtil;
+  @Autowired
+  private RefreshTokenRepository refreshTokenRepository;
 
   @PostMapping("/login")
   public LoginResponse login(@RequestBody LoginRequest loginRequest) {
@@ -49,6 +63,24 @@ public class AuthController {
       System.err.println("Logout error: " + e.getMessage());
       e.printStackTrace();
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi: " + e.getMessage());
+    }
+  }
+
+  @PostMapping("/refresh-token")
+  public ResponseEntity<RefreshTokenResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+    try {
+      //Kiểm tra refresh token xem tồn tại và còn hạn không
+      RefreshToken refreshToken = refreshTokenService.findByToken(request.getRefreshToken());
+      refreshTokenService.verifyExpiration(refreshToken);
+
+      //Tạo access token mới
+      User user = refreshToken.getUser();
+      String newAccessToken = jwtUtil.generateAccessToken(user.getUsername());
+
+      return ResponseEntity.ok(new RefreshTokenResponse(refreshToken.getToken(), newAccessToken));
+    }
+    catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
   }
 }

@@ -26,59 +26,35 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
     }
 
     @Override
-    public void createStoreOwner(StoreOwner storeOwner, Employee employee) {
+    public void deleteStoreOwner(StoreOwner storeOwner) {
+        storeOwnerRepository.delete(storeOwner);
+    }
+
+    @Override
+    public void addEmployee(StoreOwner storeOwner, Employee employee) {
+        // Đảm bảo Employee biết StoreOwner nào tạo ra nó
+        employee.setStoreOwner(storeOwner);
         employeeRepository.save(employee);
     }
 
-//    @Override
-//    public void addService(StoreOwner storeOwner, Service service) {
-//        storeOwnerRepository.addService(storeOwner, service);
-//    }
-//
-//    @Override
-//    public void removeService(StoreOwner storeOwner, Service service) {
-//        storeOwnerRepository.removeService(storeOwner, service);
-//    }
-//
-//    @Override
-//    public void hireEmployee(StoreOwner storeOwner, Employee employee) {
-//        storeOwnerRepository.hireEmployee(storeOwner, employee);
-//    }
-//
-//    @Override
-//    public void fireEmployee(StoreOwner storeOwner, Employee employee) {
-//        storeOwnerRepository.fireEmployee(storeOwner, employee);
-//    }
-//
-//    @Override
-//    public List<Employee> getEmployees(StoreOwner storeOwner) {
-//        storeOwnerRepository.getEmployees(storeOwner);
-//        return List.of();
-//    }
-//
-//    @Override
-//    public Report generateFinancialReport(StoreOwner storeOwner, String startDate, String endDate) {
-//        storeOwnerRepository.generateFinancialReport(storeOwner, startDate, endDate);
-//        return null;
-//    }
+    @Override
+    public void removeEmployee(StoreOwner storeOwner, Employee employee) {
+        // Chỉ xóa Employee nếu nó thuộc về StoreOwner hiện tại
+        if (employee.getStoreOwner() != null && employee.getStoreOwner().getId().equals(storeOwner.getId())) {
+            employeeRepository.delete(employee);
+        }
+    }
 
-//    @Override
-//    public User findUserById(Long id) {
-//        return StoreOwnerService.super.findUserById(id);
-//    }
-//
-//    @Override
-//    public List<User> findAllUsers() {
-//        return StoreOwnerService.super.findAllUsers();
-//    }
-//
-//    @Override
-//    public User save(User user) {
-//        return StoreOwnerService.super.save(user);
-//    }
-//
-//    @Override
-//    public void deleteById(Long id) {
-//        StoreOwnerService.super.deleteById(id);
-//    }
+    @Override
+    public void updateEmployee(StoreOwner storeOwner, Employee employee) {
+        // Chỉ cập nhật Employee nếu nó thuộc về StoreOwner hiện tại
+        if (employee.getStoreOwner() != null && employee.getStoreOwner().getId().equals(storeOwner.getId())) {
+            employeeRepository.save(employee);
+        }
+    }
+
+    @Override
+    public List<Employee> getEmployeesByStoreOwner(StoreOwner storeOwner) {
+        return employeeRepository.findByStoreOwner(storeOwner);
+    }
 }
