@@ -1,9 +1,10 @@
 "use client";
 
-import { Button, ConfigProvider, Layout, Menu } from "antd";
+import { ConfigProvider, Layout, Menu } from "antd";
 import { ArrowLeftToLine, ArrowRightToLine } from "lucide-react";
 import enUS from "antd/locale/en_US";
 import { useState } from "react";
+import { SiderAdmin } from "./menuItems";
 const { Content, Sider } = Layout;
 
 export default function layout({ children }: { children: React.ReactNode }) {
@@ -25,20 +26,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
             <Menu
               selectedKeys={[activeMenu]}
               mode="inline"
-              items={[
-                {
-                  key: "1",
-                  label: "nav 1",
-                },
-                {
-                  key: "2",
-                  label: "nav 2",
-                },
-                {
-                  key: "3",
-                  label: "nav 3",
-                },
-              ]}
+              items={SiderAdmin}
               onClick={(e) => setActiveMenu(e.key)}
             />
           </Sider>

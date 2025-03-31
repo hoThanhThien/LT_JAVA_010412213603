@@ -45,7 +45,7 @@ export default function Layout({
                 Tuyển dụng
               </Link>
 
-              <Link href="/" className="hover:text-main">
+              <Link href="/doi-tac" className="hover:text-main">
                 Trở thành đối tác
               </Link>
             </div>
