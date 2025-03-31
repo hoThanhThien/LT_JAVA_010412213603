@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/customer")
+@RequestMapping("/auth")
 public class CustomerController {
     @Autowired
     private CustomerService customerService;
@@ -78,7 +78,7 @@ public class CustomerController {
         customerService.addCustomer(customer);
 
         //Gửi email xác thực
-        String verificationLink = String.format("http://localhost:8080/customer/verify?token=" + verificationToken);
+        String verificationLink = String.format("http://localhost:8080/auth/verify?token=" + verificationToken);
         emailService.sendVerificationEmail(customer.getEmail(), verificationLink);
 
         return ResponseEntity.ok("Tạo tài khoản customer thành công. Vui lòng kiểm tra email để xác thực!!");
