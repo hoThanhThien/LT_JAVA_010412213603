@@ -20,12 +20,12 @@ public abstract class User implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name="user_id")
-    private int id;
+    private Integer id;
 
     @Column(nullable = false, length = 50)
     private String username;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false)
     private String password;
 
     @Column(unique = true, length = 50)
@@ -40,10 +40,6 @@ public abstract class User implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column
     private Roles roles;
-//
-//    public void setRoles(Roles roles) {
-//        this.roles = roles;
-//    }
 
     public User(String username, String password, String email, String phone, String address, Roles roles) {
         this.username = username;

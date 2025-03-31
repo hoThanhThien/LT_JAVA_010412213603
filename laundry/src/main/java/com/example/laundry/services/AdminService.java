@@ -7,6 +7,7 @@ import com.example.laundry.models.user.User;
 
 public interface AdminService extends UserService {
     void createStoreOwner(Admin admin, StoreOwner storeOwner);
+    void removeStoreOwner(Admin admin, StoreOwner storeOwner);
 //    void createStoreOwner(Admin admin, StoreOwner storeOwner);
 //    void verifyShopDetails(Admin admin, LaundryShop laundryShop);
 //    void manageUsers(Admin admin, User user);
