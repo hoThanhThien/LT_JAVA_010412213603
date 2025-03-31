@@ -28,8 +28,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/auth/logout").permitAll()
-                        .requestMatchers("/customer/create").permitAll()
-                        .requestMatchers("/customer/verify").permitAll()
+                        .requestMatchers("/auth/create").permitAll()
+                        .requestMatchers("/auth/verify").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
