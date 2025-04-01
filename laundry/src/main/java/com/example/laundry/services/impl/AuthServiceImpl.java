@@ -10,6 +10,7 @@ import com.example.laundry.security.JwtUtil;
 import com.example.laundry.services.AuthService;
 import com.example.laundry.services.RefreshTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -94,6 +95,7 @@ public class AuthServiceImpl implements AuthService {
     try{
       if(token != null) {
         tokenBlackListServiceImpl.isBlacklisted(token);
+        SecurityContextHolder.clearContext();
         return true;
       }
       return false;

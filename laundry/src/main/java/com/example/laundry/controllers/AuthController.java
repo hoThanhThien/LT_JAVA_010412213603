@@ -46,24 +46,14 @@ public class AuthController {
 
   @PostMapping("/logout")
   public ResponseEntity<String> logout(HttpServletRequest request) {
-    try {
-      String authHeader = request.getHeader("Authorization");
-      if (authHeader != null && authHeader.startsWith("Bearer ")) {
-        String token = authHeader.substring(7);
-        System.out.println("Logout request with token: " + token);
-        tokenBlackListService.blacklistToken(token);
-
-        // Xóa authentication khỏi context
-        SecurityContextHolder.clearContext();
-
+    String authHeader = request.getHeader("Authorization");
+    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+      String token = authHeader.substring(7);
+      if (authService.logout(token)) {
         return ResponseEntity.ok("Logout thành công!!!");
       }
-      return ResponseEntity.badRequest().body("Token không hợp lệ hoặc không tìm thấy");
-    } catch (Exception e) {
-      System.err.println("Logout error: " + e.getMessage());
-      e.printStackTrace();
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi: " + e.getMessage());
     }
+    return ResponseEntity.badRequest().body("Token không hợp lệ hoặc không tìm thấy");
   }
 
   @PostMapping("/refresh-token")
