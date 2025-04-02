@@ -9,7 +9,7 @@ import java.util.Set;
 public class TokenBlackListServiceImpl {
     private final Set<String> blacklistedTokens = new HashSet<>();
 
-    public void blacklistToken(String token) {
+    public void addBlacklistToken(String token) {
         blacklistedTokens.add(token);
     }
 
