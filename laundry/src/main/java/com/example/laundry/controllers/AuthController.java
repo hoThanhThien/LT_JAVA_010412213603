@@ -1,9 +1,6 @@
 package com.example.laundry.controllers;
 
-import com.example.laundry.dto.LoginRequest;
-import com.example.laundry.dto.LoginResponse;
-import com.example.laundry.dto.RefreshTokenRequest;
-import com.example.laundry.dto.RefreshTokenResponse;
+import com.example.laundry.dto.*;
 import com.example.laundry.models.notification.RefreshToken;
 import com.example.laundry.models.user.User;
 import com.example.laundry.repository.RefreshTokenRepository;
@@ -45,25 +42,9 @@ public class AuthController {
   }
 
   @PostMapping("/logout")
-  public ResponseEntity<String> logout(HttpServletRequest request) {
-    try {
-      String authHeader = request.getHeader("Authorization");
-      if (authHeader != null && authHeader.startsWith("Bearer ")) {
-        String token = authHeader.substring(7);
-        System.out.println("Logout request with token: " + token);
-        tokenBlackListService.blacklistToken(token);
-
-        // Xóa authentication khỏi context
-        SecurityContextHolder.clearContext();
-
-        return ResponseEntity.ok("Logout thành công!!!");
-      }
-      return ResponseEntity.badRequest().body("Token không hợp lệ hoặc không tìm thấy");
-    } catch (Exception e) {
-      System.err.println("Logout error: " + e.getMessage());
-      e.printStackTrace();
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi: " + e.getMessage());
-    }
+  public ResponseEntity<LogoutResponse> logoutWithRefreshToken(@RequestBody LogoutRequest logoutRequest) {
+    LogoutResponse response = authService.logout(logoutRequest);
+    return ResponseEntity.ok(response);
   }
 
   @PostMapping("/refresh-token")
