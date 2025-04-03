@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Register from "@/components/register";
 import Login from "@/components/login";
+import { getAccessTokenFromLocalStorage } from "@/lib/utils";
 
 export default function Layout({
   children,
@@ -13,6 +14,12 @@ export default function Layout({
 }>) {
   const [openRegister, setOpenRegister] = useState<boolean>(false);
   const [openLogin, setOpenLogin] = useState<boolean>(false);
+  const [isAuth, setIsAuth] = useState(false);
+
+  useEffect(() => {
+    setIsAuth(Boolean(getAccessTokenFromLocalStorage()));
+  }, []);
+
   return (
     <div className="flex min-h-screen w-full flex-col relative">
       <header className="fixed top-0 right-0 z-50 w-full md:h-24 bg-black flex items-center">
@@ -49,13 +56,22 @@ export default function Layout({
                 Trở thành đối tác
               </Link>
             </div>
-            <div className="flex gap-5">
-              <button
-                className="bg-main hover:text-white text-[18px] px-10 py-0 rounded-[28px] h-12 font-medium cursor-pointer"
-                onClick={() => setOpenLogin(true)}
-              >
-                Đăng nhập
-              </button>
+            <div>
+              {!isAuth ? (
+                <button
+                  className="bg-main hover:text-white text-[18px] px-10 py-0 rounded-[28px] h-12 font-medium cursor-pointer"
+                  onClick={() => setOpenLogin(true)}
+                >
+                  Đăng nhập
+                </button>
+              ) : (
+                <button
+                  className="bg-main hover:text-white text-[18px] px-10 py-0 rounded-[28px] h-12 font-medium cursor-pointer"
+                  onClick={() => setOpenLogin(true)}
+                >
+                  Đăng nhập
+                </button>
+              )}
             </div>
           </nav>
         </div>
