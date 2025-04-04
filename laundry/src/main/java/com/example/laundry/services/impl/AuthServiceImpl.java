@@ -37,8 +37,8 @@ public class AuthServiceImpl implements AuthService {
     try {
       User phone = userRepository.findByPhone(loginRequest.getPhone());
       if (phone == null) {
-        System.out.println("Phone not found: " + loginRequest.getPhone());
-        throw new RuntimeException("Invalid phone or password");
+        System.out.println("Số điện thoại không tồn tại: " + loginRequest.getPhone());
+        throw new RuntimeException("Số điện thoại hoặc mật khẩu không đúng");
       }
 
       if (isPasswordValid(phone, loginRequest.getPassword())) {
@@ -63,17 +63,12 @@ public class AuthServiceImpl implements AuthService {
         }
 
         //Lấy thông tin người dùng
-        Boolean emailVerified = null;
-        if (phone instanceof Customer) {
-          emailVerified = ((Customer) phone).isEmailVerified();
-        }
         LoginResponse.AccountInfo accountInfo = new LoginResponse.AccountInfo(
                 phone.getId(),
                 phone.getUsername(),
                 phone.getEmail(),
                 phone.getRoles().name(),
-                phone.getPhone(),
-                Boolean.TRUE.equals(emailVerified)
+                phone.getPhone()
         );
 
         LoginResponse.DataInfo dataInfo = new LoginResponse.DataInfo(accessToken, refreshTokenString, accountInfo);

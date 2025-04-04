@@ -35,31 +35,20 @@ public class LoginResponse {
         }
     }
 
+    @Getter
     public static class AccountInfo {
-        @Getter
-        private UUID id;
-        @Getter
-        private String username;
-        @Getter
-        private String email;
-        @Getter
-        private String role;
-        @Getter
-        private String phone;
+        private final UUID id;
+        private final String username;
+        private final String email;
+        private final String role;
+        private final String phone;
 
-        private final Boolean emailVerified;
-
-        public AccountInfo(UUID id, String username, String email, String role, String phone, boolean emailVerified) {
+        public AccountInfo(UUID id, String username, String email, String role, String phone) {
             this.id = id;
             this.username = username;
             this.email = email;
             this.role = role;
             this.phone = phone;
-            this.emailVerified = emailVerified;
-        }
-
-        public Boolean getEmailVerified() {
-            return emailVerified;
         }
     }
 }
