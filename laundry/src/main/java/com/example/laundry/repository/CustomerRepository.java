@@ -8,12 +8,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface CustomerRepository extends JpaRepository<Customer, Integer> {
+public interface CustomerRepository extends JpaRepository<Customer, UUID> {
     boolean existsByPhone(String phone);
     boolean existsByEmail(String email);
-    Customer findByVerificationToken(String token);
     //    Order bookOrder(Customer customer, LaundryShop laundryShop, Service service);
 //    void trackOrder(Customer customer, Order order);
 //    void makePayment(Customer customer, Order order, String paymentMethod, double amount);

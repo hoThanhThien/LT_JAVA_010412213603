@@ -5,8 +5,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 @Entity
 @Table(name="users")
@@ -18,9 +21,10 @@ import java.io.Serializable;
 @SuperBuilder
 public abstract class User implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name="user_id")
-    private Integer id;
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name="user_id", columnDefinition = "VARCHAR(36)")
+    private UUID id;
 
     @Column(nullable = false, length = 50)
     private String username;
