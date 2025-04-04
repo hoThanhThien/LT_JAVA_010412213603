@@ -10,3 +10,12 @@ export const AccountSchema = z.object({
 });
 
 export type AccountType = z.TypeOf<typeof AccountSchema>;
+
+export const AccountRes = z
+  .object({
+    data: AccountSchema,
+    message: z.string(),
+  })
+  .strict();
+
+export type AccountResType = z.TypeOf<typeof AccountRes>;

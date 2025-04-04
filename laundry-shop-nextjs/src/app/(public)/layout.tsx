@@ -3,17 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import Register from "@/components/register";
-import Login from "@/components/login";
 import { getAccessTokenFromLocalStorage } from "@/lib/utils";
+import Auth from "./auth";
 
 export default function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [openRegister, setOpenRegister] = useState<boolean>(false);
-  const [openLogin, setOpenLogin] = useState<boolean>(false);
+  const [openAuth, setOpenAuth] = useState<boolean>(false);
   const [isAuth, setIsAuth] = useState(false);
 
   useEffect(() => {
@@ -60,14 +58,14 @@ export default function Layout({
               {!isAuth ? (
                 <button
                   className="bg-main hover:text-white text-[18px] px-10 py-0 rounded-[28px] h-12 font-medium cursor-pointer"
-                  onClick={() => setOpenLogin(true)}
+                  onClick={() => setOpenAuth(true)}
                 >
                   Đăng nhập
                 </button>
               ) : (
                 <button
                   className="bg-main hover:text-white text-[18px] px-10 py-0 rounded-[28px] h-12 font-medium cursor-pointer"
-                  onClick={() => setOpenLogin(true)}
+                  onClick={() => setOpenAuth(true)}
                 >
                   Đăng nhập
                 </button>
@@ -75,18 +73,7 @@ export default function Layout({
             </div>
           </nav>
         </div>
-        <Register
-          openRegister={openRegister}
-          setOpenRegister={setOpenRegister}
-          openLogin={openLogin}
-          setOpenLogin={setOpenLogin}
-        />
-        <Login
-          openRegister={openRegister}
-          setOpenRegister={setOpenRegister}
-          openLogin={openLogin}
-          setOpenLogin={setOpenLogin}
-        />
+        <Auth openAuth={openAuth} setOpenAuth={setOpenAuth} />
       </header>
       <main className="flex flex-1 flex-col mt-24 gap-4 md:gap-8">
         {children}

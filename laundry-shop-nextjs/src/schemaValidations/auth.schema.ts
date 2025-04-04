@@ -26,6 +26,32 @@ export const LoginRes = z.object({
 
 export type LoginResType = z.TypeOf<typeof LoginRes>;
 
+export const RegisterBody = z
+  .object({
+    username: z.string().min(3).max(100),
+    phone: z.string().min(10).max(15),
+    password: z.string().min(3).max(100),
+  })
+  .strict();
+
+export type RegisterBodyType = z.TypeOf<typeof RegisterBody>;
+
+export const RegisterRes = z.object({
+  data: z.object({
+    accessToken: z.string(),
+    refreshToken: z.string(),
+    account: z.object({
+      id: z.number(),
+      name: z.string(),
+      phone: z.string(),
+      role: z.enum(RoleValues),
+    }),
+  }),
+  message: z.string(),
+});
+
+export type RegisterResType = z.TypeOf<typeof RegisterRes>;
+
 export const RefreshTokenBody = z
   .object({
     refreshToken: z.string(),
