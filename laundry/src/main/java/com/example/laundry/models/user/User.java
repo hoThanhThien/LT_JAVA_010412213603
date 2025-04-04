@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -19,8 +21,9 @@ import java.util.UUID;
 @SuperBuilder
 public abstract class User implements Serializable {
     @Id
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name="user_id", columnDefinition = "BINARY(16)")
+    @Column(name="user_id", columnDefinition = "VARCHAR(36)")
     private UUID id;
 
     @Column(nullable = false, length = 50)

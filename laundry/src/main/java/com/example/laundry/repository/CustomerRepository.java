@@ -14,7 +14,6 @@ import java.util.UUID;
 public interface CustomerRepository extends JpaRepository<Customer, UUID> {
     boolean existsByPhone(String phone);
     boolean existsByEmail(String email);
-    Customer findByVerificationToken(String token);
     //    Order bookOrder(Customer customer, LaundryShop laundryShop, Service service);
 //    void trackOrder(Customer customer, Order order);
 //    void makePayment(Customer customer, Order order, String paymentMethod, double amount);

@@ -4,7 +4,6 @@ import com.example.laundry.dto.CustomerDTO;
 import com.example.laundry.dto.CustomerResponseDTO;
 import com.example.laundry.models.user.Customer;
 import com.example.laundry.models.user.Roles;
-import com.example.laundry.notification.EmailService;
 import com.example.laundry.repository.CustomerRepository;
 import com.example.laundry.services.CustomerService;
 import com.example.laundry.utils.ApiResponse;
@@ -13,8 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/auth")
@@ -27,8 +24,6 @@ public class CustomerController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-    @Autowired
-    private EmailService emailService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<CustomerResponseDTO>> createCustomer(@RequestBody CustomerDTO customerDTO){
@@ -78,11 +73,6 @@ public class CustomerController {
         customer.setPassword(encodedPassword);
         customer.setPassword(encodedPassword);
 
-        // Tạo mã xác thực
-        String verificationToken = UUID.randomUUID().toString();
-        customer.setVerificationToken(verificationToken);
-        customer.setEmailVerified(false);
-
         Customer savedCustomer = customerService.addCustomer(customer);
 
         CustomerResponseDTO responseDTO = new CustomerResponseDTO(
@@ -94,25 +84,7 @@ public class CustomerController {
                 Roles.Customer
         );
 
-        //Gửi email xác thực
-        String verificationLink = String.format("http://localhost:8080/auth/verify?token=" + verificationToken);
-        emailService.sendVerificationEmail(customer.getEmail(), verificationLink);
-
         return ResponseEntity
-                .ok(new ApiResponse<>("Tạo tài khoản khách hàng thành công. Vui lòng kiểm tra email để xác thực!!!", responseDTO));
-    }
-
-    @GetMapping("/verify")
-    public ResponseEntity<ApiResponse<String>> verifyEmail(@RequestParam("token") String token){
-        Customer customer =  customerRepository.findByVerificationToken(token);
-        if(customer != null) {
-            customer.setEmailVerified(true);
-            customer.setVerificationToken(null); //Xóa mã xác thực sau khi xác thực
-            customerRepository.save(customer);
-            return ResponseEntity
-                    .ok(new ApiResponse<>("Email đã xác thực thành công!!!", null));
-        }
-        return ResponseEntity.badRequest()
-                .body(new ApiResponse<>("Mã xác thực không hơpj lệ!!!", null));
+                .ok(new ApiResponse<>("Vui lòng nhập nhập chính xác OTP để xác thực tài khoản", responseDTO));
     }
 }
