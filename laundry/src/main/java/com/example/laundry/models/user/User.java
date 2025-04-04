@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 @Entity
 @Table(name="users")
@@ -18,10 +19,9 @@ import java.io.Serializable;
 @SuperBuilder
 public abstract class User implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq_generator")
-    @SequenceGenerator(name = "user_seq_generator", sequenceName = "user_seq", allocationSize = 1)
-    @Column(name="user_id")
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name="user_id", columnDefinition = "BINARY(16)")
+    private UUID id;
 
     @Column(nullable = false, length = 50)
     private String username;

@@ -68,24 +68,25 @@ public class AuthServiceImpl implements AuthService {
           emailVerified = ((Customer) phone).isEmailVerified();
         }
         LoginResponse.AccountInfo accountInfo = new LoginResponse.AccountInfo(
-                (long) phone.getId(),
+                phone.getId(),
                 phone.getUsername(),
                 phone.getEmail(),
                 phone.getRoles().name(),
+                phone.getPhone(),
                 Boolean.TRUE.equals(emailVerified)
         );
 
         LoginResponse.DataInfo dataInfo = new LoginResponse.DataInfo(accessToken, refreshTokenString, accountInfo);
 
-        return new LoginResponse(dataInfo, "Login successful");
+        return new LoginResponse(dataInfo, "Đăng nhập thành công!!!");
       } else {
-        System.out.println("Invalid password for user: " + phone.getUsername());
-        throw new RuntimeException("Invalid username or password");
+        System.out.println("Lỗi mật khẩu với người dùng: " + phone.getUsername());
+        throw new RuntimeException("Lỗi mật khẩu hoặc người dùng");
       }
     } catch (Exception e) {
-      System.err.println("Login error: " + e.getMessage());
+      System.err.println("Đăng nhập lỗi: " + e.getMessage());
       e.printStackTrace();
-      throw new RuntimeException("Login failed: " + e.getMessage(), e);
+      throw new RuntimeException("Đăng nhập thất bại: " + e.getMessage(), e);
     }
   }
 
@@ -99,7 +100,7 @@ public class AuthServiceImpl implements AuthService {
       return false;
     }
     catch (Exception e){
-      System.err.println("Logout error: " + e.getMessage());
+      System.err.println("Đăng xuất lỗi: " + e.getMessage());
       e.printStackTrace();
       return false;
     }
