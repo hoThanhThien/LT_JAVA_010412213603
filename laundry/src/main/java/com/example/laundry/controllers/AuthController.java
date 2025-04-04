@@ -1,9 +1,6 @@
 package com.example.laundry.controllers;
 
-import com.example.laundry.dto.LoginRequest;
-import com.example.laundry.dto.LoginResponse;
-import com.example.laundry.dto.RefreshTokenRequest;
-import com.example.laundry.dto.RefreshTokenResponse;
+import com.example.laundry.dto.*;
 import com.example.laundry.models.notification.RefreshToken;
 import com.example.laundry.models.user.User;
 import com.example.laundry.repository.RefreshTokenRepository;
@@ -46,6 +43,7 @@ public class AuthController {
   }
 
   @PostMapping("/logout")
+
   public ResponseEntity<ApiResponse<String>> logout(HttpServletRequest request) {
     try {
       String authHeader = request.getHeader("Authorization");
