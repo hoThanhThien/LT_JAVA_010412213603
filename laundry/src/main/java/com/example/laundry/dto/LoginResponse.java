@@ -4,6 +4,8 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 public class LoginResponse {
@@ -35,20 +37,24 @@ public class LoginResponse {
 
     public static class AccountInfo {
         @Getter
-        private Long id;
+        private UUID id;
         @Getter
-        private String name;
+        private String username;
         @Getter
         private String email;
         @Getter
         private String role;
+        @Getter
+        private String phone;
+
         private final Boolean emailVerified;
 
-        public AccountInfo(Long id, String name, String email, String role, boolean emailVerified) {
+        public AccountInfo(UUID id, String username, String email, String role, String phone, boolean emailVerified) {
             this.id = id;
-            this.name = name;
+            this.username = username;
             this.email = email;
             this.role = role;
+            this.phone = phone;
             this.emailVerified = emailVerified;
         }
 

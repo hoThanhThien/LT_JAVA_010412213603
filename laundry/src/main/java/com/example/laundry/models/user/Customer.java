@@ -34,6 +34,10 @@ public class Customer extends User {
         super(username, password, email, phone, address, Roles.Customer);
     }
 
+    public Customer(String username, String email, String phone, String address, Roles roles) {
+        super(username, email, phone, address, String.valueOf(Roles.Customer));
+    }
+
     @Override
     public void displayRole() {
         System.out.println("Role: Customer");
