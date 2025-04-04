@@ -8,6 +8,7 @@ import com.example.laundry.security.JwtUtil;
 import com.example.laundry.services.AuthService;
 import com.example.laundry.services.RefreshTokenService;
 import com.example.laundry.services.impl.TokenBlackListServiceImpl;
+import com.example.laundry.utils.ApiResponse;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -42,13 +43,33 @@ public class AuthController {
   }
 
   @PostMapping("/logout")
-  public ResponseEntity<LogoutResponse> logoutWithRefreshToken(@RequestBody LogoutRequest logoutRequest) {
-    LogoutResponse response = authService.logout(logoutRequest);
-    return ResponseEntity.ok(response);
+
+  public ResponseEntity<ApiResponse<String>> logout(HttpServletRequest request) {
+    try {
+      String authHeader = request.getHeader("Authorization");
+      if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        String token = authHeader.substring(7);
+        System.out.println("Logout request with token: " + token);
+        tokenBlackListService.blacklistToken(token);
+
+        // Xóa authentication khỏi context
+        SecurityContextHolder.clearContext();
+
+        return ResponseEntity
+                .ok(new ApiResponse<>("Logout thành công!!!", null));
+      }
+      return ResponseEntity.badRequest()
+              .body(new ApiResponse<>("Token không hợp lệ hoặc không tìm thấy", null));
+    } catch (Exception e) {
+      System.err.println("Logout lỗi: " + e.getMessage());
+      e.printStackTrace();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+              .body(new ApiResponse<>("Lỗi: " + e.getMessage(), null));
+    }
   }
 
   @PostMapping("/refresh-token")
-  public ResponseEntity<RefreshTokenResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+  public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken(@RequestBody RefreshTokenRequest request) {
     try {
       //Kiểm tra refresh token xem tồn tại và còn hạn không
       RefreshToken refreshToken = refreshTokenService.findByToken(request.getRefreshToken());
@@ -58,7 +79,7 @@ public class AuthController {
       User user = refreshToken.getUser();
       String newAccessToken = jwtUtil.generateAccessToken(user.getUsername());
 
-      return ResponseEntity.ok(new RefreshTokenResponse(refreshToken.getToken(), newAccessToken));
+      return ResponseEntity.ok(new ApiResponse<>("", new RefreshTokenResponse(refreshToken.getToken(), newAccessToken)));
     }
     catch (Exception e) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();

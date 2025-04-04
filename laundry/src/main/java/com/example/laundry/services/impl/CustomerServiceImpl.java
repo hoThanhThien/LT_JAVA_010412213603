@@ -1,14 +1,9 @@
 package com.example.laundry.services.impl;
 
-import com.example.laundry.models.order.Order;
-import com.example.laundry.models.shop.LaundryShop;
-import com.example.laundry.models.shop.Service;
 import com.example.laundry.models.user.Customer;
 import com.example.laundry.repository.CustomerRepository;
 import com.example.laundry.services.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 @org.springframework.stereotype.Service
 public class CustomerServiceImpl implements CustomerService {
@@ -16,8 +11,9 @@ public class CustomerServiceImpl implements CustomerService {
     private CustomerRepository customerRepository;
 
     @Override
-    public void addCustomer(Customer customer) {
+    public Customer addCustomer(Customer customer) {
         customerRepository.save(customer);
+        return customer;
     }
 
 //    @Override

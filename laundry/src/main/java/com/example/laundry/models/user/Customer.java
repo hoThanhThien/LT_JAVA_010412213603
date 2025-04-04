@@ -27,11 +27,12 @@ public class Customer extends User {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orderHistory =  new ArrayList<>();
 
-    private String verificationToken;
-    private boolean emailVerified;
-
     public Customer(String username, String password, String email, String phone, String address, Roles roles) {
         super(username, password, email, phone, address, Roles.Customer);
+    }
+
+    public Customer(String username, String email, String phone, String address, Roles roles) {
+        super(username, email, phone, address, String.valueOf(Roles.Customer));
     }
 
     @Override
