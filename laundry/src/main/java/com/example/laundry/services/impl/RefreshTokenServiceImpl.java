@@ -62,4 +62,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     return refreshTokenRepository.findByToken(token)
             .orElseThrow(() -> new RuntimeException("Refresh token not found"));
   }
+
+  @Override
+  public void deleteByToken(String token) {
+    refreshTokenRepository.deleteByToken(token);
+  }
 }

@@ -2,6 +2,8 @@ package com.example.laundry.services.impl;
 
 import com.example.laundry.dto.LoginRequest;
 import com.example.laundry.dto.LoginResponse;
+import com.example.laundry.dto.LogoutRequest;
+import com.example.laundry.dto.LogoutResponse;
 import com.example.laundry.models.notification.RefreshToken;
 import com.example.laundry.models.user.Customer;
 import com.example.laundry.models.user.User;
@@ -9,6 +11,7 @@ import com.example.laundry.repository.UserRepository;
 import com.example.laundry.security.JwtUtil;
 import com.example.laundry.services.AuthService;
 import com.example.laundry.services.RefreshTokenService;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -86,13 +89,20 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
-  public boolean logout(String token) {
-    try{
-      if(token != null) {
-        tokenBlackListServiceImpl.isBlacklisted(token);
-        return true;
+  @Transactional
+  public LogoutResponse logout(LogoutRequest logoutRequest) {
+    try {
+      if(logoutRequest.getRefreshToken() != null) {
+        RefreshToken refreshToken = refreshTokenService.findByToken(logoutRequest.getRefreshToken());
+
+        String accessToken = logoutRequest.getAccessToken();
+        if (accessToken != null && !accessToken.isEmpty()) {
+          tokenBlackListServiceImpl.addBlacklistToken(accessToken);
+        }
+        refreshTokenService.deleteByToken(refreshToken.getToken());
+        return new LogoutResponse("Logout thành công!!!");
       }
-      return false;
+      return new LogoutResponse("Refresh token không tìm thấy");
     }
     catch (Exception e){
       System.err.println("Đăng xuất lỗi: " + e.getMessage());
