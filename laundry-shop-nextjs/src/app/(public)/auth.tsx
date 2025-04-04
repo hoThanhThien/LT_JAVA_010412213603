@@ -6,12 +6,14 @@ import Image from "next/image";
 import Login from "@/components/login";
 import { useEffect, useState } from "react";
 import Register from "@/components/register";
+import Otp from "@/components/otp";
 
 export default function Auth(props: {
   openAuth: boolean;
   setOpenAuth: (open: boolean) => void;
 }) {
   const [activeTab, setActiveTab] = useState("login");
+  const [phoneNumber, setPhoneNumber] = useState("");
 
   useEffect(() => {
     if (props.openAuth) {
@@ -25,7 +27,13 @@ export default function Auth(props: {
         open={props.openAuth}
         onOpenChange={(open: boolean) => props.setOpenAuth(open)}
       >
-        <DialogContent className="border-none" aria-describedby={undefined}>
+        <DialogContent
+          className="border-none"
+          aria-describedby={undefined}
+          onInteractOutside={(e) => {
+            e.preventDefault();
+          }}
+        >
           <div className=" flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
             <DialogTitle className="z-500 sm:mx-auto sm:w-full sm:max-w-sm">
               <Image
@@ -50,9 +58,12 @@ export default function Auth(props: {
                   openAuth={props.openAuth}
                   setOpenAuth={props.setOpenAuth}
                   setActiveTab={setActiveTab}
+                  setPhoneNumber={setPhoneNumber}
                 />
               </TabsContent>
-              <TabsContent value="tab3">Nội dung của Tab 3</TabsContent>
+              <TabsContent value="otp">
+                <Otp phoneNumber={phoneNumber} />
+              </TabsContent>
             </Tabs>
           </div>
         </DialogContent>
