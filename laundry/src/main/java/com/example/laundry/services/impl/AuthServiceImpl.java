@@ -1,9 +1,6 @@
 package com.example.laundry.services.impl;
 
-import com.example.laundry.dto.LoginRequest;
-import com.example.laundry.dto.LoginResponse;
-import com.example.laundry.dto.LogoutRequest;
-import com.example.laundry.dto.LogoutResponse;
+import com.example.laundry.dto.*;
 import com.example.laundry.models.notification.RefreshToken;
 import com.example.laundry.models.user.Customer;
 import com.example.laundry.models.user.User;
@@ -106,6 +103,38 @@ public class AuthServiceImpl implements AuthService {
     }
     catch (Exception e) {
       return new LogoutResponse("Logout thất bại: " + e.getMessage());
+    }
+  }
+
+  @Override
+  public GetInfoResponse getInfo(GetInfoRequest getInfoRequest) {
+    try{
+      String accessToken = getInfoRequest.getAccessToken();
+      if(accessToken == null || accessToken.isEmpty()) {
+        System.err.println("Access token is null!");
+        return new GetInfoResponse(null, "Access không được để trống!!!");
+      }
+
+      // Lấy thông tin người dùng
+      String username = jwtUtil.validateTokenAndRetrieveSubject(accessToken);
+      User user = userRepository.findByUsername(username);
+      if (user == null) {
+        return new GetInfoResponse(null, "Không tìm thấy thông tin người dùng!!!");
+      }
+      GetInfoResponse.AccountInfo accountInfo = new GetInfoResponse.AccountInfo(
+              user.getId(),
+              user.getUsername(),
+              user.getEmail(),
+              user.getRoles().name(),
+              user.getPhone()
+      );
+      GetInfoResponse.DataInfo dataInfo = new GetInfoResponse.DataInfo(accountInfo);
+      return new GetInfoResponse(dataInfo, "Lấy thông tin thành công!!!");
+    }
+    catch (Exception e) {
+      System.err.println("Lấy thông tin lỗi: " + e.getMessage());
+      e.printStackTrace();
+      return new GetInfoResponse(null, "Lấy thông tin thật bại!!!");
     }
   }
 
