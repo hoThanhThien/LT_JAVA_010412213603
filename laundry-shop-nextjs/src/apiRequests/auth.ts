@@ -1,10 +1,21 @@
 import http from "@/lib/http";
-import { LoginBodyType, LoginResType } from "@/schemaValidations/auth.schema";
+import {
+  LoginBodyType,
+  AuthResType,
+  RegisterBodyType,
+} from "@/schemaValidations/auth.schema";
 
 const authApiRequests = {
-  sLogin: (body: LoginBodyType) => http.post<LoginResType>("/auth/login", body),
+  sLogin: (body: LoginBodyType) => http.post<AuthResType>("/auth/login", body),
   login: (body: LoginBodyType) =>
-    http.post<LoginResType>("api/auth/login", body, {
+    http.post<AuthResType>("api/auth/login", body, {
+      baseUrl: "",
+    }),
+
+  sRegister: (body: RegisterBodyType) =>
+    http.post<AuthResType>("/auth/register", body),
+  register: (body: RegisterBodyType) =>
+    http.post<AuthResType>("api/auth/register", body, {
       baseUrl: "",
     }),
 };

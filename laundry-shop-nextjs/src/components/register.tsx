@@ -12,7 +12,7 @@ export default function Register(props: {
   openAuth: boolean;
   setOpenAuth: (open: boolean) => void;
   setActiveTab: (tab: string) => void;
-  setPhoneNumber: (phone: string) => void;
+  setDataRegister: (data: RegisterBodyType) => void;
 }) {
   const form = useForm<RegisterBodyType>({
     resolver: zodResolver(RegisterBody),
@@ -24,7 +24,7 @@ export default function Register(props: {
   });
 
   const onSubmit = async (data: RegisterBodyType) => {
-    props.setPhoneNumber(data.phone);
+    props.setDataRegister(data);
     setTimeout(() => {
       props.setActiveTab("otp");
     }, 100);

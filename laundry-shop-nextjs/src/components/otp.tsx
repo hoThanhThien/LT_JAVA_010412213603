@@ -11,6 +11,9 @@ import {
 } from "firebase/auth";
 import { auth } from "../../firebase";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { useRegisterMutation } from "@/queries/useAuth";
+import { RegisterBodyType } from "@/schemaValidations/auth.schema";
+import { toast } from "react-toastify";
 
 // Hàm định dạng số điện thoại thành định dạng quốc tế
 const formatPhoneNumber = (phone: string): string => {
@@ -19,7 +22,10 @@ const formatPhoneNumber = (phone: string): string => {
   return `+${phone}`;
 };
 
-export default function Otp({ phoneNumber }: { phoneNumber: string }) {
+export default function Otp(props: {
+  dataRegister: RegisterBodyType;
+  setOpenAuth: (open: boolean) => void;
+}) {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -33,7 +39,9 @@ export default function Otp({ phoneNumber }: { phoneNumber: string }) {
   const confirmationResultRef = useRef<ConfirmationResult | null>(null);
 
   // Định dạng số điện thoại
-  const formattedPhone = formatPhoneNumber(phoneNumber);
+  const formattedPhone = formatPhoneNumber(props.dataRegister.phone);
+
+  const registerMutation = useRegisterMutation();
 
   // Đếm ngược thời gian để gửi lại OTP
   useEffect(() => {
@@ -61,11 +69,11 @@ export default function Otp({ phoneNumber }: { phoneNumber: string }) {
 
   // Khởi tạo gửi OTP khi component được mount
   useEffect(() => {
-    if (!phoneNumber) return;
+    if (!props.dataRegister.phone) return;
 
     // Kiểm tra số điện thoại hợp lệ
     const phoneRegex = /^\+?[0-9]{10,15}$/;
-    if (!phoneRegex.test(phoneNumber.replace(/\s/g, ""))) {
+    if (!phoneRegex.test(props.dataRegister.phone.replace(/\s/g, ""))) {
       setError("Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.");
       return;
     }
@@ -75,7 +83,7 @@ export default function Otp({ phoneNumber }: { phoneNumber: string }) {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [phoneNumber]);
+  }, [props.dataRegister.phone]);
 
   // Khởi tạo reCAPTCHA
   // Sửa hàm initializeRecaptcha để thêm xử lý timeout tốt hơn
@@ -190,7 +198,7 @@ export default function Otp({ phoneNumber }: { phoneNumber: string }) {
               "Định dạng số điện thoại không hợp lệ. Vui lòng kiểm tra lại."
             );
             break;
-          case "auth/quota-exceeded":
+          case "auth/too-many-requests":
             setError("Đã vượt quá giới hạn yêu cầu. Vui lòng thử lại sau.");
             break;
           case "auth/captcha-check-failed":
@@ -239,7 +247,21 @@ export default function Otp({ phoneNumber }: { phoneNumber: string }) {
         setSuccess(true);
         setError("");
         console.log("Xác minh OTP thành công!");
-        // Ở đây bạn có thể chuyển hướng người dùng hoặc cập nhật trạng thái component cha
+
+        if (registerMutation.isPending) return;
+        try {
+          const result = await registerMutation.mutateAsync(props.dataRegister);
+          props.setOpenAuth(false);
+          toast.success(result.payload.message, {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: false,
+          });
+        } catch (error: any) {
+          console.error("Lỗi khi đăng ký:", error);
+          setError(error?.message || "Không thể đăng ký. Vui lòng thử lại.");
+        }
       } catch (error: any) {
         console.error("Lỗi khi xác minh OTP:", error);
 

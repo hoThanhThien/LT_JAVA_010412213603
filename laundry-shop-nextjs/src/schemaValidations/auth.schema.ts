@@ -10,7 +10,7 @@ export const LoginBody = z
 
 export type LoginBodyType = z.TypeOf<typeof LoginBody>;
 
-export const LoginRes = z.object({
+export const AuthRes = z.object({
   data: z.object({
     accessToken: z.string(),
     refreshToken: z.string(),
@@ -18,13 +18,15 @@ export const LoginRes = z.object({
       id: z.number(),
       name: z.string(),
       phone: z.string(),
+      email: z.string().optional(),
+      address: z.string().optional(),
       role: z.enum(RoleValues),
     }),
   }),
   message: z.string(),
 });
 
-export type LoginResType = z.TypeOf<typeof LoginRes>;
+export type AuthResType = z.TypeOf<typeof AuthRes>;
 
 export const RegisterBody = z
   .object({
@@ -35,22 +37,6 @@ export const RegisterBody = z
   .strict();
 
 export type RegisterBodyType = z.TypeOf<typeof RegisterBody>;
-
-export const RegisterRes = z.object({
-  data: z.object({
-    accessToken: z.string(),
-    refreshToken: z.string(),
-    account: z.object({
-      id: z.number(),
-      name: z.string(),
-      phone: z.string(),
-      role: z.enum(RoleValues),
-    }),
-  }),
-  message: z.string(),
-});
-
-export type RegisterResType = z.TypeOf<typeof RegisterRes>;
 
 export const RefreshTokenBody = z
   .object({

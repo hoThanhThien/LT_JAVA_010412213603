@@ -1,6 +1,6 @@
 import envConfig from "@/config";
 import { normalizePath } from "@/lib/utils";
-import { LoginResType } from "@/schemaValidations/auth.schema";
+import { AuthResType } from "@/schemaValidations/auth.schema";
 import { redirect } from "next/navigation";
 
 type CustomOptions = Omit<RequestInit, "method"> & {
@@ -152,7 +152,7 @@ const request = async <Response>(
   if (isClient) {
     const normalizeUrl = normalizePath(url);
     if (normalizeUrl === "api/auth/login") {
-      const { accessToken, refreshToken } = (payload as LoginResType).data;
+      const { accessToken, refreshToken } = (payload as AuthResType).data;
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
     } else if (normalizeUrl === "api/auth/logout") {

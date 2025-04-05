@@ -7,13 +7,16 @@ import Login from "@/components/login";
 import { useEffect, useState } from "react";
 import Register from "@/components/register";
 import Otp from "@/components/otp";
+import { RegisterBodyType } from "@/schemaValidations/auth.schema";
 
 export default function Auth(props: {
   openAuth: boolean;
   setOpenAuth: (open: boolean) => void;
 }) {
   const [activeTab, setActiveTab] = useState("login");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [dataRegister, setDataRegister] = useState<RegisterBodyType>(
+    {} as RegisterBodyType
+  );
 
   useEffect(() => {
     if (props.openAuth) {
@@ -58,11 +61,14 @@ export default function Auth(props: {
                   openAuth={props.openAuth}
                   setOpenAuth={props.setOpenAuth}
                   setActiveTab={setActiveTab}
-                  setPhoneNumber={setPhoneNumber}
+                  setDataRegister={setDataRegister}
                 />
               </TabsContent>
               <TabsContent value="otp">
-                <Otp phoneNumber={phoneNumber} />
+                <Otp
+                  dataRegister={dataRegister}
+                  setOpenAuth={props.setOpenAuth}
+                />
               </TabsContent>
             </Tabs>
           </div>
