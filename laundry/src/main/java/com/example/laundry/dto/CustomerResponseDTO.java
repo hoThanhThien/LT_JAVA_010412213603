@@ -1,5 +1,6 @@
 package com.example.laundry.dto;
 
+import com.example.laundry.models.user.Customer;
 import com.example.laundry.models.user.Roles;
 import lombok.*;
 
@@ -9,10 +10,19 @@ import java.util.UUID;
 @NoArgsConstructor
 @Data
 public class CustomerResponseDTO {
-    private UUID id;
-    private String username;
-    private String email;
-    private String phone;
-    private String address;
-    private Roles roles;
+    private String accessToken;
+    private String refreshToken;
+    private AccountInfo account;
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class AccountInfo {
+        private UUID id;
+        private String username;
+        private String email;
+        private String phone;
+        private String address;
+        private Roles roles;
+    }
 }
