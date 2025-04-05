@@ -32,7 +32,7 @@ public abstract class User implements Serializable {
     @Column(nullable = false)
     private String password;
 
-    @Column(unique = true, length = 50)
+    @Column(unique = true, length = 50, nullable = true)
     private String email;
 
     @Column(unique = true, length = 11)

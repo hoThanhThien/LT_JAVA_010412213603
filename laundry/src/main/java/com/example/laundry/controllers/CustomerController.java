@@ -2,10 +2,13 @@ package com.example.laundry.controllers;
 
 import com.example.laundry.dto.CustomerDTO;
 import com.example.laundry.dto.CustomerResponseDTO;
+import com.example.laundry.models.notification.RefreshToken;
 import com.example.laundry.models.user.Customer;
 import com.example.laundry.models.user.Roles;
 import com.example.laundry.repository.CustomerRepository;
+import com.example.laundry.security.JwtUtil;
 import com.example.laundry.services.CustomerService;
+import com.example.laundry.services.RefreshTokenService;
 import com.example.laundry.utils.ApiResponse;
 import com.example.laundry.utils.UserValidator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +28,12 @@ public class CustomerController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<CustomerResponseDTO>> createCustomer(@RequestBody CustomerDTO customerDTO){
         //Kiểm tra dữ liệu
@@ -40,10 +49,10 @@ public class CustomerController {
         }
 
         //Kiểm tra email
-        if(!UserValidator.isValidEmail(customerDTO.getEmail())) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>("Email không hợp lệ!!!", null));
-        }
+//        if(!UserValidator.isValidEmail(customerDTO.getEmail())) {
+//            return ResponseEntity.badRequest()
+//                    .body(new ApiResponse<>("Email không hợp lệ!!!", null));
+//        }
 
         if(customerRepository.existsByEmail(customerDTO.getEmail())) {
             return ResponseEntity.badRequest()
@@ -74,7 +83,14 @@ public class CustomerController {
 
         Customer savedCustomer = customerService.addCustomer(customer);
 
-        CustomerResponseDTO responseDTO = new CustomerResponseDTO(
+        //Tạo access token
+        String accessToken = jwtUtil.generateAccessToken(savedCustomer.getUsername());
+
+        //Tạo refresh token
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedCustomer);
+        String refreshTokenString = refreshToken.getToken();
+
+        CustomerResponseDTO.AccountInfo accountInfo = new CustomerResponseDTO.AccountInfo(
                 savedCustomer.getId(),
                 savedCustomer.getUsername(),
                 savedCustomer.getEmail(),
@@ -83,7 +99,13 @@ public class CustomerController {
                 Roles.Customer
         );
 
+        CustomerResponseDTO responseDTO = new CustomerResponseDTO(
+          accessToken,
+          refreshTokenString,
+          accountInfo
+        );
+
         return ResponseEntity
-                .ok(new ApiResponse<>("Vui lòng nhập nhập chính xác OTP để xác thực tài khoản", responseDTO));
+                .ok(new ApiResponse<>("Đăng ký thành công!!!", responseDTO));
     }
 }
