@@ -104,10 +104,8 @@ public class AuthServiceImpl implements AuthService {
       }
       return new LogoutResponse("Refresh token không tìm thấy");
     }
-    catch (Exception e){
-      System.err.println("Đăng xuất lỗi: " + e.getMessage());
-      e.printStackTrace();
-      return false;
+    catch (Exception e) {
+      return new LogoutResponse("Logout thất bại: " + e.getMessage());
     }
   }
 
