@@ -71,7 +71,6 @@ public class CustomerController {
         customer.setAddress(customerDTO.getAddress());
         customer.setRoles(Roles.Customer);
         customer.setPassword(encodedPassword);
-        customer.setPassword(encodedPassword);
 
         Customer savedCustomer = customerService.addCustomer(customer);
 
