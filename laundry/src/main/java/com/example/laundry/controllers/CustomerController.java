@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+@CrossOrigin(origins = "http://127.0.0.1:3000", allowCredentials = "true")
 @RestController
 @RequestMapping("/auth")
 public class CustomerController {
@@ -54,10 +55,10 @@ public class CustomerController {
 //                    .body(new ApiResponse<>("Email không hợp lệ!!!", null));
 //        }
 
-        if(customerRepository.existsByEmail(customerDTO.getEmail())) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>("Email đã tồn tại!!!", null));
-        }
+//        if(customerRepository.existsByEmail(customerDTO.getEmail())) {
+//            return ResponseEntity.badRequest()
+//                    .body(new ApiResponse<>("Email đã tồn tại!!!", null));
+//        }
 
         //Kiểm tra phone
         if(!UserValidator.isValidPhone(customerDTO.getPhone())) {
