@@ -3,17 +3,21 @@ package com.example.laundry.services.impl;
 import com.example.laundry.dto.*;
 import com.example.laundry.models.notification.RefreshToken;
 import com.example.laundry.models.user.Customer;
+import com.example.laundry.models.user.Roles;
 import com.example.laundry.models.user.User;
 import com.example.laundry.repository.UserRepository;
 import com.example.laundry.security.JwtUtil;
 import com.example.laundry.services.AuthService;
 import com.example.laundry.services.RefreshTokenService;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseToken;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.management.relation.Relation;
+import java.util.Map;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -31,6 +35,8 @@ public class AuthServiceImpl implements AuthService {
 
   @Autowired
   private RefreshTokenService refreshTokenService;
+  @Autowired
+  private FirebaseAuth firebaseAuth;
 
   @Override
   public LoginResponse login(LoginRequest loginRequest) {
@@ -137,6 +143,51 @@ public class AuthServiceImpl implements AuthService {
       return new GetInfoResponse(null, "Lấy thông tin thật bại!!!");
     }
   }
+
+//  @Override
+//  @Transactional
+//  public RegisterResponse register(RegisterRequest registerRequest) {
+//    // Xác minh idToken từ firebase để lấy số điện thoại
+//    try {
+//      FirebaseToken decodedToken = firebaseAuth.verifyIdToken(registerRequest.getIdToken());
+//      String verifiedPhone = null;
+//
+//      Map<String, Object> claims = decodedToken.getClaims();
+//
+//      if (claims.containsKey("phone")) {
+//        verifiedPhone = (String) claims.get("phone");
+//      }
+//
+//      if (verifiedPhone == null || verifiedPhone.isEmpty()) {
+//        return new RegisterResponse("Số điện thoại đã được dùng rồi");
+//      }
+//
+//      //Tạo người dùng
+//      Customer customer = new Customer();
+//      customer.setPhone(verifiedPhone);
+//      customer.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+//      customer.setUsername(registerRequest.getUsername());
+//      customer.setRoles(Roles.Customer);
+//
+//      Customer savedCustomer = userRepository.save(customer);
+//
+//      RegisterResponse.AccountInfor accountInfor = new RegisterResponse.AccountInfor(
+//              savedCustomer.getId(),
+//              savedCustomer.getUsername(),
+//              savedCustomer.getPhone(),
+//              savedCustomer.getRoles().name()
+//      );
+//
+//      return new RegisterResponse("Đăng ký thành công!!!",  accountInfor);
+//    } catch (FirebaseAuthException e) {
+//      System.err.println("Firebase authentication error: " + e.getMessage());
+//      return new RegisterResponse("Xác minh Firebase thất bại: " + e.getMessage());
+//    } catch (Exception e) {
+//      System.err.println("Registration error: " + e.getMessage());
+//      e.printStackTrace();
+//      return new RegisterResponse("Đăng ký thất bại: " + e.getMessage());
+//    }
+//  }
 
   private boolean isPasswordValid(User user, String rawPassword) {
     if (user.getPassword().startsWith("$2a$") ||

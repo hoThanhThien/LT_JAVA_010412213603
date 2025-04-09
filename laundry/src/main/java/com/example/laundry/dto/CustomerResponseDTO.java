@@ -10,9 +10,17 @@ import java.util.UUID;
 @NoArgsConstructor
 @Data
 public class CustomerResponseDTO {
-    private String accessToken;
-    private String refreshToken;
-    private AccountInfo account;
+    private String message;
+    private DataInfo data;
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class DataInfo {
+        private String accessToken;
+        private String refreshToken;
+        private AccountInfo account;
+    }
 
     @Data
     @AllArgsConstructor
