@@ -1,18 +1,11 @@
 package com.example.laundry.controllers;
 
-import com.example.laundry.dto.CustomerDTO;
 import com.example.laundry.dto.CustomerResponseDTO;
 import com.example.laundry.dto.RegisterRequest;
-import com.example.laundry.dto.RegisterResponse;
-import com.example.laundry.models.notification.RefreshToken;
-import com.example.laundry.models.user.Customer;
-import com.example.laundry.models.user.Roles;
 import com.example.laundry.repository.CustomerRepository;
 import com.example.laundry.security.JwtUtil;
 import com.example.laundry.services.CustomerService;
 import com.example.laundry.services.RefreshTokenService;
-import com.example.laundry.utils.ApiResponse;
-import com.example.laundry.utils.UserValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;

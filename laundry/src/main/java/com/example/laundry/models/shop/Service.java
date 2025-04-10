@@ -33,6 +33,9 @@ public class Service {
     @Column(name = "estimated_time")
     private String estimatedTime;
 
+    @Column(name = "image_desc")
+    private String imageDesc;
+
     @ManyToOne
     private LaundryShop shop;
 

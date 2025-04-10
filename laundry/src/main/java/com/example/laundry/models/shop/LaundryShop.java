@@ -1,5 +1,7 @@
 package com.example.laundry.models.shop;
 
+import com.example.laundry.dto.LaundryShopDTO;
+import com.example.laundry.models.user.StoreOwner;
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -40,9 +42,18 @@ public class LaundryShop {
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL)
     private List<Service> services = new ArrayList<>();
 
-    public LaundryShop(String name, String address, String openingHours) {
+    @ManyToOne
+    @JoinColumn(name = "store_owner_id")
+    private StoreOwner storeOwner;
+
+    public LaundryShop(Long id, String name, String address, String openingHours, String description, double averageRating, StoreOwner storeOwner) {
+        this.id = id;
         this.name = name;
         this.address = address;
         this.openingHours = openingHours;
+        this.description = description;
+        this.storeOwner = storeOwner;
+        this.averageRating = 0.0;
+        this.services = new ArrayList<>();
     }
 }
