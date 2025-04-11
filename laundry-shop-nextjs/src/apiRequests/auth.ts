@@ -3,6 +3,7 @@ import {
   LoginBodyType,
   AuthResType,
   RegisterBodyType,
+  LogoutBodyType,
 } from "@/schemaValidations/auth.schema";
 
 const authApiRequests = {
@@ -16,6 +17,21 @@ const authApiRequests = {
     http.post<AuthResType>("/auth/register", body),
   register: (body: RegisterBodyType) =>
     http.post<AuthResType>("api/auth/register", body, {
+      baseUrl: "",
+    }),
+
+  sLogout: (body: LogoutBodyType) =>
+    http.post(
+      "/auth/logout",
+      { accessToken: body.accessToken, refreshToken: body.refreshToken },
+      {
+        headers: {
+          Authorization: `Bearer ${body.accessToken}`,
+        },
+      }
+    ),
+  logout: () =>
+    http.post("api/auth/logout", null, {
       baseUrl: "",
     }),
 };

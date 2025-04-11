@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { getAccessTokenFromLocalStorage } from "@/lib/utils";
 import Auth from "./auth";
+import DropdownAvatar from "./dropdown-avatar";
 
 export default function Layout({
   children,
@@ -16,7 +17,7 @@ export default function Layout({
 
   useEffect(() => {
     setIsAuth(Boolean(getAccessTokenFromLocalStorage()));
-  }, []);
+  }, [openAuth]);
 
   return (
     <div className="flex min-h-screen w-full flex-col relative">
@@ -63,12 +64,9 @@ export default function Layout({
                   Đăng nhập
                 </button>
               ) : (
-                <button
-                  className="bg-main hover:text-white text-[18px] px-10 py-0 rounded-[28px] h-12 font-medium cursor-pointer"
-                  onClick={() => setOpenAuth(true)}
-                >
-                  Đăng nhập
-                </button>
+                <div className="flex items-center justify-center h-full">
+                  <DropdownAvatar />
+                </div>
               )}
             </div>
           </nav>

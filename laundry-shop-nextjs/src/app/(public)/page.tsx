@@ -3,6 +3,8 @@ import Stores from "@/components/stores";
 import Image from "next/image";
 import Communication from "@/components/communication";
 import Services from "@/components/services";
+import { Dropdown } from "antd";
+import DropdownAvatar from "./dropdown-avatar";
 
 export default function Home() {
   return (
