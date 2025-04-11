@@ -14,7 +14,6 @@ import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
 import com.example.laundry.utils.UserValidator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,7 +33,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
     private EmployeeService employeeService;
 
     @Autowired
-    private LaundryShopRepository laundryShopRepository; // Thêm repository để lưu shop
+    private LaundryShopRepository laundryShopRepository;
 
     // Lấy store owner hiện tại
     private StoreOwner getCurrentStoreOwner() {
@@ -187,13 +186,22 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
 
     @Override
     public ApiResponse<LaundryShopDTO> createShop(StoreOwner storeOwner, LaundryShopDTO laundryShopDTO) {
+        //Kiểm tra xem trước đó đã quản lý shop nào chưa
+        if(laundryShopRepository.existsByStoreOwner(storeOwner)) {
+            return new ApiResponse<>("Bạn đã có cửa hàng rồi, không được tạo thêm");
+        }
+
         // kiểm tra dữ liệu
+        if(laundryShopRepository.existsByName(laundryShopDTO.getName())) {
+            return new ApiResponse<>("Tên cửa hàng đã tồn tại vui lòng chọn tên khác!!!");
+        }
+
         if(laundryShopDTO.getName() == null || laundryShopDTO.getName().isEmpty()) {
-            return new ApiResponse<>("Tên cửa hàng không được để trống", null);
+            return new ApiResponse<>("Tên cửa hàng không được để trống");
         }
 
         if(laundryShopDTO.getAddress() == null || laundryShopDTO.getAddress().isEmpty()) {
-            return new ApiResponse<>("Địa chỉ cửa hàng không được để trống", null);
+            return new ApiResponse<>("Địa chỉ cửa hàng không được để trống");
         }
 
         LaundryShop laundryShop = new LaundryShop(
@@ -214,6 +222,35 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         return new ApiResponse<>("Tạo cửa hàng thành công!!!", responseDTO);
     }
 
+    @Override
+    public LaundryShop getLaundryShopByStoreOwner(StoreOwner storeOwner) {
+        return laundryShopRepository.findByStoreOwner(storeOwner);
+    }
+
+    @Override
+    public ApiResponse<LaundryShopDTO> updateLaundryShop(StoreOwner storeOwner, LaundryShopDTO laundryShopDTO) {
+        LaundryShop existingShop =  laundryShopRepository.findByStoreOwner(storeOwner);
+        if(existingShop == null) {
+            return new ApiResponse<>("Bạn chưa có cửa hàng để cập nhật!!!", null);
+        }
+
+        if (laundryShopDTO.getName() != null &&
+                !laundryShopDTO.getName().equals(existingShop.getName()) &&
+                laundryShopRepository.existsByName(laundryShopDTO.getName())) {
+            return new ApiResponse<>("Tên cửa hàng đã tồn tại, vui lòng chọn tên khác!", null);
+        }
+
+        if (laundryShopDTO.getName() != null) existingShop.setName(laundryShopDTO.getName());
+        if (laundryShopDTO.getAddress() != null) existingShop.setAddress(laundryShopDTO.getAddress());
+        if (laundryShopDTO.getOpeningHours() != null) existingShop.setOpeningHours(laundryShopDTO.getOpeningHours());
+        if (laundryShopDTO.getDescription() != null) existingShop.setDescription(laundryShopDTO.getDescription());
+
+        LaundryShop updatedShop = laundryShopRepository.save(existingShop);
+        LaundryShopDTO responseDTO = convertToResponseDTO(updatedShop);
+
+        return new ApiResponse<>("Cập nhật cửa hàng thành công!!!", responseDTO);
+    }
+
     // Thêm phương thức tìm employee theo thông tin
     private Employee findEmployeeByInfo(EmployeeDTO employeeDTO) {
         Employee employee = null;
@@ -230,7 +267,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
 
         if (employeeDTO.getPhone() != null && !employeeDTO.getPhone().isEmpty()) {
             employee = employeeRepository.findByPhone(employeeDTO.getPhone());
-            if (employee != null) return employee;
+          return employee;
         }
 
         return null;

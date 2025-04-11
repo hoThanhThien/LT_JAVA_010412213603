@@ -107,4 +107,23 @@ public class StoreOwnerController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/shop/update")
+    @PreAuthorize("hasRole('STOREOWNER')")
+    public ResponseEntity<ApiResponse<LaundryShopDTO>> updateShop(@RequestBody LaundryShopDTO laundryShopDTO) {
+        //Kiểm tra thông tin storeowner
+        StoreOwner storeOwner = getCurrentStoreOwner();
+        if (storeOwner == null) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>("Không tìm thấy thông tin storeowner"));
+        }
+
+        ApiResponse<LaundryShopDTO> response = storeOwnerService.updateLaundryShop(storeOwner, laundryShopDTO);
+
+        if(response.getData() == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        return ResponseEntity.ok(response);
+    }
 }

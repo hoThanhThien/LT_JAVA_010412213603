@@ -15,10 +15,4 @@ public interface StoreOwnerRepository extends JpaRepository<StoreOwner, UUID> {
     boolean existsByPhone(String phone);
     boolean existsByEmail(String email);
     boolean existsById(@NonNull UUID id);
-//    void addService(StoreOwner storeOwner, Service service);
-//    void removeService(StoreOwner storeOwner, Service service);
-//    void hireEmployee(StoreOwner storeOwner, Employee employee);
-//    void fireEmployee(StoreOwner storeOwner, Employee employee);
-//    List<Employee> getEmployees(StoreOwner storeOwner);
-//    Report generateFinancialReport(StoreOwner storeOwner, String startDate, String endDate);
 }

@@ -9,6 +9,11 @@ public class ApiResponse<T> {
         this.data = data;
     }
 
+    public ApiResponse(String message) {
+        this.message = message;
+        data = null;
+    }
+
     public String getMessage() {
         return message;
     }
