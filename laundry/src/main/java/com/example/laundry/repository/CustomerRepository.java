@@ -14,6 +14,12 @@ import java.util.UUID;
 public interface CustomerRepository extends JpaRepository<Customer, UUID> {
     boolean existsByPhone(String phone);
     boolean existsByEmail(String email);
+<<<<<<< HEAD
+
+    boolean existsById(Long customerId);
+
+=======
+>>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
     //    Order bookOrder(Customer customer, LaundryShop laundryShop, Service service);
 //    void trackOrder(Customer customer, Order order);
 //    void makePayment(Customer customer, Order order, String paymentMethod, double amount);

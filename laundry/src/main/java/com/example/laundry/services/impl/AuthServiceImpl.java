@@ -1,22 +1,39 @@
 package com.example.laundry.services.impl;
 
+<<<<<<< HEAD
+import com.example.laundry.dto.*;
+import com.example.laundry.models.notification.RefreshToken;
+import com.example.laundry.models.user.Customer;
+import com.example.laundry.models.user.Roles;
+=======
 import com.example.laundry.dto.LoginRequest;
 import com.example.laundry.dto.LoginResponse;
 import com.example.laundry.dto.LogoutRequest;
 import com.example.laundry.dto.LogoutResponse;
 import com.example.laundry.models.notification.RefreshToken;
 import com.example.laundry.models.user.Customer;
+>>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
 import com.example.laundry.models.user.User;
 import com.example.laundry.repository.UserRepository;
 import com.example.laundry.security.JwtUtil;
 import com.example.laundry.services.AuthService;
 import com.example.laundry.services.RefreshTokenService;
+<<<<<<< HEAD
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseToken;
+=======
+>>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+<<<<<<< HEAD
+import java.util.Map;
+=======
 import javax.management.relation.Relation;
+>>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -34,6 +51,11 @@ public class AuthServiceImpl implements AuthService {
 
   @Autowired
   private RefreshTokenService refreshTokenService;
+<<<<<<< HEAD
+  @Autowired
+  private FirebaseAuth firebaseAuth;
+=======
+>>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
 
   @Override
   public LoginResponse login(LoginRequest loginRequest) {
@@ -109,6 +131,86 @@ public class AuthServiceImpl implements AuthService {
     }
   }
 
+<<<<<<< HEAD
+  @Override
+  public GetInfoResponse getInfo(GetInfoRequest getInfoRequest) {
+    try{
+      String accessToken = getInfoRequest.getAccessToken();
+      if(accessToken == null || accessToken.isEmpty()) {
+        System.err.println("Access token is null!");
+        return new GetInfoResponse(null, "Access không được để trống!!!");
+      }
+
+      // Lấy thông tin người dùng
+      String username = jwtUtil.validateTokenAndRetrieveSubject(accessToken);
+      User user = userRepository.findByUsername(username);
+      if (user == null) {
+        return new GetInfoResponse(null, "Không tìm thấy thông tin người dùng!!!");
+      }
+      GetInfoResponse.AccountInfo accountInfo = new GetInfoResponse.AccountInfo(
+              user.getId(),
+              user.getUsername(),
+              user.getEmail(),
+              user.getRoles().name(),
+              user.getPhone()
+      );
+      GetInfoResponse.DataInfo dataInfo = new GetInfoResponse.DataInfo(accountInfo);
+      return new GetInfoResponse(dataInfo, "Lấy thông tin thành công!!!");
+    }
+    catch (Exception e) {
+      System.err.println("Lấy thông tin lỗi: " + e.getMessage());
+      e.printStackTrace();
+      return new GetInfoResponse(null, "Lấy thông tin thật bại!!!");
+    }
+  }
+
+//  @Override
+//  @Transactional
+//  public RegisterResponse register(RegisterRequest registerRequest) {
+//    // Xác minh idToken từ firebase để lấy số điện thoại
+//    try {
+//      FirebaseToken decodedToken = firebaseAuth.verifyIdToken(registerRequest.getIdToken());
+//      String verifiedPhone = null;
+//
+//      Map<String, Object> claims = decodedToken.getClaims();
+//
+//      if (claims.containsKey("phone")) {
+//        verifiedPhone = (String) claims.get("phone");
+//      }
+//
+//      if (verifiedPhone == null || verifiedPhone.isEmpty()) {
+//        return new RegisterResponse("Số điện thoại đã được dùng rồi");
+//      }
+//
+//      //Tạo người dùng
+//      Customer customer = new Customer();
+//      customer.setPhone(verifiedPhone);
+//      customer.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+//      customer.setUsername(registerRequest.getUsername());
+//      customer.setRoles(Roles.Customer);
+//
+//      Customer savedCustomer = userRepository.save(customer);
+//
+//      RegisterResponse.AccountInfor accountInfor = new RegisterResponse.AccountInfor(
+//              savedCustomer.getId(),
+//              savedCustomer.getUsername(),
+//              savedCustomer.getPhone(),
+//              savedCustomer.getRoles().name()
+//      );
+//
+//      return new RegisterResponse("Đăng ký thành công!!!",  accountInfor);
+//    } catch (FirebaseAuthException e) {
+//      System.err.println("Firebase authentication error: " + e.getMessage());
+//      return new RegisterResponse("Xác minh Firebase thất bại: " + e.getMessage());
+//    } catch (Exception e) {
+//      System.err.println("Registration error: " + e.getMessage());
+//      e.printStackTrace();
+//      return new RegisterResponse("Đăng ký thất bại: " + e.getMessage());
+//    }
+//  }
+
+=======
+>>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
   private boolean isPasswordValid(User user, String rawPassword) {
     if (user.getPassword().startsWith("$2a$") ||
             user.getPassword().startsWith("$2b$") ||

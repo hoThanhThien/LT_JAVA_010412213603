@@ -1,3 +1,64 @@
+<<<<<<< HEAD
+package com.example.laundry.models.shop;
+
+import com.example.laundry.dto.LaundryShopDTO;
+import com.example.laundry.models.user.StoreOwner;
+import jakarta.persistence.*;
+
+import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Data
+@Builder
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name="laudry_shops")
+@DiscriminatorValue("LAUNDRYSHOP")
+public class LaundryShop {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Getter
+    @Column(nullable = false, unique = true)
+    private String name;
+
+    @Column(nullable = false)
+    private String address;
+
+    @Column(name = "opening_hours")
+    private String openingHours;
+
+    @Column
+    private String description;
+
+    @Column(name = "average_rating")
+    private double averageRating;
+
+    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL)
+    private List<Service> services = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "store_owner_id")
+    private StoreOwner storeOwner;
+
+    public LaundryShop(Long id, String name, String address, String openingHours, String description, double averageRating, StoreOwner storeOwner) {
+        this.id = id;
+        this.name = name;
+        this.address = address;
+        this.openingHours = openingHours;
+        this.description = description;
+        this.storeOwner = storeOwner;
+        this.averageRating = 0.0;
+        this.services = new ArrayList<>();
+    }
+}
+=======
 package com.example.laundry.models.shop;
 
 import jakarta.persistence.*;
@@ -46,3 +107,4 @@ public class LaundryShop {
         this.openingHours = openingHours;
     }
 }
+>>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
