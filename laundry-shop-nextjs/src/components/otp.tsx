@@ -185,6 +185,7 @@ export default function Otp(props: {
         );
 
         confirmationResultRef.current = result;
+        console.log(result);
         setResendCountdown(60);
         setIsOtpSent(true);
         setError("");
@@ -243,14 +244,19 @@ export default function Otp(props: {
           return;
         }
 
-        await confirmationResult.confirm(otp);
+        const result2 = await confirmationResult.confirm(otp);
+
         setSuccess(true);
         setError("");
         console.log("Xác minh OTP thành công!");
 
         if (registerMutation.isPending) return;
         try {
-          const result = await registerMutation.mutateAsync(props.dataRegister);
+          const idToken = (await auth.currentUser?.getIdToken()) ?? "";
+          const result = await registerMutation.mutateAsync({
+            ...props.dataRegister,
+            idToken,
+          });
           props.setOpenAuth(false);
           toast.success(result.payload.message, {
             position: "top-right",

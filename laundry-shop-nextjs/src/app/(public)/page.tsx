@@ -5,6 +5,7 @@ import Communication from "@/components/communication";
 import Services from "@/components/services";
 import { Dropdown } from "antd";
 import DropdownAvatar from "./dropdown-avatar";
+import DownloadApp from "@/components/dowload-app";
 
 export default function Home() {
   return (
@@ -67,105 +68,14 @@ export default function Home() {
       <div>
         <Services />
       </div>
-      <div className="grid lg:grid-cols-2 max-w-7xl mx-auto">
-        <div className="lg:col-span-1 lg:col-start-1">
-          <Comment />
-        </div>
-        <div className="lg:col-span-1 lg:col-start-2">
-          <form
-            className="bg-white rounded-4xl shadow-2xl py-10 px-20 space-y-10"
-            noValidate
-          >
-            <div className="font-bold text-center text-3xl">ĐẶT DỊCH VỤ</div>
-            <div className="text-center mx-auto text-sm w-[60%] block text-gray-400">
-              Sau khi quý khách gửi thông tin, chuyên viên từ HERAMO sẽ liên hệ
-              trong vòng 15 phút để hỗ trợ tư vấn chi tiết
-            </div>
-            <div>
-              <label className="block text-sm/6 font-medium text-gray-900">
-                Cho HERAMO xin tên của bạn nhé *
-              </label>
-              <div className="mt-2">
-                <input
-                  type="text"
-                  placeholder="Trần Văn A"
-                  className="block w-full rounded-md bg-white px-3 py-2.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm/6 font-medium text-gray-900">
-                Số điện thoại HERAMO có thể liên hệ là *
-              </label>
-              <div className="mt-2">
-                <input
-                  type="text"
-                  placeholder="0123456789"
-                  className="block w-full rounded-md bg-white px-3 py-2.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm/6 font-medium text-gray-900">
-                Bạn cần dịch vụ gì?
-              </label>
-              <div className="mt-2">
-                <input
-                  type="text"
-                  placeholder="0123456789"
-                  className="block w-full rounded-md bg-white px-3 py-2.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
-                />
-              </div>
-            </div>
-            <button className="bg-main hover:text-white text-[18px] px-5 py-0 rounded-[28px] h-12 font-medium cursor-pointer mx-auto block">
-              ĐẶT DỊCH VỤ NGAY
-            </button>
-            <div className="text-sm text-center text-gray-400">
-              Thông qua việc đặt dịch vụ, bạn đồng ý với các điều khoản sử dụng
-              dịch vụ của chúng tôi
-            </div>
-          </form>
-        </div>
+      <div>
+        <Comment />
       </div>
       <div>
         <Communication />
       </div>
       <div>
-        <div className="grid grid-cols-2 bg-[url('/home/phone-tien-trinh.jpg')] bg-center bg-no-repeat bg-cover h-[1124px] px-24 my-12 mt-[-48px]">
-          <div className="col-span-1 col-start-1 self-end">
-            <Image
-              src={"/home/homescreen.png"}
-              alt="home-screen"
-              width="565"
-              height="976"
-              // className="w-[40%] h-[290px] mx-auto"
-            />
-          </div>
-          <div className="col-span-1 col-start-2 self-end h-full flex flex-col justify-center items-center gap-15">
-            <div className="text-4xl font-bold">
-              Tải App Ngay - Ưu Đãi Về Tay!
-            </div>
-            <div className="text-xl mt-2">
-              Đặt tất cả dịch vụ giặt ủi, vệ sinh nhanh chóng. Theo dõi đơn
-              hàng, hình ảnh món đồ mọi lúc mọi nơi. Ưu đãi lên đến 100K dành
-              tặng khách mới và khách hàng thân thiết
-            </div>
-            <div className="flex gap-6">
-              <Image
-                src="/app-store.svg"
-                alt="AppStore"
-                width="200"
-                height="200"
-              />
-              <Image
-                src="/google-play.svg"
-                alt="GooglePlay"
-                width="200"
-                height="200"
-              />
-            </div>
-          </div>
-        </div>
+        <DownloadApp />
       </div>
       <div>
         <Stores />

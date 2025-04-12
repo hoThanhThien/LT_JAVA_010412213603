@@ -34,6 +34,7 @@ export const RegisterBody = z
     username: z.string().min(3).max(100),
     phone: z.string().min(10).max(15),
     password: z.string().min(3).max(100),
+    idToken: z.string().optional(),
   })
   .strict();
 
