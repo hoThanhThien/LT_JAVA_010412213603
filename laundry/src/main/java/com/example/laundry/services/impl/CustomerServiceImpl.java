@@ -55,12 +55,24 @@ public class CustomerServiceImpl implements CustomerService {
 
             Map<String, Object> claims = decodedToken.getClaims();
 
-            if (claims.containsKey("phone")) {
-                verifiedPhone = (String) claims.get("phone");
+            if (claims.containsKey("phone_number")) {
+                verifiedPhone = (String) claims.get("phone_number");
+
+                //Chuyển +84 thành 0
+                if(verifiedPhone.startsWith("+84")) {
+                    verifiedPhone = "0" + verifiedPhone.substring(3);
+                }
             }
 
+            //Kiểm tra xem có dữ liệu chưa
             if (verifiedPhone == null || verifiedPhone.isEmpty()) {
                 return new CustomerResponseDTO("Số điện thoại không tồn tại", null);
+            }
+
+            //Kiểm tra tồn tại
+            if(customerRepository.findByPhone(verifiedPhone).isPresent()) {
+                System.out.println("Số điện thoại đã tồn tại trong hệ thống: " + verifiedPhone);
+                return new CustomerResponseDTO("Số điện thoại đã được đăng ký trong hệ thống", null);
             }
 
             //Tạo người dùng
