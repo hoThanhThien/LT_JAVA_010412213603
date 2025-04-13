@@ -84,6 +84,12 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
             return new ApiResponse<>("Số điện thoại đã tồn tại!!!", null);
         }
 
+        //Kiểm tra xem StoreOwner có shop chưa
+        LaundryShop laundryShop = laundryShopRepository.findByStoreOwner(storeOwner);
+        if (laundryShop == null) {
+            return new ApiResponse<>("StoreOwner chưa có shop, không thể tạo nhân viên", null);
+        }
+
         // Mã hóa password trước khi lưu xuống db
         String encodedPassword = passwordEncoder.encode(employeeDTO.getPassword());
 
@@ -97,6 +103,9 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
                 Roles.Employee,
                 storeOwner
         );
+
+        //Gán shop vào employee
+        employee.setShop(laundryShop);
 
         // Sử dụng service để thêm employee với quan hệ storeOwner
         employeeService.addEmployee(employee);
@@ -125,7 +134,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
 
         employeeService.deleteEmployee(employee);
 
-        return new ApiResponse<>("Đã xóa nhân viên thành công", "success");
+        return new ApiResponse<>("Đã xóa nhân viên thành công", null);
     }
 
     @Override

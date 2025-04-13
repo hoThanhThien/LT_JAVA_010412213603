@@ -34,18 +34,18 @@ public class LaundryShopServiceImpl implements LaundryShopService {
         laundryShopRepository.deleteById(id);
     }
 
-    @Override
-    public void addService(LaundryShop laundryShop, com.example.laundry.models.shop.Service service) {
-        service.setShop(laundryShop);
-        laundryShop.getServices().add(service);
-        laundryShopRepository.save(laundryShop);
-    }
+//    @Override
+//    public void addService(LaundryShop laundryShop, com.example.laundry.models.shop.Service service) {
+//        service.setShop(laundryShop);
+//        laundryShop.getServices().add(service);
+//        laundryShopRepository.save(laundryShop);
+//    }
 
-    @Override
-    public void removeService(LaundryShop laundryShop, com.example.laundry.models.shop.Service service) {
-        laundryShop.getServices().remove(service);
-        laundryShopRepository.save(laundryShop);
-    }
+//    @Override
+//    public void removeService(LaundryShop laundryShop, com.example.laundry.models.shop.Service service) {
+//        laundryShop.getServices().remove(service);
+//        laundryShopRepository.save(laundryShop);
+//    }
 
     @Override
     public LaundryShop createShopByStoreOwner(LaundryShop laundryShop, StoreOwner storeOwner) {

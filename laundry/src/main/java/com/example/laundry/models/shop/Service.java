@@ -37,7 +37,8 @@ public class Service {
     private String imageDesc;
 
     @ManyToOne
-    private LaundryShop shop;
+    @JoinColumn(name = "category_id")
+    private ServiceCategory category;
 
     public Service(String name, double price, String description, String estimatedTime) {
         this.name = name;

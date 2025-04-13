@@ -60,7 +60,7 @@ public class CustomerServiceImpl implements CustomerService {
             }
 
             if (verifiedPhone == null || verifiedPhone.isEmpty()) {
-                return new CustomerResponseDTO("Số điện thoại đã được dùng rồi", null);
+                return new CustomerResponseDTO("Số điện thoại không tồn tại", null);
             }
 
             //Tạo người dùng

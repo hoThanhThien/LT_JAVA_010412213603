@@ -35,7 +35,7 @@ public class StoreOwnerController {
 
     @PostMapping("/employee/create")
     @PreAuthorize("hasRole('STOREOWNER')")
-    public ResponseEntity<ApiResponse<Employee>> createEmployee(@RequestBody EmployeeDTO employeeDTO) {
+    public ResponseEntity<ApiResponse<EmployeeDTO>> createEmployee(@RequestBody EmployeeDTO employeeDTO) {
         // Lấy thông tin StoreOwner hiện tại
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
@@ -46,10 +46,12 @@ public class StoreOwnerController {
         ApiResponse<Employee> response = storeOwnerService.createEmployee(storeOwner, employeeDTO);
 
         if (response.getData() == null) {
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest().body(new ApiResponse<>(response.getMessage(), null));
         }
 
-        return ResponseEntity.ok(response);
+        EmployeeDTO responseDTO = new EmployeeDTO(response.getData());
+
+        return ResponseEntity.ok(new ApiResponse<>("Tạo nhân viên thành công", responseDTO));
     }
 
     @DeleteMapping("/employee/delete")
@@ -61,19 +63,14 @@ public class StoreOwnerController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>("Không tìm thấy thông tin StoreOwner", null));
         }
-
         ApiResponse<String> response = storeOwnerService.deleteEmployee(storeOwner, employeeDTO);
-
-        if (response.getData() == null) {
-            return ResponseEntity.badRequest().body(response);
-        }
 
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/employee/update")
     @PreAuthorize("hasRole('STOREOWNER')")
-    public ResponseEntity<ApiResponse<Employee>> updateEmployee(@RequestBody EmployeeDTO employeeDTO) {
+    public ResponseEntity<ApiResponse<EmployeeDTO>> updateEmployee(@RequestBody EmployeeDTO employeeDTO) {
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -83,10 +80,12 @@ public class StoreOwnerController {
         ApiResponse<Employee> response = storeOwnerService.updateEmployee(storeOwner, employeeDTO);
 
         if (response.getData() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            return ResponseEntity.badRequest().body(new ApiResponse<>(response.getMessage(), null));
         }
 
-        return ResponseEntity.ok(response);
+        EmployeeDTO responseDTO = new EmployeeDTO(response.getData());
+
+        return ResponseEntity.ok(new ApiResponse<>("Cập nhật thông tin nhân viên thành công", responseDTO));
     }
 
     @PostMapping("/shop/create")

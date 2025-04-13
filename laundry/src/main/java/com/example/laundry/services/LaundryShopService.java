@@ -11,7 +11,7 @@ public interface LaundryShopService {
     List<LaundryShop> findAll();
     LaundryShop save(LaundryShop laundryShop);
     void deleteById(int id);
-    void addService(LaundryShop laundryShop, Service service);
-    void removeService(LaundryShop laundryShop, Service service);
+//    void addService(LaundryShop laundryShop, Service service);
+//    void removeService(LaundryShop laundryShop, Service service);
     LaundryShop createShopByStoreOwner(LaundryShop laundryShop, StoreOwner storeOwner);
 }

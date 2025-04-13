@@ -40,7 +40,7 @@ public class LaundryShop {
     private double averageRating;
 
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL)
-    private List<Service> services = new ArrayList<>();
+    private List<ServiceCategory> serviceCategories = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "store_owner_id")
@@ -54,6 +54,6 @@ public class LaundryShop {
         this.description = description;
         this.storeOwner = storeOwner;
         this.averageRating = 0.0;
-        this.services = new ArrayList<>();
+        this.serviceCategories = new ArrayList<>();
     }
 }
