@@ -65,4 +65,12 @@ public class Order {
     public void setSpecialInstructions(String instructions) {
         this.instructions = instructions;
     }
+
+    public String getCustomerName() {
+        return customer != null ? customer.getName() : null;
+    }
+
+    public String getStatus() {
+        return orderStatus != null ? orderStatus.name() : null;
+    }
 }

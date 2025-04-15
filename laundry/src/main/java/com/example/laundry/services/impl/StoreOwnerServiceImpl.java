@@ -7,7 +7,7 @@ import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.Roles;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.EmployeeRepository;
-import com.example.laundry.repository.LaundryShopRepository; // Thêm repository cần thiết
+import com.example.laundry.repository.LaundryShopRepository;
 import com.example.laundry.repository.StoreOwnerRepository;
 import com.example.laundry.services.EmployeeService;
 import com.example.laundry.services.StoreOwnerService;
@@ -17,25 +17,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
-@org.springframework.stereotype.Service
+@Service
 public class StoreOwnerServiceImpl implements StoreOwnerService {
     @Autowired
     private PasswordEncoder passwordEncoder;
-
     @Autowired
     private StoreOwnerRepository storeOwnerRepository;
-
     @Autowired
     private EmployeeRepository employeeRepository;
-
     @Autowired
     private EmployeeService employeeService;
-
     @Autowired
     private LaundryShopRepository laundryShopRepository;
 
-    // Lấy store owner hiện tại
     private StoreOwner getCurrentStoreOwner() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
@@ -44,56 +40,47 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
 
     @Override
     public void addStoreOwner(StoreOwner storeOwner) {
-        // Thực hiện logic thêm store owner
         storeOwnerRepository.save(storeOwner);
     }
 
     @Override
     public void deleteStoreOwner(StoreOwner storeOwner) {
-        // Thực hiện logic xóa store owner
         storeOwnerRepository.delete(storeOwner);
     }
 
     @Override
     public ApiResponse<Employee> createEmployee(StoreOwner storeOwner, EmployeeDTO employeeDTO) {
-        // Kiểm tra dữ liệu
         if (employeeDTO.getPassword() == null || employeeDTO.getPassword().isEmpty()) {
-            return new ApiResponse<>("Mật khẩu không được để trống", null);
+            return ApiResponse.error("Mật khẩu không được để trống");
         }
 
-        // Kiểm tra password
         if (!UserValidator.isValidPassword(employeeDTO.getPassword())) {
-            return new ApiResponse<>("Mật khẩu không hợp lệ!!!", null);
+            return ApiResponse.error("Mật khẩu không hợp lệ!!!");
         }
 
-        // Kiểm tra email
         if (!UserValidator.isValidEmail(employeeDTO.getEmail())) {
-            return new ApiResponse<>("Email không hợp lệ!!!", null);
+            return ApiResponse.error("Email không hợp lệ!!!");
         }
 
         if (employeeRepository.existsByEmail(employeeDTO.getEmail())) {
-            return new ApiResponse<>("Email đã tồn tại!!!", null);
+            return ApiResponse.error("Email đã tồn tại!!!");
         }
 
-        // Kiểm tra phone
         if (!UserValidator.isValidPhone(employeeDTO.getPhone())) {
-            return new ApiResponse<>("Số điện thoại phải có 10 chữ số!!!", null);
+            return ApiResponse.error("Số điện thoại phải có 10 chữ số!!!");
         }
 
         if (employeeRepository.existsByPhone(employeeDTO.getPhone())) {
-            return new ApiResponse<>("Số điện thoại đã tồn tại!!!", null);
+            return ApiResponse.error("Số điện thoại đã tồn tại!!!");
         }
 
-        //Kiểm tra xem StoreOwner có shop chưa
         LaundryShop laundryShop = laundryShopRepository.findByStoreOwner(storeOwner);
         if (laundryShop == null) {
-            return new ApiResponse<>("StoreOwner chưa có shop, không thể tạo nhân viên", null);
+            return ApiResponse.error("StoreOwner chưa có shop, không thể tạo nhân viên");
         }
 
-        // Mã hóa password trước khi lưu xuống db
         String encodedPassword = passwordEncoder.encode(employeeDTO.getPassword());
 
-        // Tạo đối tượng Employee và thiết lập mối quan hệ với StoreOwner
         Employee employee = new Employee(
                 employeeDTO.getUsername(),
                 encodedPassword,
@@ -103,71 +90,63 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
                 Roles.Employee,
                 storeOwner
         );
-
-        //Gán shop vào employee
         employee.setShop(laundryShop);
 
-        // Sử dụng service để thêm employee với quan hệ storeOwner
         employeeService.addEmployee(employee);
-
-        return new ApiResponse<>("Tạo tài khoản nhân viên thành công", employee);
+        return ApiResponse.success(employee, "Tạo tài khoản nhân viên thành công");
     }
 
     @Override
     public ApiResponse<String> deleteEmployee(StoreOwner storeOwner, EmployeeDTO employeeDTO) {
-        // Kiểm tra xem tồn tại hay không
         if (employeeDTO.getEmail() == null && employeeDTO.getPhone() == null && employeeDTO.getUsername() == null) {
-            return new ApiResponse<>("Không đủ thông tin để xóa!!!", null);
+            return ApiResponse.error("Không đủ thông tin để xóa!!!");
         }
 
-        // Tìm Employee theo các thông tin cung cấp
         Employee employee = findEmployeeByInfo(employeeDTO);
-
         if (employee == null) {
-            return new ApiResponse<>("Không tìm thấy nhân viên với thông tin đã cung cấp!!!", null);
+            return ApiResponse.error("Không tìm thấy nhân viên với thông tin đã cung cấp!!!");
         }
 
-        // Kiểm tra Employee có thuộc về StoreOwner hiện tại không
         if (employee.getStoreOwner() == null || !employee.getStoreOwner().getId().equals(storeOwner.getId())) {
-            return new ApiResponse<>("Bạn không có quyền xóa nhân viên này", null);
+            return ApiResponse.error("Bạn không có quyền xóa nhân viên này");
         }
 
         employeeService.deleteEmployee(employee);
-
-        return new ApiResponse<>("Đã xóa nhân viên thành công", null);
+        return ApiResponse.success("Đã xóa nhân viên thành công");
     }
 
     @Override
     public ApiResponse<Employee> updateEmployee(StoreOwner storeOwner, EmployeeDTO employeeDTO) {
         if (employeeDTO.getEmail() == null && employeeDTO.getPhone() == null && employeeDTO.getUsername() == null) {
-            return new ApiResponse<>("Cần cung cấp ít nhất một thông tin để tìm Employee.", null);
+            return ApiResponse.error("Cần cung cấp ít nhất một thông tin để tìm Employee.");
         }
 
         Employee employee = findEmployeeByInfo(employeeDTO);
         if (employee == null) {
-            return new ApiResponse<>("Không tìm thấy Employee với thông tin đã cung cấp.", null);
+            return ApiResponse.error("Không tìm thấy Employee với thông tin đã cung cấp.");
         }
 
         if (employee.getStoreOwner() == null || !employee.getStoreOwner().getId().equals(storeOwner.getId())) {
-            return new ApiResponse<>("Bạn không có quyền cập nhật Employee này", null);
+            return ApiResponse.error("Bạn không có quyền cập nhật Employee này");
         }
 
+        // Update logic remains the same
         if (employeeDTO.getEmail() != null && !employeeDTO.getEmail().equals(employee.getEmail())) {
             if (!UserValidator.isValidEmail(employeeDTO.getEmail())) {
-                return new ApiResponse<>("Email không hợp lệ!!!", null);
+                return ApiResponse.error("Email không hợp lệ!!!");
             }
             if (employeeRepository.existsByEmail(employeeDTO.getEmail())) {
-                return new ApiResponse<>("Email đã tồn tại!!!", null);
+                return ApiResponse.error("Email đã tồn tại!!!");
             }
             employee.setEmail(employeeDTO.getEmail());
         }
 
         if (employeeDTO.getPhone() != null && !employeeDTO.getPhone().equals(employee.getPhone())) {
             if (!UserValidator.isValidPhone(employeeDTO.getPhone())) {
-                return new ApiResponse<>("Phone phải có 10 chữ số!!!", null);
+                return ApiResponse.error("Phone phải có 10 chữ số!!!");
             }
             if (employeeRepository.existsByPhone(employeeDTO.getPhone())) {
-                return new ApiResponse<>("Phone đã tồn tại!!!", null);
+                return ApiResponse.error("Phone đã tồn tại!!!");
             }
             employee.setPhone(employeeDTO.getPhone());
         }
@@ -179,7 +158,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
 
         if (employeeDTO.getPassword() != null && !employeeDTO.getPassword().isEmpty()) {
             if (!UserValidator.isValidPassword(employeeDTO.getPassword())) {
-                return new ApiResponse<>("Password không hợp lệ!!!", null);
+                return ApiResponse.error("Password không hợp lệ!!!");
             }
             employee.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
         }
@@ -189,28 +168,25 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         }
 
         employeeService.updateEmployee(employee);
-
-        return new ApiResponse<>("Cập nhật Employee thành công!", employee);
+        return ApiResponse.success(employee, "Cập nhật Employee thành công!");
     }
 
     @Override
     public ApiResponse<LaundryShopDTO> createShop(StoreOwner storeOwner, LaundryShopDTO laundryShopDTO) {
-        //Kiểm tra xem trước đó đã quản lý shop nào chưa
         if(laundryShopRepository.existsByStoreOwner(storeOwner)) {
-            return new ApiResponse<>("Bạn đã có cửa hàng rồi, không được tạo thêm");
+            return ApiResponse.error("Bạn đã có cửa hàng rồi, không được tạo thêm");
         }
 
-        // kiểm tra dữ liệu
         if(laundryShopRepository.existsByName(laundryShopDTO.getName())) {
-            return new ApiResponse<>("Tên cửa hàng đã tồn tại vui lòng chọn tên khác!!!");
+            return ApiResponse.error("Tên cửa hàng đã tồn tại vui lòng chọn tên khác!!!");
         }
 
         if(laundryShopDTO.getName() == null || laundryShopDTO.getName().isEmpty()) {
-            return new ApiResponse<>("Tên cửa hàng không được để trống");
+            return ApiResponse.error("Tên cửa hàng không được để trống");
         }
 
         if(laundryShopDTO.getAddress() == null || laundryShopDTO.getAddress().isEmpty()) {
-            return new ApiResponse<>("Địa chỉ cửa hàng không được để trống");
+            return ApiResponse.error("Địa chỉ cửa hàng không được để trống");
         }
 
         LaundryShop laundryShop = new LaundryShop(
@@ -223,12 +199,10 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
                 storeOwner
         );
 
-        // Lưu shop vào database
         LaundryShop createdShop = laundryShopRepository.save(laundryShop);
-
         LaundryShopDTO responseDTO = convertToResponseDTO(createdShop);
 
-        return new ApiResponse<>("Tạo cửa hàng thành công!!!", responseDTO);
+        return ApiResponse.success(responseDTO, "Tạo cửa hàng thành công!!!");
     }
 
     @Override
@@ -238,15 +212,15 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
 
     @Override
     public ApiResponse<LaundryShopDTO> updateLaundryShop(StoreOwner storeOwner, LaundryShopDTO laundryShopDTO) {
-        LaundryShop existingShop =  laundryShopRepository.findByStoreOwner(storeOwner);
+        LaundryShop existingShop = laundryShopRepository.findByStoreOwner(storeOwner);
         if(existingShop == null) {
-            return new ApiResponse<>("Bạn chưa có cửa hàng để cập nhật!!!", null);
+            return ApiResponse.error("Bạn chưa có cửa hàng để cập nhật!!!");
         }
 
         if (laundryShopDTO.getName() != null &&
                 !laundryShopDTO.getName().equals(existingShop.getName()) &&
                 laundryShopRepository.existsByName(laundryShopDTO.getName())) {
-            return new ApiResponse<>("Tên cửa hàng đã tồn tại, vui lòng chọn tên khác!", null);
+            return ApiResponse.error("Tên cửa hàng đã tồn tại, vui lòng chọn tên khác!");
         }
 
         if (laundryShopDTO.getName() != null) existingShop.setName(laundryShopDTO.getName());
@@ -257,10 +231,9 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         LaundryShop updatedShop = laundryShopRepository.save(existingShop);
         LaundryShopDTO responseDTO = convertToResponseDTO(updatedShop);
 
-        return new ApiResponse<>("Cập nhật cửa hàng thành công!!!", responseDTO);
+        return ApiResponse.success(responseDTO, "Cập nhật cửa hàng thành công!!!");
     }
 
-    // Thêm phương thức tìm employee theo thông tin
     private Employee findEmployeeByInfo(EmployeeDTO employeeDTO) {
         Employee employee = null;
 
@@ -276,7 +249,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
 
         if (employeeDTO.getPhone() != null && !employeeDTO.getPhone().isEmpty()) {
             employee = employeeRepository.findByPhone(employeeDTO.getPhone());
-          return employee;
+            return employee;
         }
 
         return null;
@@ -293,7 +266,6 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
 
         LaundryShopDTO.StoreOwnerSimpleDTO ownerDTO = new LaundryShopDTO.StoreOwnerSimpleDTO();
         ownerDTO.setUsername(shop.getStoreOwner().getUsername());
-
         dto.setStoreOwner(ownerDTO);
 
         return dto;

@@ -23,7 +23,8 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentResponse getPaymentInfo(PaymentRequest paymentRequest) {
-        Order order = orderRepository.findById(paymentRequest.getOrderId().intValue())
+        Order order;
+        order = orderRepository.findById((long) paymentRequest.getOrderId().intValue())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng!!!"));
 
         return PaymentResponse.builder()

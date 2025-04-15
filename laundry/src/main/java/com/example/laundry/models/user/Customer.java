@@ -5,12 +5,14 @@ import com.example.laundry.models.order.Payment;
 import com.example.laundry.models.shop.LaundryShop;
 import com.example.laundry.models.shop.Service;
 import jakarta.persistence.*;
-
+import lombok.Getter;
+import lombok.Setter;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.UUID;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -24,6 +26,12 @@ import java.util.ArrayList;
 @Table(name="customers")
 @DiscriminatorValue("CUSTOMER")
 public class Customer extends User {
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    private Long id;
+    private String phone;
+    private String address;
+    private String name;
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orderHistory =  new ArrayList<>();
 

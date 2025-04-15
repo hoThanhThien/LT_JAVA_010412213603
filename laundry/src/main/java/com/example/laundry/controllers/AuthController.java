@@ -57,7 +57,8 @@ public class AuthController {
       User user = refreshToken.getUser();
       String newAccessToken = jwtUtil.generateAccessToken(user.getUsername());
 
-      return ResponseEntity.ok(new ApiResponse<>("", new RefreshTokenResponse(refreshToken.getToken(), newAccessToken)));
+      return ResponseEntity.ok(new ApiResponse<>(new RefreshTokenResponse(refreshToken.getToken(), newAccessToken), ""));
+
     }
     catch (Exception e) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();

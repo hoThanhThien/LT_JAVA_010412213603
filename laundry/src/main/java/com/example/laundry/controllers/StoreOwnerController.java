@@ -26,7 +26,6 @@ public class StoreOwnerController {
     @Autowired
     private StoreOwnerRepository storeOwnerRepository;
 
-    // Lấy store owner hiện tại
     private StoreOwner getCurrentStoreOwner() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
@@ -36,35 +35,33 @@ public class StoreOwnerController {
     @PostMapping("/employee/create")
     @PreAuthorize("hasRole('STOREOWNER')")
     public ResponseEntity<ApiResponse<EmployeeDTO>> createEmployee(@RequestBody EmployeeDTO employeeDTO) {
-        // Lấy thông tin StoreOwner hiện tại
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>("Không tìm thấy thông tin StoreOwner", null));
+                    .body(ApiResponse.error("Không tìm thấy thông tin StoreOwner"));
         }
 
         ApiResponse<Employee> response = storeOwnerService.createEmployee(storeOwner, employeeDTO);
 
         if (response.getData() == null) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(response.getMessage(), null));
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(response.getMessage()));
         }
 
         EmployeeDTO responseDTO = new EmployeeDTO(response.getData());
-
-        return ResponseEntity.ok(new ApiResponse<>("Tạo nhân viên thành công", responseDTO));
+        return ResponseEntity.ok(ApiResponse.success(responseDTO, "Tạo nhân viên thành công"));
     }
 
     @DeleteMapping("/employee/delete")
     @PreAuthorize("hasRole('STOREOWNER')")
     public ResponseEntity<ApiResponse<String>> deleteEmployee(@RequestBody EmployeeDTO employeeDTO) {
-        // Lấy thông tin StoreOwner hiện tại
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>("Không tìm thấy thông tin StoreOwner", null));
+                    .body(ApiResponse.error("Không tìm thấy thông tin StoreOwner"));
         }
-        ApiResponse<String> response = storeOwnerService.deleteEmployee(storeOwner, employeeDTO);
 
+        ApiResponse<String> response = storeOwnerService.deleteEmployee(storeOwner, employeeDTO);
         return ResponseEntity.ok(response);
     }
 
@@ -74,34 +71,34 @@ public class StoreOwnerController {
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>("Không tìm thấy thông tin StoreOwner", null));
+                    .body(ApiResponse.error("Không tìm thấy thông tin StoreOwner"));
         }
 
         ApiResponse<Employee> response = storeOwnerService.updateEmployee(storeOwner, employeeDTO);
 
         if (response.getData() == null) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(response.getMessage(), null));
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(response.getMessage()));
         }
 
         EmployeeDTO responseDTO = new EmployeeDTO(response.getData());
-
-        return ResponseEntity.ok(new ApiResponse<>("Cập nhật thông tin nhân viên thành công", responseDTO));
+        return ResponseEntity.ok(ApiResponse.success(responseDTO, "Cập nhật thông tin nhân viên thành công"));
     }
 
     @PostMapping("/shop/create")
     @PreAuthorize("hasRole('STOREOWNER')")
     public ResponseEntity<ApiResponse<LaundryShopDTO>> createShop(@RequestBody LaundryShopDTO laundryShopDTO) {
-        //Lấy thông tin storeowner hiện tại
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>("Không tìm thấy thông tin storeowner", null));
+                    .body(ApiResponse.error("Không tìm thấy thông tin storeowner"));
         }
 
         ApiResponse<LaundryShopDTO> response = storeOwnerService.createShop(storeOwner, laundryShopDTO);
 
         if (response.getData() == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error(response.getMessage()));
         }
 
         return ResponseEntity.ok(response);
@@ -110,17 +107,17 @@ public class StoreOwnerController {
     @PostMapping("/shop/update")
     @PreAuthorize("hasRole('STOREOWNER')")
     public ResponseEntity<ApiResponse<LaundryShopDTO>> updateShop(@RequestBody LaundryShopDTO laundryShopDTO) {
-        //Kiểm tra thông tin storeowner
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>("Không tìm thấy thông tin storeowner"));
+                    .body(ApiResponse.error("Không tìm thấy thông tin storeowner"));
         }
 
         ApiResponse<LaundryShopDTO> response = storeOwnerService.updateLaundryShop(storeOwner, laundryShopDTO);
 
         if(response.getData() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(response.getMessage()));
         }
 
         return ResponseEntity.ok(response);

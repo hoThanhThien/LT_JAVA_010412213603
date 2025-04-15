@@ -26,33 +26,33 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public ApiResponse<StoreOwner> createStoreOwner(StoreOwnerDTO storeOwnerDTO) {
-        // Kiểm tra dữ liệu
+        // Validate data
         if (storeOwnerDTO.getPassword() == null || storeOwnerDTO.getPassword().isEmpty()) {
-            return new ApiResponse<>("Password không được để trống", null);
+            return ApiResponse.error("Password không được để trống");
         }
 
-        //Kiểm tra password
+        // Validate password
         if(!UserValidator.isValidPassword(storeOwnerDTO.getPassword())){
-            return new ApiResponse<>("Password không hợp lệ!!!", null);
+            return ApiResponse.error("Password không hợp lệ!!!");
         }
 
-        //Kiểm tra email
+        // Validate email
         if(!UserValidator.isValidEmail(storeOwnerDTO.getEmail())){
-            return new ApiResponse<>("Email không hợp lệ!!!", null);
+            return ApiResponse.error("Email không hợp lệ!!!");
         }
         if(storeOwnerRepository.existsByEmail(storeOwnerDTO.getEmail())){
-            return new ApiResponse<>("Email đã tồn tại!!!", null);
+            return ApiResponse.error("Email đã tồn tại!!!");
         }
 
-        //Kiểm tra phone
+        // Validate phone
         if(!UserValidator.isValidPhone(storeOwnerDTO.getPhone())){
-            return new ApiResponse<>("Phone phải có 10 chữ số!!!", null);
+            return ApiResponse.error("Phone phải có 10 chữ số!!!");
         }
         if(storeOwnerRepository.existsByPhone(storeOwnerDTO.getPhone())){
-            return new ApiResponse<>("Phone đã tồn tại!!!", null);
+            return ApiResponse.error("Phone đã tồn tại!!!");
         }
 
-        // Mã hóa password trước khi lưu vào DB
+        // Encode password before saving to DB
         String encodedPassword = passwordEncoder.encode(storeOwnerDTO.getPassword());
 
         StoreOwner storeOwner = new StoreOwner(
@@ -66,29 +66,30 @@ public class AdminServiceImpl implements AdminService {
 
         storeOwnerService.addStoreOwner(storeOwner);
 
-        return new ApiResponse<>("Tạo tài khoản Store Owner thành công", storeOwner);
+        return ApiResponse.success(storeOwner, "Tạo tài khoản Store Owner thành công");
     }
 
     @Override
     public ApiResponse<String> removeStoreOwner(StoreOwnerDTO storeOwnerDTO) {
         if (storeOwnerDTO.getEmail() == null && storeOwnerDTO.getPhone() == null && storeOwnerDTO.getUsername() == null) {
-            return new ApiResponse<>("Không đủ thông tin để xóa!!!", null);
+            return ApiResponse.error("Không đủ thông tin để xóa!!!");
         }
 
         StoreOwner storeOwner = findStoreOwnerByInfo(storeOwnerDTO);
 
         if (storeOwner == null) {
-            return new ApiResponse<>("Không tìm thấy Store Owner với thông tin đã cung cấp", null);
+            return ApiResponse.error("Không tìm thấy Store Owner với thông tin đã cung cấp");
         }
 
         if (!storeOwnerRepository.existsById(storeOwner.getId())) {
-            return new ApiResponse<>("Store Owner không tồn tại hoặc đã bị xóa trước đó", null);
+            return ApiResponse.error("Store Owner không tồn tại hoặc đã bị xóa trước đó");
         }
 
         storeOwnerService.deleteStoreOwner(storeOwner);
 
-        return new ApiResponse<>("Đã xóa Store Owner thành công", null);
+        return ApiResponse.success("Đã xóa Store Owner thành công");
     }
+
     private StoreOwner findStoreOwnerByInfo(StoreOwnerDTO storeOwnerDTO) {
         StoreOwner storeOwner = null;
         if (storeOwnerDTO.getEmail() != null) {
