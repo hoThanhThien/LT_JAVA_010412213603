@@ -22,6 +22,9 @@ public class ServiceCategory {
   @Column
   private String description;
 
+  @Column(name = "image_desc")
+  private String imageDesc;
+
   @ManyToOne
   @JoinColumn(name = "shop_id")
   private LaundryShop shop;

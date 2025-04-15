@@ -54,6 +54,9 @@ public abstract class User implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
+    @Column(name = "avt_user")
+    private String avtUser;
+
     // Constructor, getters, and setters
 
     @PrePersist

@@ -31,6 +31,9 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
+    @Column(name = "img_product")
+    private  String imgProduct;
+
     @ManyToOne
     private Customer customer;
 
