@@ -15,8 +15,6 @@ public class LaundryShopDTO {
   private StoreOwnerSimpleDTO  storeOwner;
 
   @Data
-  @Getter
-  @Setter
   public static class StoreOwnerSimpleDTO {
     private String username;
   }

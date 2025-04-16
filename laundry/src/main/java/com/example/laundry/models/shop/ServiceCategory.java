@@ -31,4 +31,11 @@ public class ServiceCategory {
 
   @OneToMany(mappedBy = "category")
   private List<Service> services;
+
+  public ServiceCategory(Long id, String name, String description, String imageDesc) {
+    this.id = id;
+    this.name = name;
+    this.description = description;
+    this.imageDesc = imageDesc;
+  }
 }

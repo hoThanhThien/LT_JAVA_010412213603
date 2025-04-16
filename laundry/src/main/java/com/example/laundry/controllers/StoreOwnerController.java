@@ -2,6 +2,8 @@ package com.example.laundry.controllers;
 
 import com.example.laundry.dto.EmployeeDTO;
 import com.example.laundry.dto.LaundryShopDTO;
+import com.example.laundry.dto.ServiceCategoryDTO;
+import com.example.laundry.dto.ServiceDTO;
 import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.StoreOwnerRepository;
@@ -124,5 +126,43 @@ public class StoreOwnerController {
         }
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/category/add")
+    @PreAuthorize("hasRole('STOREOWNER')")
+    public ResponseEntity<ApiResponse<ServiceCategoryDTO>> addServiceCategory(@RequestBody ServiceCategoryDTO serviceCategoryDTO) {
+        //Kiểm tra thông tin storeowner
+        StoreOwner storeOwner = getCurrentStoreOwner();
+        if (storeOwner == null) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>("Không tìm thấy thông tin storeowner"));
+        }
+
+        ApiResponse<ServiceCategoryDTO> response = storeOwnerService.createServiceCategory(storeOwner, serviceCategoryDTO);
+
+        if(response.getData() == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        return  ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/service/add")
+    @PreAuthorize("hasRole('STOREOWNER')")
+    public ResponseEntity<ApiResponse<ServiceDTO>> addService(@RequestBody ServiceDTO serviceDTO) {
+        //Kiểm tra thông tin storeowner
+        StoreOwner storeOwner = getCurrentStoreOwner();
+        if (storeOwner == null) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>("Không tìm thấy thông tin storeowner"));
+        }
+
+        ApiResponse<ServiceDTO> response = storeOwnerService.createService(storeOwner, serviceDTO);
+
+        if(response.getData() == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        return  ResponseEntity.ok(response);
     }
 }

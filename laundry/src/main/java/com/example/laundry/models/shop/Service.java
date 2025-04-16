@@ -25,7 +25,7 @@ public class Service {
     private String name;
 
     @Column(nullable = false)
-    private double price;
+    private Double price;
 
     @Column
     private String description;
@@ -45,5 +45,14 @@ public class Service {
         this.price = price;
         this.description = description;
         this.estimatedTime = estimatedTime;
+    }
+
+    public Service(Long id, String name, String description, String estimateTime, Double price, String imageDesc) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.estimatedTime = estimateTime;
+        this.price = price;
+        this.imageDesc = imageDesc;
     }
 }

@@ -2,6 +2,8 @@ package com.example.laundry.services;
 
 import com.example.laundry.dto.EmployeeDTO;
 import com.example.laundry.dto.LaundryShopDTO;
+import com.example.laundry.dto.ServiceCategoryDTO;
+import com.example.laundry.dto.ServiceDTO;
 import com.example.laundry.models.shop.LaundryShop;
 import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.StoreOwner;
@@ -16,4 +18,6 @@ public interface StoreOwnerService extends UserService {
     ApiResponse<LaundryShopDTO> createShop(StoreOwner storeOwner, LaundryShopDTO laundryShopDTO);
     LaundryShop getLaundryShopByStoreOwner(StoreOwner storeOwner);
     ApiResponse<LaundryShopDTO> updateLaundryShop(StoreOwner storeOwner, LaundryShopDTO laundryShopDTO);
+    ApiResponse<ServiceCategoryDTO> createServiceCategory(StoreOwner storeOwner, ServiceCategoryDTO serviceCategoryDTO);
+    ApiResponse<ServiceDTO> createService(StoreOwner storeOwner, ServiceDTO serviceDTO);
 }

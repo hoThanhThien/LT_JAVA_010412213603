@@ -11,7 +11,7 @@ public class ServiceDTO {
     private Long id;
     private String name;
     private String description;
-    private String estimate_time;
-    private String image_desc;
-    private double price;
+    private String estimatedTime;
+    private String imageDesc;
+    private Double price;
 }
