@@ -1,6 +1,6 @@
 package com.example.laundry.services.impl;
 
-import com.example.laundry.dto.StoreOwnerDTO;
+import com.example.laundry.dto.*;
 import com.example.laundry.models.user.Roles;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.AdminRepository;
@@ -10,8 +10,16 @@ import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
 import com.example.laundry.utils.UserValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AdminServiceImpl implements AdminService {
@@ -89,6 +97,34 @@ public class AdminServiceImpl implements AdminService {
 
         return new ApiResponse<>("Đã xóa Store Owner thành công", null);
     }
+
+    @Override
+    public PagedResponse<StoreOwnerDTO> getAllStoreOwners(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<StoreOwner> storeOwnerPage = storeOwnerRepository.findAll(pageable);
+
+        List<StoreOwnerDTO> storeOwnerDTOs = storeOwnerPage.getContent().stream()
+                .map(owner -> new StoreOwnerDTO(
+                        owner.getUsername(),
+                        null,
+                        owner.getEmail(),
+                        owner.getPhone(),
+                        owner.getAddress()
+                ))
+                .toList();
+
+        Meta meta = new Meta(
+                storeOwnerPage.getNumber() + 1,
+                storeOwnerPage.getSize(),
+                storeOwnerPage.getTotalElements(),
+                storeOwnerPage.getTotalPages()
+        );
+        PagedData<StoreOwnerDTO> pagedData = new PagedData<>(meta, storeOwnerDTOs);
+        PagedResponse<StoreOwnerDTO> response = new PagedResponse<>("Lấy danh sách thành công", pagedData);
+
+        return ResponseEntity.ok(response).getBody();
+    }
+
     private StoreOwner findStoreOwnerByInfo(StoreOwnerDTO storeOwnerDTO) {
         StoreOwner storeOwner = null;
         if (storeOwnerDTO.getEmail() != null) {

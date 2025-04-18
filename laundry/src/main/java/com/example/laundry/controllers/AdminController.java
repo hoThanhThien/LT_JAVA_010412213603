@@ -1,5 +1,6 @@
 package com.example.laundry.controllers;
 
+import com.example.laundry.dto.PagedResponse;
 import com.example.laundry.dto.StoreOwnerDTO;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.services.AdminService;
@@ -39,5 +40,13 @@ public class AdminController {
         }
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/storeowners")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PagedResponse<StoreOwnerDTO>> getAllStoreOwners(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(adminService.getAllStoreOwners(page, size));
     }
 }
