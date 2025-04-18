@@ -32,39 +32,37 @@ public class  JwtAuthenticationFilter extends OncePerRequestFilter {
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
           throws ServletException, IOException {
-    // Get authorization header
     final String authorizationHeader = request.getHeader("Authorization");
 
     String username = null;
     String token = null;
 
-    logger.debug("Authorization header: " + authorizationHeader);
-
-    // Check if the header is present and has the correct format
     if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
       token = authorizationHeader.substring(7);
-      logger.debug("Extracted token: " + token);
 
-      // Kiểm tra blacklist sau khi đã trích xuất token
-      if(tokenBlackListServiceImpl.isBlacklisted(token)) {
+      if (tokenBlackListServiceImpl.isBlacklisted(token)) {
         logger.debug("Token is blacklisted: " + token);
-        filterChain.doFilter(request, response);
-        return;
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\":\"Token không hợp lệ\"}");
+        return; // Dừng xử lý và không tiếp tục chuỗi filter
       }
 
       try {
         username = jwtUtil.validateTokenAndRetrieveSubject(token);
-        logger.debug("Username from token: " + username);
       } catch (JwtException e) {
         logger.error("JWT token validation failed: " + e.getMessage());
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"error\":\"Token không hợp lệ\"}");
+        return;
       }
     }
 
-    // If we have a username and no authentication exists in the context
+    // Nếu token hợp lệ và chưa xác thực
     if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
       UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-      // Create authentication token and set it in the context
       UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
               userDetails, null, userDetails.getAuthorities());
       authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
