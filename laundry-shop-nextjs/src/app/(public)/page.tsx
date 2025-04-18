@@ -1,13 +1,24 @@
+"use client";
+
 import Comment from "@/components/comment";
 import Stores from "@/components/stores";
 import Image from "next/image";
 import Communication from "@/components/communication";
 import Services from "@/components/services";
-import { Dropdown } from "antd";
-import DropdownAvatar from "./dropdown-avatar";
 import DownloadApp from "@/components/dowload-app";
+import { useAuthStore } from "@/lib/zustand";
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function Home() {
+  const { setOpenAuth } = useAuthStore();
+  const searchParams = useSearchParams();
+  const reqLogin = searchParams.get("login");
+  useEffect(() => {
+    if (reqLogin) {
+      setOpenAuth(true);
+    }
+  }, [reqLogin, setOpenAuth]);
   return (
     <main className="relative">
       <div className="bg-[url('/home/bg-1.png')] bg-no-repeat min-h-[960px] px-4 bg-[length:100%_1060px]">

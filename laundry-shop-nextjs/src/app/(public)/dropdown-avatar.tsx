@@ -8,49 +8,52 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-// import { useLogoutMutation } from "@/queries/useAuth";
+import { useLogoutMutation } from "@/queries/useAuth";
 import { handleErrorApi } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useAccountMe } from "@/queries/useAccount";
-import { useEffect } from "react";
+import { useAuthStore } from "@/lib/zustand";
 
 export default function DropdownAvatar() {
-  // const logoutMutation = useLogoutMutation();
-  // const router = useRouter();
+  const logoutMutation = useLogoutMutation();
+  const router = useRouter();
   const { data } = useAccountMe();
-  const account = data?.payload.data.account;
+  const account = data?.payload?.data?.account;
 
-  // const logout = async () => {
-  //   if (logoutMutation.isPending) return;
-  //   try {
-  //     await logoutMutation.mutateAsync();
-  //     router.push("/");
-  //   } catch (error) {
-  //     handleErrorApi({
-  //       error,
-  //     });
-  //   }
-  // };
-  useEffect(() => {
-    console.log(account?.username);
-  }, [account]);
+  const { setIsAuth } = useAuthStore();
+
+  const logout = async () => {
+    if (logoutMutation.isPending) return;
+    try {
+      await logoutMutation.mutateAsync();
+      setIsAuth(false);
+      router.push("/");
+    } catch (error) {
+      handleErrorApi({
+        error,
+      });
+    }
+  };
+
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className="overflow-hidden rounded-full"
-        >
-          <Avatar>
-            <AvatarFallback>
-              {account?.username?.slice(0, 1).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-        </Button>
+        {account && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="overflow-hidden rounded-full"
+          >
+            <Avatar>
+              <AvatarFallback>
+                {account?.username?.slice(0, 1).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{account?.username}</DropdownMenuLabel>
@@ -62,7 +65,7 @@ export default function DropdownAvatar() {
         </DropdownMenuItem>
         <DropdownMenuItem>Hỗ trợ</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Đăng xuất</DropdownMenuItem>
+        <DropdownMenuItem onClick={logout}>Đăng xuất</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

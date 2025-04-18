@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       {
         message: "Không tìm thấy token",
       },
-      { status: 200 }
+      { status: 401 }
     );
   }
 

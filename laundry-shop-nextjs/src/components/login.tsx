@@ -7,6 +7,8 @@ import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { useLoginMutation } from "@/queries/useAuth";
 import { handleErrorApi } from "@/lib/utils";
 import { toast } from "react-toastify";
+import { useAuthStore } from "@/lib/zustand";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function Login(props: {
   openAuth: boolean;
@@ -14,6 +16,10 @@ export default function Login(props: {
   setActiveTab: (tab: string) => void;
 }) {
   const loginMutation = useLoginMutation();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect");
+  const { setIsAuth } = useAuthStore();
   const form = useForm<LoginBodyType>({
     resolver: zodResolver(LoginBody),
     defaultValues: {
@@ -27,12 +33,14 @@ export default function Login(props: {
     try {
       const result = await loginMutation.mutateAsync(data);
       props.setOpenAuth(false);
+      setIsAuth(true);
       toast.success(result.payload.message, {
-        position: "top-right",
+        position: "bottom-left",
         autoClose: 3000,
         hideProgressBar: false,
         closeOnClick: false,
       });
+      if (redirect) router.push(redirect);
     } catch (error: any) {
       handleErrorApi({ error, setError: form.setError });
     }
@@ -105,7 +113,10 @@ export default function Login(props: {
           />
 
           <div>
-            <button className="cursor-pointer flex w-full justify-center rounded-md bg-main px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-main">
+            <button
+              disabled={loginMutation.isPending}
+              className="cursor-pointer flex w-full justify-center rounded-md bg-main px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-main disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               Đăng nhập
             </button>
           </div>

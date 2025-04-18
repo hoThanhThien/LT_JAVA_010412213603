@@ -11,9 +11,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
-const listGiatHapFAQ = [
+const listGiatSayFAQ = [
   {
     id: 1,
     question: "Giá giặt sấy bao nhiêu 1kg? Giặt lố số kg sẽ như thế nào?",
@@ -59,13 +60,83 @@ export default function layout({ children }: { children: React.ReactNode }) {
 
   let listFAQ: any[] = defaultFAQ;
 
-  if (path.startsWith("/dich-vu/giat-hap")) {
-    listFAQ = listGiatHapFAQ;
+  if (path.startsWith("/dich-vu/giat-say")) {
+    listFAQ = listGiatSayFAQ;
   }
   return (
     <div>
       <div>{children}</div>
       <div>
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-4xl font-bold text-center">
+            Dịch vụ giao nhận
+          </div>
+          <div className="text-base text-center text-gray-400 mt-4 mb-15 w-[50%] mx-auto">
+            Dịch vụ giao nhận tận nơi của HERAMO mang đến trải nghiệm nhanh
+            chóng và an toàn, với hơn 90% khách hàng hài lòng. Đội ngũ shipper
+            chuyên nghiệp được đào tạo bài bản, luôn mặc đồng phục và cung cấp
+            biên nhận điện tử khi giao hàng.
+          </div>
+          <div className="grid grid-cols-2">
+            <div>
+              <div className="text-xl font-bold">
+                Phí giao nhận tiết kiệm hơn 50% so với các công ty vận chuyển*:
+              </div>
+              <div className="w-[65%] flex flex-col gap-4 my-5">
+                <div className="flex items-start gap-5">
+                  <Image
+                    src="/ve-chung-toi/checked.svg"
+                    alt="Checked"
+                    width="32"
+                    height="32"
+                  />
+                  <span className="text-xl">
+                    15.000/chiều - Quận 1, 3, 4 ,5 ,10, Phú Nhuận, Gò Vấp, Tân
+                    Bình, Bình Thạnh
+                  </span>
+                </div>
+                <div className="flex items-start gap-5">
+                  <Image
+                    src="/ve-chung-toi/checked.svg"
+                    alt="Checked"
+                    width="32"
+                    height="32"
+                  />
+                  <span className="text-xl">
+                    20.000/chiều - Quận 2, 6, 7, 8, 11, Tân Phú
+                  </span>
+                </div>
+                <div className="flex items-start gap-5">
+                  <Image
+                    src="/ve-chung-toi/checked.svg"
+                    alt="Checked"
+                    width="32"
+                    height="32"
+                  />
+                  <span className="text-xl">
+                    25.000/chiều - Quận 12, 9, Bình Tân, Thủ Đức, Bình Chánh,
+                    Nhà Bè
+                  </span>
+                </div>
+              </div>
+              <div className="text-xl font-bold">
+                Đặc biệt, miễn phí giao nhận 2 chiều khi đặt đơn từ 1.000.000.
+              </div>
+              <div className="text-sm text-gray-400 mt-4">
+                (*) Áp dụng cho đơn hàng từ 350.000. Đối với đơn dưới 350.000,
+                phí giao nhận sẽ có sự thay đổi.
+              </div>
+            </div>
+            <div>
+              <Image
+                src="/dich-vu/shipper-info.png"
+                alt="Shipper Info"
+                width="458"
+                height="384"
+              />
+            </div>
+          </div>
+        </div>
         <GiaTri />
         <Communication />
         <Comment />

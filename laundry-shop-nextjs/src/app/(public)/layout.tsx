@@ -2,22 +2,22 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { getAccessTokenFromLocalStorage } from "@/lib/utils";
 import Auth from "./auth";
 import DropdownAvatar from "./dropdown-avatar";
+import { useAuthStore } from "@/lib/zustand";
 
 export default function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [openAuth, setOpenAuth] = useState<boolean>(false);
-  const [isAuth, setIsAuth] = useState(false);
+  const { isAuth, setIsAuth, setOpenAuth } = useAuthStore();
 
   useEffect(() => {
     setIsAuth(Boolean(getAccessTokenFromLocalStorage()));
-  }, [openAuth]);
+  }, []);
 
   return (
     <div className="flex min-h-screen w-full flex-col relative">
@@ -43,7 +43,7 @@ export default function Layout({
                 Nhượng quyền
               </Link>
 
-              <Link href="/" className="hover:text-main">
+              <Link href="/manage/admin/customer" className="hover:text-main">
                 Dịch vụ
               </Link>
 
@@ -71,7 +71,7 @@ export default function Layout({
             </div>
           </nav>
         </div>
-        <Auth openAuth={openAuth} setOpenAuth={setOpenAuth} />
+        <Auth />
       </header>
       <main className="flex flex-1 flex-col mt-24 gap-4 md:gap-8">
         {children}

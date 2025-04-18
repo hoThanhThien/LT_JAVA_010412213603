@@ -8,27 +8,26 @@ import { useEffect, useState } from "react";
 import Register from "@/components/register";
 import Otp from "@/components/otp";
 import { RegisterBodyType } from "@/schemaValidations/auth.schema";
+import { useAuthStore } from "@/lib/zustand";
 
-export default function Auth(props: {
-  openAuth: boolean;
-  setOpenAuth: (open: boolean) => void;
-}) {
+export default function Auth() {
+  const { openAuth, setOpenAuth, isAuth } = useAuthStore();
   const [activeTab, setActiveTab] = useState("login");
   const [dataRegister, setDataRegister] = useState<RegisterBodyType>(
     {} as RegisterBodyType
   );
 
   useEffect(() => {
-    if (props.openAuth) {
+    if (openAuth) {
       setActiveTab("login");
     }
-  }, [props.openAuth]);
+  }, [openAuth]);
 
   return (
     <>
       <Dialog
-        open={props.openAuth}
-        onOpenChange={(open: boolean) => props.setOpenAuth(open)}
+        open={isAuth ? false : openAuth}
+        onOpenChange={(open: boolean) => setOpenAuth(open)}
       >
         <DialogContent
           className="border-none"
@@ -51,24 +50,21 @@ export default function Auth(props: {
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsContent value="login">
                 <Login
-                  openAuth={props.openAuth}
-                  setOpenAuth={props.setOpenAuth}
+                  openAuth={openAuth}
+                  setOpenAuth={setOpenAuth}
                   setActiveTab={setActiveTab}
                 />
               </TabsContent>
               <TabsContent value="register">
                 <Register
-                  openAuth={props.openAuth}
-                  setOpenAuth={props.setOpenAuth}
+                  openAuth={openAuth}
+                  setOpenAuth={setOpenAuth}
                   setActiveTab={setActiveTab}
                   setDataRegister={setDataRegister}
                 />
               </TabsContent>
               <TabsContent value="otp">
-                <Otp
-                  dataRegister={dataRegister}
-                  setOpenAuth={props.setOpenAuth}
-                />
+                <Otp dataRegister={dataRegister} setOpenAuth={setOpenAuth} />
               </TabsContent>
             </Tabs>
           </div>

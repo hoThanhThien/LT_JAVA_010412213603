@@ -12,20 +12,24 @@ export function middleware(request: NextRequest) {
 
   //Chưa đăng nhập, k cho vào private path => login
   if (privatePaths.some((path) => pathname.startsWith(path)) && !refreshToken) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const url = new URL("/", request.url);
+    url.searchParams.set("login", "true");
+    url.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(url);
   }
-  //Đã đăng nhập => không vào dc /login
-  if (unAuthPaths.some((path) => pathname.startsWith(path)) && refreshToken) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
+  // // //Đã đăng nhập => không vào dc /login
+  // if (unAuthPaths.some((path) => pathname.startsWith(path)) && refreshToken) {
+  //   return NextResponse.redirect(new URL("/", request.url));
+  // }
   //Đã đăng nhập, nhưng accessToken hết hạn => logout
   if (
     privatePaths.some((path) => pathname.startsWith(path)) &&
     !accessToken &&
     refreshToken
   ) {
-    const url = new URL("/logout", request.url);
+    const url = new URL("/refresh-token", request.url);
     url.searchParams.set("refreshToken", refreshToken);
+    url.searchParams.set("redirect", pathname);
     return NextResponse.redirect(url);
   }
 
