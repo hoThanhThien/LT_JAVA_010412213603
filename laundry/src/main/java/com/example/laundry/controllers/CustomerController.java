@@ -53,7 +53,7 @@ public class CustomerController {
         CustomerResponseDTO response = customerService.register(registerRequest);
         return ResponseEntity.ok(response);
     }
-
+    //order cho customer
     @PostMapping("/{customerId}/orders")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<OrderResponse>> bookService(
@@ -70,7 +70,7 @@ public class CustomerController {
                     .body(new ApiResponse<>("Đặt hàng thất bại: " + e.getMessage(), null));
         }
     }
-    //order cho customer
+    //order cho history customer
     @GetMapping("/orders/history")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<List<OrderResponse>>> historyOrder(@RequestHeader("Authorization") String authHeader) {
