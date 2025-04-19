@@ -70,6 +70,7 @@ public class CustomerController {
                     .body(new ApiResponse<>("Đặt hàng thất bại: " + e.getMessage(), null));
         }
     }
+    //order cho customer
     @GetMapping("/orders/history")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<List<OrderResponse>>> historyOrder(@RequestHeader("Authorization") String authHeader) {
