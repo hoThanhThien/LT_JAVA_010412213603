@@ -1,15 +1,16 @@
-<<<<<<< HEAD
 package com.example.laundry.services.impl;
 
 import com.example.laundry.dto.EmployeeDTO;
 import com.example.laundry.dto.LaundryShopDTO;
+import com.example.laundry.dto.ServiceCategoryDTO;
+import com.example.laundry.dto.ServiceDTO;
 import com.example.laundry.models.shop.LaundryShop;
+import com.example.laundry.models.shop.Service;
+import com.example.laundry.models.shop.ServiceCategory;
 import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.Roles;
 import com.example.laundry.models.user.StoreOwner;
-import com.example.laundry.repository.EmployeeRepository;
-import com.example.laundry.repository.LaundryShopRepository; // Thêm repository cần thiết
-import com.example.laundry.repository.StoreOwnerRepository;
+import com.example.laundry.repository.*;
 import com.example.laundry.services.EmployeeService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
@@ -35,6 +36,12 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
 
     @Autowired
     private LaundryShopRepository laundryShopRepository;
+
+    @Autowired
+    private ServiceCategoryRepository serviceCategoryRepository;
+
+    @Autowired
+    private ServiceRepository serviceRepository;
 
     // Lấy store owner hiện tại
     private StoreOwner getCurrentStoreOwner() {
@@ -85,6 +92,12 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
             return new ApiResponse<>("Số điện thoại đã tồn tại!!!", null);
         }
 
+        //Kiểm tra xem StoreOwner có shop chưa
+        LaundryShop laundryShop = laundryShopRepository.findByStoreOwner(storeOwner);
+        if (laundryShop == null) {
+            return new ApiResponse<>("StoreOwner chưa có shop, không thể tạo nhân viên", null);
+        }
+
         // Mã hóa password trước khi lưu xuống db
         String encodedPassword = passwordEncoder.encode(employeeDTO.getPassword());
 
@@ -98,6 +111,9 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
                 Roles.Employee,
                 storeOwner
         );
+
+        //Gán shop vào employee
+        employee.setShop(laundryShop);
 
         // Sử dụng service để thêm employee với quan hệ storeOwner
         employeeService.addEmployee(employee);
@@ -126,7 +142,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
 
         employeeService.deleteEmployee(employee);
 
-        return new ApiResponse<>("Đã xóa nhân viên thành công", "success");
+        return new ApiResponse<>("Đã xóa nhân viên thành công", null);
     }
 
     @Override
@@ -252,6 +268,95 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         return new ApiResponse<>("Cập nhật cửa hàng thành công!!!", responseDTO);
     }
 
+    @Override
+    public ApiResponse<ServiceCategoryDTO> createServiceCategory(StoreOwner storeOwner, ServiceCategoryDTO serviceCategoryDTO) {
+        LaundryShop existingShop =  laundryShopRepository.findByStoreOwner(storeOwner);
+
+        //Kiểm tra dữ liệu
+        if(serviceCategoryRepository.existsByName(serviceCategoryDTO.getName())) {
+            return new ApiResponse<>("Tên mục dịch vụ đã tồn tại vui lòng chọn tên khác!!!");
+        }
+
+        if(serviceCategoryDTO.getName() == null) {
+            return new ApiResponse<>("Tên mục dịch vụ không được để trống!!!");
+        }
+
+        if(serviceCategoryDTO.getDescription() == null) {
+            return new ApiResponse<>("Thiếu phần mô tả!!!");
+        }
+
+        if(serviceCategoryDTO.getImageDesc() == null) {
+            return new ApiResponse<>("Thiếu ảnh mô tả!!!");
+        }
+
+        ServiceCategory serviceCategory = new ServiceCategory(
+                serviceCategoryDTO.getId(),
+                serviceCategoryDTO.getName(),
+                serviceCategoryDTO.getDescription(),
+                serviceCategoryDTO.getImageDesc()
+        );
+
+        serviceCategory.setShop(existingShop);
+
+        ServiceCategory savedCategory = serviceCategoryRepository.save(serviceCategory);
+
+        ServiceCategoryDTO responseDTO = new ServiceCategoryDTO(
+                savedCategory.getId(),
+                savedCategory.getName(),
+                savedCategory.getImageDesc(),
+                savedCategory.getDescription()
+        );
+
+        return new ApiResponse<>("Thêm mục dịch vụ thành công!!!", responseDTO);
+    }
+
+    @Override
+    public ApiResponse<ServiceDTO> createService(StoreOwner storeOwner, ServiceDTO serviceDTO) {
+        LaundryShop existingShop =  laundryShopRepository.findByStoreOwner(storeOwner);
+        ServiceCategory serviceCategory = serviceCategoryRepository.findByShop(existingShop);
+
+        //kiểm tra dữ liệu
+        if(serviceRepository.existsByName(serviceDTO.getName())) {
+            return new ApiResponse<>("Tên dịch vụ đã tồn tại vui lòng chọn tên khác!!!");
+        }
+
+        if(serviceDTO.getName() == null) {
+            return new ApiResponse<>("Tên dịch vụ không được để trống!!!");
+        }
+
+        if(serviceDTO.getPrice() == null) {
+            return new ApiResponse<>("Tên mục dịch vụ đã tồn tại vui lòng chọn tên khác!!!");
+        }
+
+        if(serviceDTO.getImageDesc() == null) {
+            return new ApiResponse<>("Thiếu ảnh mô tả!!!");
+        }
+
+        Service service = new Service(
+                serviceDTO.getId(),
+                serviceDTO.getName(),
+                serviceDTO.getDescription(),
+                serviceDTO.getEstimatedTime(),
+                serviceDTO.getPrice(),
+                serviceDTO.getImageDesc()
+        );
+
+        service.setCategory(serviceCategory);
+
+        Service savedService = serviceRepository.save(service);
+
+        ServiceDTO responseDTO = new ServiceDTO(
+                savedService.getId(),
+                savedService.getName(),
+                savedService.getDescription(),
+                savedService.getEstimatedTime(),
+                savedService.getImageDesc(),
+                savedService.getPrice()
+        );
+
+        return new ApiResponse<>("Thêm dịch vụ thành công!!!", responseDTO);
+    }
+
     // Thêm phương thức tìm employee theo thông tin
     private Employee findEmployeeByInfo(EmployeeDTO employeeDTO) {
         Employee employee = null;
@@ -291,65 +396,3 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         return dto;
     }
 }
-=======
-package com.example.laundry.services.impl;
-
-import com.example.laundry.models.report.Report;
-import com.example.laundry.models.shop.Service;
-import com.example.laundry.models.user.Employee;
-import com.example.laundry.models.user.Roles;
-import com.example.laundry.models.user.StoreOwner;
-import com.example.laundry.models.user.User;
-import com.example.laundry.repository.EmployeeRepository;
-import com.example.laundry.repository.StoreOwnerRepository;
-import com.example.laundry.services.StoreOwnerService;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
-
-@org.springframework.stereotype.Service
-public class StoreOwnerServiceImpl implements StoreOwnerService {
-    @Autowired
-    private StoreOwnerRepository storeOwnerRepository;
-    @Autowired
-    private EmployeeRepository employeeRepository;
-
-    @Override
-    public void addStoreOwner(StoreOwner storeOwner) {
-        storeOwnerRepository.save(storeOwner);
-    }
-
-    @Override
-    public void deleteStoreOwner(StoreOwner storeOwner) {
-        storeOwnerRepository.delete(storeOwner);
-    }
-
-    @Override
-    public void addEmployee(StoreOwner storeOwner, Employee employee) {
-        // Đảm bảo Employee biết StoreOwner nào tạo ra nó
-        employee.setStoreOwner(storeOwner);
-        employeeRepository.save(employee);
-    }
-
-    @Override
-    public void removeEmployee(StoreOwner storeOwner, Employee employee) {
-        // Chỉ xóa Employee nếu nó thuộc về StoreOwner hiện tại
-        if (employee.getStoreOwner() != null && employee.getStoreOwner().getId().equals(storeOwner.getId())) {
-            employeeRepository.delete(employee);
-        }
-    }
-
-    @Override
-    public void updateEmployee(StoreOwner storeOwner, Employee employee) {
-        // Chỉ cập nhật Employee nếu nó thuộc về StoreOwner hiện tại
-        if (employee.getStoreOwner() != null && employee.getStoreOwner().getId().equals(storeOwner.getId())) {
-            employeeRepository.save(employee);
-        }
-    }
-
-    @Override
-    public List<Employee> getEmployeesByStoreOwner(StoreOwner storeOwner) {
-        return employeeRepository.findByStoreOwner(storeOwner);
-    }
-}
->>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a

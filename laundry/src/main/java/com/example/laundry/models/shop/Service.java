@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 package com.example.laundry.models.shop;
 
 import jakarta.persistence.*;
@@ -26,7 +25,7 @@ public class Service {
     private String name;
 
     @Column(nullable = false)
-    private double price;
+    private Double price;
 
     @Column
     private String description;
@@ -38,7 +37,8 @@ public class Service {
     private String imageDesc;
 
     @ManyToOne
-    private LaundryShop shop;
+    @JoinColumn(name = "category_id")
+    private ServiceCategory category;
 
     public Service(String name, double price, String description, String estimatedTime) {
         this.name = name;
@@ -46,51 +46,13 @@ public class Service {
         this.description = description;
         this.estimatedTime = estimatedTime;
     }
-}
-=======
-package com.example.laundry.models.shop;
 
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
-
-@Data
-@Setter
-@Getter
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-@Entity
-@Table(name="services")
-@DiscriminatorValue("SERVICE")
-public class Service {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
-    private String name;
-
-    @Column(nullable = false)
-    private double price;
-
-    @Column
-    private String description;
-
-    @Column(name = "estimated_time")
-    private String estimatedTime;
-
-    @ManyToOne
-    private LaundryShop shop;
-
-    public Service(String name, double price, String description, String estimatedTime) {
+    public Service(Long id, String name, String description, String estimateTime, Double price, String imageDesc) {
+        this.id = id;
         this.name = name;
-        this.price = price;
         this.description = description;
-        this.estimatedTime = estimatedTime;
+        this.estimatedTime = estimateTime;
+        this.price = price;
+        this.imageDesc = imageDesc;
     }
 }
->>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a

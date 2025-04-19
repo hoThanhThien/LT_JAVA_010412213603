@@ -10,6 +10,8 @@ import com.example.laundry.services.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
 public class PaymentServiceImpl implements PaymentService {
     @Autowired
@@ -28,7 +30,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         return PaymentResponse.builder()
                 .orderId(Long.valueOf(order.getId().toString()))
-                .totalAmount(order.getTotalAmount())
+                // ép kiểu
+                .totalAmount(BigDecimal.valueOf(order.getTotalAmount()))
                 .accountHolder("Pham Minh Chi")
                 .bankName("MB Bank")
                 .accountNumber("0943869063")

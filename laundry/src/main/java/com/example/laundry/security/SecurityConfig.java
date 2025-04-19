@@ -12,7 +12,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-<<<<<<< HEAD
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -20,8 +19,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
-=======
->>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
 
 @Configuration
 @EnableWebSecurity
@@ -33,11 +30,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-<<<<<<< HEAD
                 .cors(httpSecurityCorsConfigurer
                         -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()))
-=======
->>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
@@ -55,7 +49,6 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
-<<<<<<< HEAD
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -70,6 +63,4 @@ public class SecurityConfig {
 
         return source;
     }
-=======
->>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
 }

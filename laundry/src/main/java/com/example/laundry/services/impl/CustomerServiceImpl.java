@@ -1,54 +1,54 @@
 package com.example.laundry.services.impl;
 
-<<<<<<< HEAD
-import com.example.laundry.dto.CustomerResponseDTO;
-import com.example.laundry.dto.RegisterRequest;
-import com.example.laundry.dto.RegisterResponse;
+import com.example.laundry.dto.*;
 import com.example.laundry.models.notification.RefreshToken;
+import com.example.laundry.models.order.Order;
+import com.example.laundry.models.order.OrderStatus;
+import com.example.laundry.models.shop.LaundryShop;
+import com.example.laundry.models.shop.Service;
+import com.example.laundry.models.shop.ServiceCategory;
 import com.example.laundry.models.user.Customer;
 import com.example.laundry.models.user.Roles;
-import com.example.laundry.repository.CustomerRepository;
-import com.example.laundry.repository.UserRepository;
+import com.example.laundry.repository.*;
 import com.example.laundry.security.JwtUtil;
 import com.example.laundry.services.CustomerService;
+import com.example.laundry.services.OrderService;
 import com.example.laundry.services.RefreshTokenService;
+import com.example.laundry.utils.ApiResponse;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
-import org.antlr.v4.runtime.misc.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
-=======
-import com.example.laundry.models.user.Customer;
-import com.example.laundry.repository.CustomerRepository;
-import com.example.laundry.services.CustomerService;
-import org.springframework.beans.factory.annotation.Autowired;
->>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
 
 @org.springframework.stereotype.Service
 public class CustomerServiceImpl implements CustomerService {
     @Autowired
     private CustomerRepository customerRepository;
-<<<<<<< HEAD
-  @Autowired
-  private JwtUtil jwtUtil;
-  @Autowired
-  private RefreshTokenService refreshTokenService;
+    @Autowired
+    private JwtUtil jwtUtil;
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+    @Autowired
+    private ServiceRepository serviceRepository;
+    @Autowired
+    private OrderService orderService;
 
-  @Override
-=======
+    @Autowired
+    private ServiceCategoryRepository serviceCategoryRepository;
+    @Autowired
+    private OrderRepository orderRepository;
 
     @Override
->>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
     public Customer addCustomer(Customer customer) {
         customerRepository.save(customer);
         return customer;
     }
 
-<<<<<<< HEAD
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -57,6 +57,9 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Autowired
     private FirebaseAuth firebaseAuth;
+
+    @Autowired
+    private LaundryShopRepository laundryShopRepository;
 
     @Override
     @Transactional
@@ -68,12 +71,24 @@ public class CustomerServiceImpl implements CustomerService {
 
             Map<String, Object> claims = decodedToken.getClaims();
 
-            if (claims.containsKey("phone")) {
-                verifiedPhone = (String) claims.get("phone");
+            if (claims.containsKey("phone_number")) {
+                verifiedPhone = (String) claims.get("phone_number");
+
+                //Chuyển +84 thành 0
+                if(verifiedPhone.startsWith("+84")) {
+                    verifiedPhone = "0" + verifiedPhone.substring(3);
+                }
             }
 
+            //Kiểm tra xem có dữ liệu chưa
             if (verifiedPhone == null || verifiedPhone.isEmpty()) {
-                return new CustomerResponseDTO("Số điện thoại đã được dùng rồi", null);
+                return new CustomerResponseDTO("Số điện thoại không tồn tại", null);
+            }
+
+            //Kiểm tra tồn tại
+            if(customerRepository.findByPhone(verifiedPhone).isPresent()) {
+                System.out.println("Số điện thoại đã tồn tại trong hệ thống: " + verifiedPhone);
+                return new CustomerResponseDTO("Số điện thoại đã được đăng ký trong hệ thống", null);
             }
 
             //Tạo người dùng
@@ -117,30 +132,99 @@ public class CustomerServiceImpl implements CustomerService {
         }
     }
 
-=======
->>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
-//    @Override
-//    public Order bookOrder(Customer customer, LaundryShop laundryShop, Service service, String instructions) {
-//        return customerRepository.bookOrder(customer, laundryShop, service);
-//    }
-//
-//    @Override
-//    public void trackOrder(Customer customer, Order order) {
-//
-//    }
-//
-//    @Override
-//    public void makePayment(Customer customer, Order order, String paymentMethod, double amount) {
-//
-//    }
-//
-//    @Override
-//    public List<Order> getOrderHistory(Customer customer) {
-//        return null;
-//    }
-//
-//    @Override
-//    public List<LaundryShop> searchShops(Customer customer, String location) {
-//        return null;
-//    }
+    @Override
+    public ApiResponse<OrderResponse> bookService(Customer customer, OrderDTO orderDTO) {
+        // Kiem tra customer
+        Customer customerId = customerRepository.findById(customer.getId())
+                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + customer));
+
+        // Load LaundryShop từ database
+        LaundryShop laundryShop = null;
+        if (orderDTO.getLaundryShop() != null && orderDTO.getLaundryShop().getId() != null) {
+            laundryShop = laundryShopRepository.findById(Math.toIntExact(orderDTO.getLaundryShop().getId()))
+                    .orElseThrow(() -> new RuntimeException("LaundryShop not found with id: " + orderDTO.getLaundryShop().getId()));
+        } else {
+            return new ApiResponse<>("Vui lòng chọn cửa hàng giặt là!!!");
+        }
+
+        // Load ServiceCategory từ database
+        ServiceCategory serviceCategory = null;
+        if (orderDTO.getServiceCategory() != null && orderDTO.getServiceCategory().getId() != null) {
+            serviceCategory = serviceCategoryRepository.findById(orderDTO.getServiceCategory().getId())
+                    .orElseThrow(() -> new RuntimeException("ServiceCategory not found with id: " + orderDTO.getServiceCategory().getId()));
+        } else {
+            return new ApiResponse<>("Vui lòng chọn loại dịch vụ!!!");
+        }
+
+        // Load Service từ database và lấy giá
+        Service service = null;
+        if (orderDTO.getService() != null && orderDTO.getService().getId() != null) {
+            service = serviceRepository.findById(orderDTO.getService().getId())
+                    .orElseThrow(() -> new RuntimeException("Service not found with id: " + orderDTO.getService().getId()));
+        } else {
+            return new ApiResponse<>("Vui lòng chọn dịch vụ!!!");
+        }
+
+        // Kiem tra du lieu
+        Double orderVolume = orderDTO.getOrderVolume();
+        if(orderVolume == null|| orderDTO.getOrderVolume() <= 0) {
+            return new ApiResponse<>("Khối lượng đồ không được để trống và phải lớn hơn 0");
+        }
+
+        Order order = new Order();
+        order.setCustomer(customer);
+        order.setLaundryShop(laundryShop);
+        order.setServiceCategory(serviceCategory);
+        order.setService(service);
+        order.setOrderVolume(orderDTO.getOrderVolume());
+        order.setOrderStatus(OrderStatus.IN_PROGRESS);
+        order.setCreatedAt(orderDTO.getCreatedAt());
+        order.setInstructions(orderDTO.getInstructions());
+        double totalAmount = orderDTO.getOrderVolume() * service.getPrice();
+        order.setTotalAmount(totalAmount);
+
+        Order savedOrder = orderService.save(order);
+
+        OrderResponse responseDTO = new OrderResponse();
+                responseDTO.setId(savedOrder.getId());
+                responseDTO.setTotalAmount(savedOrder.getTotalAmount());
+                responseDTO.setOrderStatus(savedOrder.getOrderStatus());
+                responseDTO.setImgProduct(savedOrder.getImgProduct());
+                responseDTO.setLaundryShopName(laundryShop.getName());
+                responseDTO.setServiceCategoryName(serviceCategory.getName());
+                responseDTO.setServiceName(service.getName());
+                responseDTO.setServicePrice(service.getPrice());
+                responseDTO.setOrderVolume(savedOrder.getOrderVolume());
+                responseDTO.setCreatedAt(savedOrder.getCreatedAt());
+                responseDTO.setInstructions(savedOrder.getInstructions());
+
+        return new ApiResponse<>("Bạn đã ta đơn giặt hàng thành công. Vui lòng chú ý thông báo của chúng tôi!", responseDTO);
+    }
+
+    @Override
+    public ApiResponse<List<OrderResponse>> historyOrder(Customer customer, OrderDTO orderDTO) {
+        List<Order> orderOfCustomer = orderRepository.findOrdersByCustomerId(customer.getId());
+
+        if(orderOfCustomer == null) {
+            return new ApiResponse<>("Bạn chưa có đơn đặt lịch nào!!!");
+        }
+
+        List<OrderResponse> responseList = orderOfCustomer.stream()
+                .map(order -> {
+                    OrderResponse orderResponse = new OrderResponse();
+                    orderResponse.setId(order.getId());
+                    orderResponse.setTotalAmount(order.getTotalAmount());
+                    orderResponse.setOrderStatus(order.getOrderStatus());
+                    orderResponse.setLaundryShopName(order.getLaundryShop().getName());
+                    orderResponse.setServiceCategoryName(order.getServiceCategory().getName());
+                    orderResponse.setServiceName(order.getService().getName());
+                    orderResponse.setServicePrice(order.getService().getPrice());
+                    orderResponse.setOrderVolume(order.getOrderVolume());
+                    orderResponse.setCreatedAt(order.getCreatedAt());
+                    return orderResponse;
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        return new ApiResponse<>("Lấy lịch sử đơn hàng thành công", responseList);
+    }
 }

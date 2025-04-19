@@ -9,10 +9,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.io.Serializable;
-<<<<<<< HEAD
 import java.util.Date;
-=======
->>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
 import java.util.UUID;
 
 @Entity
@@ -36,11 +33,7 @@ public abstract class User implements Serializable {
     @Column(nullable = false)
     private String password;
 
-<<<<<<< HEAD
     @Column(unique = true, length = 50, nullable = true)
-=======
-    @Column(unique = true, length = 50)
->>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
     private String email;
 
     @Column(unique = true, length = 11)
@@ -53,7 +46,6 @@ public abstract class User implements Serializable {
     @Column
     private Roles roles;
 
-<<<<<<< HEAD
     @Column(name = "created_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
@@ -61,6 +53,9 @@ public abstract class User implements Serializable {
     @Column(name = "updated_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
+
+    @Column(name = "avt_user")
+    private String avtUser;
 
     // Constructor, getters, and setters
 
@@ -75,8 +70,6 @@ public abstract class User implements Serializable {
         this.updatedAt = new Date();
     }
 
-=======
->>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
     public User(String username, String password, String email, String phone, String address, Roles roles) {
         this.username = username;
         this.password = password;

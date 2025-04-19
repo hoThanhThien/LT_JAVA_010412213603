@@ -6,20 +6,16 @@ import com.example.laundry.models.shop.Service;
 import com.example.laundry.models.user.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, UUID> {
     boolean existsByPhone(String phone);
     boolean existsByEmail(String email);
-<<<<<<< HEAD
+    Optional<Customer> findByPhone(String phone);
 
-    boolean existsById(Long customerId);
-
-=======
->>>>>>> 84721bd55a92f8a6da77804fa8a257fe7820d08a
+    Customer findByUsername(String currentUsername);
     //    Order bookOrder(Customer customer, LaundryShop laundryShop, Service service);
 //    void trackOrder(Customer customer, Order order);
 //    void makePayment(Customer customer, Order order, String paymentMethod, double amount);
