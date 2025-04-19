@@ -20,6 +20,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
+
 @org.springframework.stereotype.Service
 public class StoreOwnerServiceImpl implements StoreOwnerService {
     @Autowired
@@ -234,7 +236,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         // Lưu shop vào database
         LaundryShop createdShop = laundryShopRepository.save(laundryShop);
 
-        LaundryShopDTO responseDTO = convertToResponseDTO(createdShop);
+        LaundryShopDTO responseDTO = convertToLaundryDTO(createdShop);
 
         return new ApiResponse<>("Tạo cửa hàng thành công!!!", responseDTO);
     }
@@ -263,9 +265,27 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         if (laundryShopDTO.getDescription() != null) existingShop.setDescription(laundryShopDTO.getDescription());
 
         LaundryShop updatedShop = laundryShopRepository.save(existingShop);
-        LaundryShopDTO responseDTO = convertToResponseDTO(updatedShop);
+        LaundryShopDTO responseDTO = convertToLaundryDTO(updatedShop);
 
         return new ApiResponse<>("Cập nhật cửa hàng thành công!!!", responseDTO);
+    }
+
+    @Override
+    public ApiResponse<String> deleteLaundryShop(StoreOwner storeOwner, LaundryShopDTO laundryShopDTO) {
+        // Kiểm tra xem tồn tại không
+        if(laundryShopDTO.getName() == null || laundryShopDTO.getName().isEmpty()) {
+            return new ApiResponse<>("Không đủ thông tin để xóa!!!", null);
+        }
+
+        LaundryShop laundryShop = laundryShopRepository.findByStoreOwner(storeOwner);
+
+        if(laundryShop == null) {
+            return new ApiResponse<>("Không tìm thấy cửa hàng với thông tin đã cung cấp!!!", null);
+        }
+
+        laundryShopRepository.delete(laundryShop);
+
+        return new ApiResponse<>("Đã xóa cửa hàng thành công", null);
     }
 
     @Override
@@ -273,8 +293,8 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         LaundryShop existingShop =  laundryShopRepository.findByStoreOwner(storeOwner);
 
         //Kiểm tra dữ liệu
-        if(serviceCategoryRepository.existsByName(serviceCategoryDTO.getName())) {
-            return new ApiResponse<>("Tên mục dịch vụ đã tồn tại vui lòng chọn tên khác!!!");
+        if (serviceCategoryRepository.existsByNameAndShop(serviceCategoryDTO.getName(), existingShop)) {
+            return new ApiResponse<>("Tên mục dịch vụ đã tồn tại trong cửa hàng!", null);
         }
 
         if(serviceCategoryDTO.getName() == null) {
@@ -311,13 +331,59 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
     }
 
     @Override
+    public ApiResponse<ServiceCategoryDTO> updateServiceCategory(StoreOwner storeOwner, ServiceCategoryDTO serviceCategoryDTO) {
+        //Kiểm tra dữ liệu
+        ServiceCategory exstingServiceCategory = serviceCategoryRepository.findById(serviceCategoryDTO.getId()).get();
+        if(serviceCategoryDTO.getId() == null) {
+            return new ApiResponse<>("Bạn chưa có mục dịch vụ để cập nhật!!!", null);
+        }
+
+        if (serviceCategoryDTO.getName() != null &&
+                !serviceCategoryDTO.getName().equals(exstingServiceCategory.getName()) &&
+                serviceCategoryRepository.existsByNameAndShopAndIdNot(serviceCategoryDTO.getName(), exstingServiceCategory.getShop(), exstingServiceCategory.getId())) {
+
+            return new ApiResponse<>("Tên mục dịch vụ đã tồn tại trong cửa hàng!", null);
+        }
+
+
+        if(serviceCategoryDTO.getName() != null) exstingServiceCategory.setName(serviceCategoryDTO.getName());
+        if(serviceCategoryDTO.getDescription() != null) exstingServiceCategory.setDescription(serviceCategoryDTO.getDescription());
+        if(serviceCategoryDTO.getImageDesc() != null) exstingServiceCategory.setImageDesc(serviceCategoryDTO.getImageDesc());
+        if(serviceCategoryDTO.getDescription() != null) exstingServiceCategory.setDescription(serviceCategoryDTO.getDescription());
+
+        ServiceCategory updatedService = serviceCategoryRepository.save(exstingServiceCategory);
+
+        ServiceCategoryDTO responseDTO = convertToServiceCategoryDTO(updatedService);
+
+        return new ApiResponse<>("Cập nhật mục dịch vụ thành công!!!", responseDTO);
+    }
+
+    @Override
+    public ApiResponse<Integer> deleteServiceCategory(StoreOwner storeOwner, ServiceCategoryDTO serviceCategoryDTO) {
+        // Kiểm tra dữ liệu
+        if(serviceCategoryDTO.getId() == null) {
+            return new ApiResponse<>("Không đủ thông tin để xóa!!!", null);
+        }
+
+        Optional<ServiceCategory> serviceCategory = serviceCategoryRepository.findById(serviceCategoryDTO.getId());
+
+        if(serviceCategory.isEmpty()) {
+            return new ApiResponse<>("Không tìm thấy dịch vụ với thông tin đã cung cấp!!!", null);
+        }
+
+        serviceCategoryRepository.delete(serviceCategory.get());
+
+        return new ApiResponse<>("Đã xóa mục dịch vụ thành công", null);
+    }
+
+    @Override
     public ApiResponse<ServiceDTO> createService(StoreOwner storeOwner, ServiceDTO serviceDTO) {
         LaundryShop existingShop =  laundryShopRepository.findByStoreOwner(storeOwner);
         ServiceCategory serviceCategory = serviceCategoryRepository.findByShop(existingShop);
 
         //kiểm tra dữ liệu
-        if(serviceRepository.existsByName(serviceDTO.getName())) {
-            return new ApiResponse<>("Tên dịch vụ đã tồn tại vui lòng chọn tên khác!!!");
+        if (serviceRepository.existsByNameAndCategory_Shop(serviceDTO.getName(), existingShop)) {
+            return new ApiResponse<>("Tên dịch vụ đã tồn tại trong cửa hàng!", null);
         }
 
         if(serviceDTO.getName() == null) {
@@ -325,7 +391,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         }
 
         if(serviceDTO.getPrice() == null) {
-            return new ApiResponse<>("Tên mục dịch vụ đã tồn tại vui lòng chọn tên khác!!!");
+            return new ApiResponse<>("Giá không được để trống!!!");
         }
 
         if(serviceDTO.getImageDesc() == null) {
@@ -357,7 +423,54 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         return new ApiResponse<>("Thêm dịch vụ thành công!!!", responseDTO);
     }
 
-    // Thêm phương thức tìm employee theo thông tin
+    @Override
+    public ApiResponse<ServiceDTO> updateService(StoreOwner storeOwner, ServiceDTO serviceDTO) {
+        // Kiểm tra dữ liệu
+        Service exstingService = serviceRepository.findById(serviceDTO.getId()).get();
+        if(serviceDTO.getId() == null) {
+            return new ApiResponse<>("Bạn chưa có dịch vụ để cập nhật!!!", null);
+        }
+
+        if (serviceDTO.getName() != null &&
+                !serviceDTO.getName().equals(exstingService.getName()) &&
+                serviceRepository.existsByNameAndCategory_ShopAndIdNot(serviceDTO.getName(), exstingService.getCategory().getShop(), exstingService.getId())) {
+
+            return new ApiResponse<>("Tên dịch vụ đã tồn tại trong cửa hàng!", null);
+        }
+
+
+
+        if(serviceDTO.getName() != null) exstingService.setName(serviceDTO.getName());
+        if(serviceDTO.getDescription() != null) exstingService.setDescription(serviceDTO.getDescription());
+        if(serviceDTO.getPrice() != null) exstingService.setPrice(serviceDTO.getPrice());
+        if(serviceDTO.getImageDesc() != null) exstingService.setImageDesc(serviceDTO.getImageDesc());
+        if(serviceDTO.getEstimatedTime() != null) exstingService.setEstimatedTime(serviceDTO.getEstimatedTime());
+        
+        Service updatedService = serviceRepository.save(exstingService);
+
+        ServiceDTO responseDTO = convertToServiceDTO(updatedService);
+        
+        return new ApiResponse<>("Cập nhật dịch vụ thành công!!!", responseDTO);
+    }
+
+    @Override
+    public ApiResponse<Integer> deleteService(StoreOwner storeOwner, ServiceDTO serviceDTO) {
+        // Kiểm tra dữ liệu
+        if(serviceDTO.getId() == null) {
+            return new ApiResponse<>("Không đủ thông tin để xóa!!!", null);
+        }
+
+        Optional<Service> service = serviceRepository.findById(serviceDTO.getId());
+
+        if(service.isEmpty()) {
+            return new ApiResponse<>("Không tìm thấy dịch vụ với thông tin đã cung cấp!!!", null);
+        }
+
+        serviceRepository.delete(service.get());
+
+        return new ApiResponse<>("Đã xóa dịch vụ thành công", null);
+    }
+
     private Employee findEmployeeByInfo(EmployeeDTO employeeDTO) {
         Employee employee = null;
 
@@ -379,7 +492,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         return null;
     }
 
-    private LaundryShopDTO convertToResponseDTO(LaundryShop shop) {
+    private LaundryShopDTO convertToLaundryDTO(LaundryShop shop) {
         LaundryShopDTO dto = new LaundryShopDTO();
         dto.setId(shop.getId());
         dto.setName(shop.getName());
@@ -392,6 +505,28 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         ownerDTO.setUsername(shop.getStoreOwner().getUsername());
 
         dto.setStoreOwner(ownerDTO);
+
+        return dto;
+    }
+
+    private ServiceDTO convertToServiceDTO(Service service) {
+        ServiceDTO dto = new ServiceDTO();
+        dto.setId(service.getId());
+        dto.setName(service.getName());
+        dto.setDescription(service.getDescription());
+        dto.setPrice(service.getPrice());
+        dto.setImageDesc(service.getImageDesc());
+        dto.setEstimatedTime(service.getEstimatedTime());
+
+        return dto;
+    }
+
+    private ServiceCategoryDTO convertToServiceCategoryDTO(ServiceCategory serviceCategory) {
+        ServiceCategoryDTO dto = new ServiceCategoryDTO();
+        dto.setId(serviceCategory.getId());
+        dto.setName(serviceCategory.getName());
+        dto.setDescription(serviceCategory.getDescription());
+        dto.setImageDesc(serviceCategory.getImageDesc());
 
         return dto;
     }

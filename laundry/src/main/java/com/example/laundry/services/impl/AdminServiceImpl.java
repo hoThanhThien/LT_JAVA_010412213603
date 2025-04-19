@@ -109,7 +109,10 @@ public class AdminServiceImpl implements AdminService {
                         null,
                         owner.getEmail(),
                         owner.getPhone(),
-                        owner.getAddress()
+                        owner.getAddress(),
+                        owner.getRoles(),
+                        owner.getCreatedAt(),
+                        owner.getUpdatedAt()
                 ))
                 .toList();
 
