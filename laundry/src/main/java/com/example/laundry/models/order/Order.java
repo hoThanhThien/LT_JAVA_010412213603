@@ -2,6 +2,7 @@ package com.example.laundry.models.order;
 
 import com.example.laundry.models.shop.LaundryShop;
 import com.example.laundry.models.shop.Service;
+import com.example.laundry.models.shop.ServiceCategory;
 import com.example.laundry.models.user.Customer;
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,7 +12,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.util.Date;
 
-@Data
 @Builder
 @Getter
 @Setter
@@ -40,19 +40,28 @@ public class Order {
     @ManyToOne
     private LaundryShop laundryShop;
 
+
+    @ManyToOne
+    private ServiceCategory serviceCategory;
+
     @ManyToOne
     private Service service;
+
+    @Column(name = "order_volume")
+    private Double orderVolume;
 
     @CreationTimestamp
     private Date createdAt;
     private Date updatedAt;
     private String instructions;
 
-    public Order(OrderStatus orderStatus, LaundryShop laundryShop, Customer customer, Service service, String instructions) {
+    public Order(OrderStatus orderStatus, LaundryShop laundryShop, Customer customer, ServiceCategory serviceCategory, Service service, Double orderVolume, String instructions) {
         this.orderStatus = orderStatus;
         this.laundryShop = laundryShop;
         this.customer = customer;
+        this.serviceCategory = serviceCategory;
         this.service = service;
+        this.orderVolume = orderVolume;
         this.instructions = instructions;
         this.createdAt = new Date();
     }
@@ -60,9 +69,6 @@ public class Order {
     public String getCustomerUsername() {
 
         return "";
-    }
-
-    public void setLaundryShop(LaundryShop shop) {
     }
 
     public void setSpecialInstructions(String instructions) {
