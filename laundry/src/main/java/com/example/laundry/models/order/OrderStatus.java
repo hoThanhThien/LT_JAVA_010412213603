@@ -1,9 +1,10 @@
 package com.example.laundry.models.order;
 
 public enum OrderStatus {
-    NEW,
-    OPEN,
+    //NEW,
+    //OPEN,
+    DONE,
     IN_PROGRESS,
-    RESOLVED,
-    CLOSED;
+    //RESOLVED,
+    //CLOSED;
 }

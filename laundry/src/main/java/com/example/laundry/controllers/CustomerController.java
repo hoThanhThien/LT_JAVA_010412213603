@@ -24,7 +24,7 @@ import java.util.UUID;
 
 @CrossOrigin(origins = "http://127.0.0.1:3000", allowCredentials = "true")
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/customer")
 public class CustomerController {
     @Autowired
     private CustomerService customerService;
@@ -47,12 +47,6 @@ public class CustomerController {
         return customerRepository.findByUsername(currentUsername);
     }
 
-    @PostMapping("/register")
-    @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<CustomerResponseDTO> register(@RequestBody RegisterRequest registerRequest) {
-        CustomerResponseDTO response = customerService.register(registerRequest);
-        return ResponseEntity.ok(response);
-    }
     //order cho customer
     @PostMapping("/{customerId}/orders")
     @PreAuthorize("hasRole('CUSTOMER')")
@@ -71,7 +65,7 @@ public class CustomerController {
         }
     }
     //order cho history customer
-    @GetMapping("/orders/history")
+    @GetMapping("/{customerId}/history-order")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<List<OrderResponse>>> historyOrder(@RequestHeader("Authorization") String authHeader) {
         try {

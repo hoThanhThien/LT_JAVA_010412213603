@@ -6,13 +6,17 @@ import com.example.laundry.models.user.User;
 import com.example.laundry.repository.RefreshTokenRepository;
 import com.example.laundry.security.JwtUtil;
 import com.example.laundry.services.AuthService;
+import com.example.laundry.services.CustomerService;
 import com.example.laundry.services.RefreshTokenService;
 import com.example.laundry.services.impl.TokenBlackListServiceImpl;
 import com.example.laundry.utils.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @CrossOrigin(origins = "http://127.0.0.1:3000", allowCredentials = "true")
 @RestController
@@ -29,6 +33,8 @@ public class AuthController {
   private JwtUtil jwtUtil;
   @Autowired
   private RefreshTokenRepository refreshTokenRepository;
+  @Autowired
+  private CustomerService customerService;
 
   @PostMapping("/login")
   public LoginResponse login(@RequestBody LoginRequest loginRequest) {
@@ -58,4 +64,12 @@ public class AuthController {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
   }
+
+  @PostMapping("/register")
+  @PreAuthorize("hasRole('CUSTOMER')")
+  public ResponseEntity<CustomerResponseDTO> register(@RequestBody RegisterRequest registerRequest) {
+    CustomerResponseDTO response = customerService.register(registerRequest);
+    return ResponseEntity.ok(response);
+  }
 }
+
