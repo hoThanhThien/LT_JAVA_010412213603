@@ -38,7 +38,7 @@ public class Order {
     private Customer customer;
 
     @ManyToOne
-    private LaundryShop shop;
+    private LaundryShop laundryShop;
 
     @ManyToOne
     private Service service;
@@ -48,9 +48,9 @@ public class Order {
     private Date updatedAt;
     private String instructions;
 
-    public Order(OrderStatus orderStatus, LaundryShop shop, Customer customer, Service service, String instructions) {
+    public Order(OrderStatus orderStatus, LaundryShop laundryShop, Customer customer, Service service, String instructions) {
         this.orderStatus = orderStatus;
-        this.shop = shop;
+        this.laundryShop = laundryShop;
         this.customer = customer;
         this.service = service;
         this.instructions = instructions;
