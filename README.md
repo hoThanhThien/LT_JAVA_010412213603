@@ -14,18 +14,61 @@ Các API :
 -CUSTOMER
 
 
++ Register: POST http://localhost:8080/customer/register
+
+
++POST http://localhost:8080/auth/refresh-token
+
+
 +login: POST http://localhost:8080/auth/login
+
+
++logout: POST http://localhost:8080/auth/logout
+
+
+
++POST http://localhost:8080/customer/{{customerId}}/orders  
+
+
++GET http://localhost:8080/customer/{{customerId}}/history-order
+
+
++
 
 
 + lich su order cho khach:GET http://localhost:8080/customer/orders/history?paged=0&size=5
 
-  
+
 + update customer:PUT http://localhost:8080/accounts/me
 
   
 -ADMIN
 +login AMDIN: POST http://localhost:8080/auth/login
+
+
 + lich su dat hang cho admin GET http://localhost:8080/admin/orders/history?page=0&size=5
+
+
++POST http://localhost:8080/admin/storeowner/create
+
+
++DELETE http://localhost:8080/admin/storeowner/delete
+
+
++GET http://localhost:8080/admin/storeowners?page={{$random.integer(100)}}&
+
+
++GET http://localhost:8080/admin/orders
+
+
++GET http://localhost:8080/admin/orders/customer/{{customerId}}
+
+
++GET http://localhost:8080/admin/orders/status={{status}}?page=0&size=5
+
+
+
+    
 -STOREOWNER
 +POST http://localhost:8080/admin/storeowner/create
 
@@ -72,7 +115,14 @@ Các API :
 +GET http://localhost:8080/shop/{{shopId}}/category/{{categoryId}}/services
 
 
--SHop laundry
+-Shop laundry
 
 
 +GET http://localhost:8080/shops
+
+-employee
+
++PUT http://localhost:8080/employee/{{orderId}}/status?status=DONE
+
+
+
