@@ -1,16 +1,20 @@
 package com.example.laundry.services.impl;
 
-import com.example.laundry.dto.LaundryShopDTO;
+import com.example.laundry.dto.*;
 import com.example.laundry.models.shop.LaundryShop;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.LaundryShopRepository;
 import com.example.laundry.services.LaundryShopService;
 import com.example.laundry.utils.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class LaundryShopServiceImpl implements LaundryShopService {
@@ -38,6 +42,26 @@ public class LaundryShopServiceImpl implements LaundryShopService {
     }
 
     @Override
+    public PagedResponse<LaundryShopDTO> getAllShops(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<LaundryShop> shopPage = laundryShopRepository.findAll(pageable);
+
+        List<LaundryShopDTO> dtos = shopPage.getContent().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+
+        Meta meta = new Meta(
+                shopPage.getNumber() + 1,
+                shopPage.getSize(),
+                shopPage.getTotalElements(),
+                shopPage.getTotalPages()
+        );
+
+        PagedData<LaundryShopDTO> pagedData = new PagedData<>(meta, dtos);
+        return new PagedResponse<>("Lấy danh sách nhân viên thành công", pagedData);
+    }
+
+    @Override
     public ApiResponse<List<LaundryShopDTO>> getAllShop() {
         List<LaundryShop> laundryShops = laundryShopRepository.findAll();
 
@@ -53,5 +77,20 @@ public class LaundryShopServiceImpl implements LaundryShopService {
 
 
         return new ApiResponse<>("Danh sách các cửa hàng", laundryShopDTOs);
+    }
+
+    private LaundryShopDTO convertToDTO(LaundryShop laundryShop) {
+        LaundryShopDTO dto = new LaundryShopDTO();
+        dto.setId(laundryShop.getId());
+        dto.setName(laundryShop.getName());
+        dto.setAddress(laundryShop.getAddress());
+        dto.setOpeningHours(laundryShop.getOpeningHours());
+        dto.setAverageRating(laundryShop.getAverageRating());
+        dto.setCreatedAt(laundryShop.getCreatedAt());
+        LaundryShopDTO.StoreOwnerSimpleDTO storeOwnerSimpleDTO = new LaundryShopDTO.StoreOwnerSimpleDTO();
+        storeOwnerSimpleDTO.setUsername(laundryShop.getStoreOwner().getUsername());
+        dto.setStoreOwner(storeOwnerSimpleDTO);
+
+        return dto;
     }
 }

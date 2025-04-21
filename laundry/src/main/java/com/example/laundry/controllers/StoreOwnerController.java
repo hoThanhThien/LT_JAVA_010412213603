@@ -1,13 +1,11 @@
 package com.example.laundry.controllers;
 
-import com.example.laundry.dto.EmployeeDTO;
-import com.example.laundry.dto.LaundryShopDTO;
-import com.example.laundry.dto.ServiceCategoryDTO;
-import com.example.laundry.dto.ServiceDTO;
+import com.example.laundry.dto.*;
 import com.example.laundry.models.shop.Service;
 import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.StoreOwnerRepository;
+import com.example.laundry.services.EmployeeService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
 
@@ -28,6 +26,8 @@ public class StoreOwnerController {
 
     @Autowired
     private StoreOwnerRepository storeOwnerRepository;
+  @Autowired
+  private EmployeeService employeeService;
 
     // Lấy store owner hiện tại
     private StoreOwner getCurrentStoreOwner() {
@@ -80,15 +80,28 @@ public class StoreOwnerController {
                     .body(new ApiResponse<>("Không tìm thấy thông tin StoreOwner", null));
         }
 
-        ApiResponse<Employee> response = storeOwnerService.updateEmployee(storeOwner, employeeDTO);
+        ApiResponse<EmployeeDTO> responseDTO = storeOwnerService.updateEmployee(storeOwner, employeeDTO);
 
-        if (response.getData() == null) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(response.getMessage(), null));
+        if (responseDTO.getData() == null) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(responseDTO.getMessage(), null));
         }
 
-        EmployeeDTO responseDTO = new EmployeeDTO(response.getData());
+        return ResponseEntity.ok(new ApiResponse<>("Cập nhật thông tin nhân viên thành công", responseDTO).getData());
+    }
 
-        return ResponseEntity.ok(new ApiResponse<>("Cập nhật thông tin nhân viên thành công", responseDTO));
+    @GetMapping("/employees")
+    @PreAuthorize("hasRole('STOREOWNER')")
+    public ResponseEntity<PagedResponse<EmployeeDTO>> getMyEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            StoreOwner storeOwner = getCurrentStoreOwner();
+            PagedResponse<EmployeeDTO> response = employeeService.getAllEmployeesByStoreOwner(storeOwner, page, size);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new PagedResponse<>("Lấy danh sách nhân viên thất bại: " + e.getMessage(), null));
+        }
     }
 
     @PostMapping("/shop/create")

@@ -2,6 +2,8 @@ package com.example.laundry.dto;
 
 import lombok.*;
 
+import java.util.Date;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -12,6 +14,7 @@ public class LaundryShopDTO {
   private String address;
   private String openingHours;
   private double averageRating;
+  private Date createdAt;
   private StoreOwnerSimpleDTO  storeOwner;
 
   public LaundryShopDTO(Long id, String name, String address, String description, String openingHours) {

@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -39,6 +40,10 @@ public class LaundryShop {
     @Column(name = "average_rating")
     private double averageRating;
 
+    @Column(name = "created_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdAt;
+
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL)
     private List<ServiceCategory> serviceCategories = new ArrayList<>();
 
@@ -55,5 +60,10 @@ public class LaundryShop {
         this.storeOwner = storeOwner;
         this.averageRating = 0.0;
         this.serviceCategories = new ArrayList<>();
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = new Date();
     }
 }

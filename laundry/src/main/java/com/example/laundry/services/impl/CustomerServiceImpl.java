@@ -15,6 +15,7 @@ import com.example.laundry.services.CustomerService;
 import com.example.laundry.services.OrderService;
 import com.example.laundry.services.RefreshTokenService;
 import com.example.laundry.utils.ApiResponse;
+import com.example.laundry.utils.UserValidator;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -100,7 +101,13 @@ public class CustomerServiceImpl implements CustomerService {
 
             //Tạo người dùng
             Customer customer = new Customer();
+            if (!UserValidator.isValidPhone(verifiedPhone)) {
+                return new CustomerResponseDTO("Số điện thoại không hợp lệ! Phải có đúng 10 chữ số.", null);
+            }
             customer.setPhone(verifiedPhone);
+            if (!UserValidator.isValidPassword(registerRequest.getPassword())) {
+                return new CustomerResponseDTO("Mật khẩu không hợp lệ! Phải có ít nhất 8 ký tự, bao gồm chữ, số và ký tự đặc biệt.", null);
+            }
             customer.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
             customer.setUsername(registerRequest.getUsername());
             customer.setRoles(Roles.Customer);
@@ -246,19 +253,29 @@ public class CustomerServiceImpl implements CustomerService {
         try {
             // Validate email if provided
             if (customerDTO.getEmail() != null && !customerDTO.getEmail().isEmpty()) {
+                if (!UserValidator.isValidEmail(customerDTO.getEmail())) {
+                    return new ApiResponse<>("Email không hợp lệ!", null);
+                }
+
                 if (customerRepository.existsByEmail(customerDTO.getEmail()) &&
                         !customerDTO.getEmail().equals(customer.getEmail())) {
                     return new ApiResponse<>("Email đã tồn tại trong hệ thống", null);
                 }
+
                 customer.setEmail(customerDTO.getEmail());
             }
 
             // Validate phone if provided
-            if (customerDTO.getPhone() != null && !customerDTO.getPhone().isEmpty() &&
-                    !customerDTO.getPhone().equals(customer.getPhone())) {
-                if (customerRepository.existsByPhone(customerDTO.getPhone())) {
+            if (customerDTO.getPhone() != null && !customerDTO.getPhone().isEmpty()) {
+                if (!UserValidator.isValidPhone(customerDTO.getPhone())) {
+                    return new ApiResponse<>("Số điện thoại không hợp lệ! Phải có đúng 10 chữ số.", null);
+                }
+
+                if (!customerDTO.getPhone().equals(customer.getPhone()) &&
+                        customerRepository.existsByPhone(customerDTO.getPhone())) {
                     return new ApiResponse<>("Số điện thoại đã tồn tại trong hệ thống", null);
                 }
+
                 customer.setPhone(customerDTO.getPhone());
             }
 
@@ -271,16 +288,29 @@ public class CustomerServiceImpl implements CustomerService {
                 customer.setAddress(customerDTO.getAddress());
             }
 
+            if (customerDTO.getPassword() != null && !customerDTO.getPassword().isEmpty()) {
+                if (!UserValidator.isValidPassword(customerDTO.getPassword())) {
+                    return new ApiResponse<>("Mật khẩu không hợp lệ! Phải có ít nhất 8 ký tự, bao gồm chữ, số và ký tự đặc biệt.", null);
+                }
+                customer.setPassword(passwordEncoder.encode(customerDTO.getPassword()));
+            }
+
+            if (customerDTO.getAvtUser() != null && !customerDTO.getAvtUser().isEmpty()) {
+                customer.setAvtUser(customerDTO.getAvtUser());
+            }
+
             // Save the updated customer
             Customer updatedCustomer = customerRepository.save(customer);
 
             // Build response
             CustomerDTO responseDTO = new CustomerDTO();
             responseDTO.setUsername(updatedCustomer.getUsername());
+            responseDTO.setPassword(updatedCustomer.getPassword());
             responseDTO.setEmail(updatedCustomer.getEmail());
             responseDTO.setPhone(updatedCustomer.getPhone());
             responseDTO.setAddress(updatedCustomer.getAddress());
             responseDTO.setRole(updatedCustomer.getRoles());
+            responseDTO.setAvtUser(updatedCustomer.getAvtUser());
             responseDTO.setCreatedAt(updatedCustomer.getCreatedAt());
             responseDTO.setUpdatedAt(updatedCustomer.getUpdatedAt());
             // Set other fields as needed
@@ -290,26 +320,5 @@ public class CustomerServiceImpl implements CustomerService {
             return new ApiResponse<>("Cập nhật thông tin thất bại: " + e.getMessage(), null);
         }
     }
-
-    private List<OrderResponse> mapOrdersToOrderResponses(List<Order> orders) {
-        return orders.stream()
-                .map(order -> {
-                    OrderResponse orderResponse = new OrderResponse();
-                    orderResponse.setId(order.getId());
-                    orderResponse.setTotalAmount(order.getTotalAmount());
-                    orderResponse.setOrderStatus(order.getOrderStatus());
-                    orderResponse.setImgProduct(order.getImgProduct());
-                    orderResponse.setLaundryShopName(order.getLaundryShop().getName());
-                    orderResponse.setServiceCategoryName(order.getServiceCategory().getName());
-                    orderResponse.setServiceName(order.getService().getName());
-                    orderResponse.setServicePrice(order.getService().getPrice());
-                    orderResponse.setOrderVolume(order.getOrderVolume());
-                    orderResponse.setCreatedAt(order.getCreatedAt());
-                    orderResponse.setInstructions(order.getInstructions());
-                    return orderResponse;
-                })
-                .collect(Collectors.toList());
-    }
-
 }
 

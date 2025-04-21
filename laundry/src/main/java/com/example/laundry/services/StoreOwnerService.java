@@ -1,9 +1,6 @@
 package com.example.laundry.services;
 
-import com.example.laundry.dto.EmployeeDTO;
-import com.example.laundry.dto.LaundryShopDTO;
-import com.example.laundry.dto.ServiceCategoryDTO;
-import com.example.laundry.dto.ServiceDTO;
+import com.example.laundry.dto.*;
 import com.example.laundry.models.shop.LaundryShop;
 import com.example.laundry.models.shop.Service;
 import com.example.laundry.models.user.Employee;
@@ -15,7 +12,7 @@ public interface StoreOwnerService extends UserService {
     void deleteStoreOwner(StoreOwner storeOwner);
     ApiResponse<Employee> createEmployee(StoreOwner storeOwner, EmployeeDTO employeeDTO);
     ApiResponse<String> deleteEmployee(StoreOwner storeOwner, EmployeeDTO employeeDTO);
-    ApiResponse<Employee> updateEmployee(StoreOwner storeOwner, EmployeeDTO employeeDTO);
+    ApiResponse<EmployeeDTO> updateEmployee(StoreOwner storeOwner, EmployeeDTO employeeDTO);
     ApiResponse<LaundryShopDTO> createShop(StoreOwner storeOwner, LaundryShopDTO laundryShopDTO);
     LaundryShop getLaundryShopByStoreOwner(StoreOwner storeOwner);
     ApiResponse<LaundryShopDTO> updateLaundryShop(StoreOwner storeOwner, LaundryShopDTO laundryShopDTO);

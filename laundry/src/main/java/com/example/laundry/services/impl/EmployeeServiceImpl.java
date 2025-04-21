@@ -1,17 +1,28 @@
 package com.example.laundry.services.impl;
 
+import com.example.laundry.dto.EmployeeDTO;
+import com.example.laundry.dto.Meta;
+import com.example.laundry.dto.PagedData;
+import com.example.laundry.dto.PagedResponse;
 import com.example.laundry.models.order.Order;
 import com.example.laundry.models.order.OrderStatus;
 import com.example.laundry.models.user.Employee;
+import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.EmployeeRepository;
 import com.example.laundry.repository.OrderRepository;
 import com.example.laundry.services.EmployeeService;
 import com.example.laundry.utils.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
@@ -60,13 +71,59 @@ public class EmployeeServiceImpl implements EmployeeService {
     return new ApiResponse<>(message);
   }
 
-//    @Override
-//    public void notifyOrderCompleted(Employee employee, Long orderId) {
-//        employeeRepository.notifyOrderCompleted(employee, orderId);
-//    }
-//
-//    @Override
-//    public void notifyCustomer(Employee employee, Long orderId, String message, String notificationType) {
-//        employeeRepository.notifyCustomer(employee, orderId, message, notificationType);
-//    }
+  @Override
+  public PagedResponse<EmployeeDTO> getAllEmployees(int page, int size) {
+    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+    Page<Employee> employeePage = employeeRepository.findAll(pageable);
+
+    List<EmployeeDTO> dtos = employeePage.getContent().stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
+
+    Meta meta = new Meta(
+            employeePage.getNumber() + 1,
+            employeePage.getSize(),
+            employeePage.getTotalElements(),
+            employeePage.getTotalPages()
+    );
+
+    PagedData<EmployeeDTO> pagedData = new PagedData<>(meta, dtos);
+    return new PagedResponse<>("Lấy danh sách nhân viên thành công", pagedData);
+  }
+
+  @Override
+  public PagedResponse<EmployeeDTO> getAllEmployeesByStoreOwner(StoreOwner storeOwner, int page, int size) {
+    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+    Page<Employee> employeePage = employeeRepository.findByStoreOwner(storeOwner, pageable);
+
+    List<EmployeeDTO> dtos = employeePage.getContent().stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
+
+    Meta meta = new Meta(
+            employeePage.getNumber() + 1,
+            employeePage.getSize(),
+            employeePage.getTotalElements(),
+            employeePage.getTotalPages()
+    );
+
+    PagedData<EmployeeDTO> pagedData = new PagedData<>(meta, dtos);
+    return new PagedResponse<>("Lấy danh sách nhân viên thành công", pagedData);
+  }
+
+
+  private EmployeeDTO convertToDTO(Employee employee) {
+    EmployeeDTO dto = new EmployeeDTO();
+    dto.setUsername(employee.getUsername());
+    dto.setEmail(employee.getEmail());
+    dto.setPhone(employee.getPhone());
+    dto.setAddress(employee.getAddress());
+    dto.setRole(employee.getRoles());
+    dto.setAvtUser(employee.getAvtUser());
+    dto.setCreatedAt(employee.getCreatedAt());
+    dto.setUpdatedAt(employee.getUpdatedAt());
+
+    return dto;
+  }
+
 }

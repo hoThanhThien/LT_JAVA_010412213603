@@ -140,7 +140,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public ApiResponse<List<OrderResponse>> getAllOrders(int page, int size) {
+    public PagedResponse<OrderResponse> getAllOrders(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Order> orderPage = orderRepository.findAll(pageable);
 
@@ -187,51 +187,30 @@ public class AdminServiceImpl implements AdminService {
         return storeOwner;
     }
 
-    @Override
-    public ApiResponse<List<OrderResponse>> getOrdersByCustomer(UUID customerId) {
-        Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng với ID: " + customerId));
+  @Override
+  public PagedResponse<OrderResponse> getOrdersByCustomer(UUID customerId, int page, int size) {
+    Customer customer = customerRepository.findById(customerId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng với ID: " + customerId));
 
-        List<Order> customerOrders = orderRepository.findOrdersByCustomerId(customerId);
+    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+    Page<Order> customerOrders = orderRepository.findByCustomerId(customerId, pageable);
 
-        if (customerOrders.isEmpty()) {
-            return new ApiResponse<>("Khách hàng chưa có đơn hàng nào", null);
-        }
-
-        List<OrderResponse> responseList = mapOrdersToOrderResponses(customerOrders);
-        return new ApiResponse<>("Lấy danh sách đơn hàng của khách hàng thành công", responseList);
+    if (customerOrders.isEmpty()) {
+      return new PagedResponse<>("Khách hàng chưa có đơn hàng nào", null);
     }
 
-    @Override
-    public PagedResponse<EmployeeDTO> getAllEmployees(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Employee> employeePage = employeeRepository.findAll(pageable);
+    List<OrderResponse> responseList = mapOrdersToOrderResponses(customerOrders.getContent());
 
-        List<EmployeeDTO> employeeDTOS = employeePage.getContent().stream()
-                .map(employee -> new EmployeeDTO(
-                        employee.getUsername(),
-                        null,
-                        employee.getEmail(),
-                        employee.getPhone(),
-                        employee.getAddress(),
-                        employee.getRoles(),
-                        employee.getCreatedAt(),
-                        employee.getUpdatedAt()
-                ))
-                .toList();
+    Meta meta = new Meta(
+            customerOrders.getNumber() + 1,
+            customerOrders.getSize(),
+            customerOrders.getTotalElements(),
+            customerOrders.getTotalPages()
+    );
 
-        Meta meta = new Meta(
-                employeePage.getNumber() + 1,
-                employeePage.getSize(),
-                employeePage.getTotalElements(),
-                employeePage.getTotalPages()
-        );
-
-        PagedData<EmployeeDTO> pagedData = new PagedData<>(meta, employeeDTOS);
-        PagedResponse<EmployeeDTO> response = new PagedResponse<>("Lấy danh sách thành công", pagedData);
-
-        return ResponseEntity.ok(response).getBody();
-    }
+    PagedData<OrderResponse> pagedData = new PagedData<>(meta, responseList);
+    return new PagedResponse<>("Lấy danh sách đơn hàng của khách hàng thành công", pagedData);
+  }
 
     @Override
     public PagedResponse<CustomerDTO> getAllCustomers(int page, int size) {
@@ -246,6 +225,7 @@ public class AdminServiceImpl implements AdminService {
                         customer.getPhone(),
                         customer.getAddress(),
                         customer.getRoles(),
+                        customer.getAvtUser(),
                         customer.getCreatedAt(),
                         customer.getUpdatedAt()
                 ))

@@ -4,6 +4,7 @@ import com.example.laundry.dto.*;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.services.AdminService;
 import com.example.laundry.services.EmployeeService;
+import com.example.laundry.services.LaundryShopService;
 import com.example.laundry.utils.ApiResponse;
 
 
@@ -26,6 +27,8 @@ public class AdminController {
     private AdminService adminService;
     @Autowired
     private EmployeeService employeeService;
+    @Autowired
+    private LaundryShopService laundryShopService;
 
     @PostMapping("/storeowner/create")
     @PreAuthorize("hasRole('ADMIN')")
@@ -64,7 +67,13 @@ public class AdminController {
     public ResponseEntity<PagedResponse<EmployeeDTO>> getAllEmployees(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(adminService.getAllEmployees(page, size));
+        try {
+            PagedResponse<EmployeeDTO> response = employeeService.getAllEmployees(page, size);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new PagedResponse<>("Lấy danh sách nhân viên thất bại: " + e.getMessage(), null));
+        }
     }
 
     @GetMapping("/customers")
@@ -77,28 +86,30 @@ public class AdminController {
 
     @GetMapping("/orders")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<OrderResponse>>> getAllOrders(
+    public ResponseEntity<PagedResponse<OrderResponse>> getAllOrders(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
+            @RequestParam(defaultValue = "10") int size) {
         try {
-            ApiResponse<List<OrderResponse>> response = adminService.getAllOrders(page, size);
+            PagedResponse<OrderResponse> response = adminService.getAllOrders(page, size);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>("Lấy danh sách đơn hàng thất bại: " + e.getMessage(), null));
+                    .body(new PagedResponse<>("Lấy danh sách đơn hàng thất bại: " + e.getMessage(), null));
         }
     }
 
     @GetMapping("/orders/customer/{customerId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<OrderResponse>>> getOrdersByCustomer(@PathVariable UUID customerId) {
+    public ResponseEntity<PagedResponse<OrderResponse>> getOrdersByCustomer(
+            @PathVariable UUID customerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
         try {
-            ApiResponse<List<OrderResponse>> response = adminService.getOrdersByCustomer(customerId);
+            PagedResponse<OrderResponse> response = adminService.getOrdersByCustomer(customerId, page, size);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>("Lấy danh sách đơn hàng của khách hàng thất bại: " + e.getMessage(), null));
+                    .body(new PagedResponse<>("Lấy danh sách đơn hàng của khách hàng thất bại: " + e.getMessage(), null));
         }
     }
 
@@ -107,14 +118,27 @@ public class AdminController {
     public ResponseEntity<PagedResponse<OrderResponse>> getOrdersByStatus(
             @PathVariable String status,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
+            @RequestParam(defaultValue = "10") int size) {
         try {
             PagedResponse<OrderResponse> response = adminService.getOrdersByStatus(status, page, size);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(new PagedResponse<>("Lấy danh sách đơn hàng theo trạng thái thất bại: " + e.getMessage(), null));
+        }
+    }
+
+    @GetMapping("/shops")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PagedResponse<LaundryShopDTO>> getAllShops(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            PagedResponse<LaundryShopDTO> response = laundryShopService.getAllShops(page, size);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new PagedResponse<>("Lấy danh sách nhân viên thất bại: " + e.getMessage(), null));
         }
     }
 }

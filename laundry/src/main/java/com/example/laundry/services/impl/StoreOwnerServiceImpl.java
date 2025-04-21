@@ -1,9 +1,6 @@
 package com.example.laundry.services.impl;
 
-import com.example.laundry.dto.EmployeeDTO;
-import com.example.laundry.dto.LaundryShopDTO;
-import com.example.laundry.dto.ServiceCategoryDTO;
-import com.example.laundry.dto.ServiceDTO;
+import com.example.laundry.dto.*;
 import com.example.laundry.models.shop.LaundryShop;
 import com.example.laundry.models.shop.Service;
 import com.example.laundry.models.shop.ServiceCategory;
@@ -15,11 +12,18 @@ import com.example.laundry.services.EmployeeService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
 import com.example.laundry.utils.UserValidator;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 
 @org.springframework.stereotype.Service
@@ -148,59 +152,49 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
     }
 
     @Override
-    public ApiResponse<Employee> updateEmployee(StoreOwner storeOwner, EmployeeDTO employeeDTO) {
-        if (employeeDTO.getEmail() == null && employeeDTO.getPhone() == null && employeeDTO.getUsername() == null) {
-            return new ApiResponse<>("Cần cung cấp ít nhất một thông tin để tìm Employee.", null);
-        }
-
+    @Transactional
+    public ApiResponse<EmployeeDTO> updateEmployee(StoreOwner storeOwner, EmployeeDTO employeeDTO) {
         Employee employee = findEmployeeByInfo(employeeDTO);
         if (employee == null) {
-            return new ApiResponse<>("Không tìm thấy Employee với thông tin đã cung cấp.", null);
+            return new ApiResponse<>("Không tìm thấy nhân viên với thông tin đã cung cấp!", null);
         }
 
-        if (employee.getStoreOwner() == null || !employee.getStoreOwner().getId().equals(storeOwner.getId())) {
-            return new ApiResponse<>("Bạn không có quyền cập nhật Employee này", null);
+        if (!employee.getStoreOwner().getId().equals(storeOwner.getId())) {
+            return new ApiResponse<>("Bạn không có quyền cập nhật nhân viên này!", null);
         }
 
-        if (employeeDTO.getEmail() != null && !employeeDTO.getEmail().equals(employee.getEmail())) {
-            if (!UserValidator.isValidEmail(employeeDTO.getEmail())) {
-                return new ApiResponse<>("Email không hợp lệ!!!", null);
-            }
-            if (employeeRepository.existsByEmail(employeeDTO.getEmail())) {
-                return new ApiResponse<>("Email đã tồn tại!!!", null);
-            }
-            employee.setEmail(employeeDTO.getEmail());
-        }
-
-        if (employeeDTO.getPhone() != null && !employeeDTO.getPhone().equals(employee.getPhone())) {
-            if (!UserValidator.isValidPhone(employeeDTO.getPhone())) {
-                return new ApiResponse<>("Phone phải có 10 chữ số!!!", null);
-            }
-            if (employeeRepository.existsByPhone(employeeDTO.getPhone())) {
-                return new ApiResponse<>("Phone đã tồn tại!!!", null);
-            }
-            employee.setPhone(employeeDTO.getPhone());
-        }
-
-        if (employeeDTO.getUsername() != null && !employeeDTO.getUsername().isEmpty() &&
-                !employeeDTO.getUsername().equals(employee.getUsername())) {
+        if (employeeDTO.getUsername() != null && !employeeDTO.getUsername().isEmpty()) {
             employee.setUsername(employeeDTO.getUsername());
-        }
-
-        if (employeeDTO.getPassword() != null && !employeeDTO.getPassword().isEmpty()) {
-            if (!UserValidator.isValidPassword(employeeDTO.getPassword())) {
-                return new ApiResponse<>("Password không hợp lệ!!!", null);
-            }
-            employee.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
         }
 
         if (employeeDTO.getAddress() != null) {
             employee.setAddress(employeeDTO.getAddress());
         }
 
-        employeeService.updateEmployee(employee);
+        if (employeeDTO.getPassword() != null && !employeeDTO.getPassword().isEmpty()) {
+            if (!UserValidator.isValidPassword(employeeDTO.getPassword())) {
+                return new ApiResponse<>("Mật khẩu không hợp lệ!", null);
+            }
 
-        return new ApiResponse<>("Cập nhật Employee thành công!", employee);
+            employee.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
+        }
+
+        if (employeeDTO.getAvtUser() != null && !employeeDTO.getAvtUser().isEmpty()) {
+            employee.setAvtUser(employeeDTO.getAvtUser());
+        }
+
+        Employee updatedEmployee = employeeRepository.save(employee);
+
+        EmployeeDTO responseDTO = new EmployeeDTO();
+        responseDTO.setUsername(updatedEmployee.getUsername());
+        responseDTO.setEmail(updatedEmployee.getEmail());
+        responseDTO.setPhone(updatedEmployee.getPhone());
+        responseDTO.setAddress(updatedEmployee.getAddress());
+        responseDTO.setAvtUser(updatedEmployee.getAvtUser());
+        responseDTO.setCreatedAt(updatedEmployee.getCreatedAt());
+        responseDTO.setUpdatedAt(updatedEmployee.getUpdatedAt());
+
+        return new ApiResponse<>("Cập nhật nhân viên thành công!", responseDTO);
     }
 
     @Override
@@ -500,6 +494,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         dto.setOpeningHours(shop.getOpeningHours());
         dto.setDescription(shop.getDescription());
         dto.setAverageRating(shop.getAverageRating());
+        dto.setCreatedAt(shop.getCreatedAt());
 
         LaundryShopDTO.StoreOwnerSimpleDTO ownerDTO = new LaundryShopDTO.StoreOwnerSimpleDTO();
         ownerDTO.setUsername(shop.getStoreOwner().getUsername());
