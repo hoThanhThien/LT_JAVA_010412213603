@@ -134,9 +134,6 @@ public class CustomerController {
         }
     }
 
-
-
-    // Simplified endpoint for creating orders
     @PostMapping("/orders/create")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<OrderResponse>> createOrder(@RequestBody OrderDTO orderDTO) {
@@ -154,90 +151,4 @@ public class CustomerController {
                     .body(new ApiResponse<>("Tạo đơn hàng thất bại: " + e.getMessage(), null));
         }
     }
-    @GetMapping("/orders/status/{status}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<OrderResponse>>> getOrdersByStatus(@PathVariable String status) {
-        try {
-            CustomerController adminService = null;
-            ApiResponse<List<OrderResponse>> response = adminService.getOrdersByStatus(status).getBody();
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>("Lấy danh sách đơn hàng theo trạng thái thất bại: " + e.getMessage(), null));
-        }
-    }
-//    @PostMapping("/register")
-//    public ResponseEntity<ApiResponse<CustomerResponseDTO>> createCustomer(@RequestBody CustomerDTO customerDTO){
-//        //Kiểm tra dữ liệu
-//        if(customerDTO.getPassword() == null || customerDTO.getPassword().isEmpty()) {
-//            return ResponseEntity.badRequest()
-//                    .body(new ApiResponse<>("Password không được để trống", null));
-//        }
-//
-//        //Kiểm tra password
-//        if(!UserValidator.isValidPassword(customerDTO.getPassword())) {
-//            return ResponseEntity.badRequest()
-//                    .body(new ApiResponse<>("Password không hợp lệ!!!", null));
-//        }
-//
-//        //Kiểm tra email
-//      if(!UserValidator.isValidEmail(customerDTO.getEmail())) {
-//            return ResponseEntity.badRequest()
-//                    .body(new ApiResponse<>("Email không hợp lệ!!!", null));
-//        }
-//
-//        if(customerRepository.existsByEmail(customerDTO.getEmail())) {
-//           return ResponseEntity.badRequest()
-//                   .body(new ApiResponse<>("Email đã tồn tại!!!", null));
-//       }
-//
-//        //Kiểm tra phone
-//        if(!UserValidator.isValidPhone(customerDTO.getPhone())) {
-//            return ResponseEntity.badRequest()
-//                    .body(new ApiResponse<>("Phone phải có 10 chữ số!!!", null));
-//        }
-//
-//        if(customerRepository.existsByPhone(customerDTO.getPhone())) {
-//            return ResponseEntity.badRequest()
-//                    .body(new ApiResponse<>("Phone đã tồn tại!!!", null));
-//        }
-//
-//        //Mã hóa password trước khi lưu xuống db
-//        String encodedPassword = passwordEncoder.encode(customerDTO.getPassword());
-//
-//        Customer customer = new Customer();
-//        customer.setUsername(customerDTO.getUsername());
-//        customer.setEmail(customerDTO.getEmail());
-//        customer.setPhone(customerDTO.getPhone());
-//        customer.setAddress(customerDTO.getAddress());
-//        customer.setRoles(Roles.Customer);
-//        customer.setPassword(encodedPassword);
-//
-//        Customer savedCustomer = customerService.addCustomer(customer);
-//
-//        //Tạo access token
-//        String accessToken = jwtUtil.generateAccessToken(savedCustomer.getUsername());
-//
-//        //Tạo refresh token
-//        RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedCustomer);
-//        String refreshTokenString = refreshToken.getToken();
-//
-//        CustomerResponseDTO.AccountInfo accountInfo = new CustomerResponseDTO.AccountInfo(
-//                savedCustomer.getId(),
-//                savedCustomer.getUsername(),
-//                savedCustomer.getEmail(),
-//                savedCustomer.getPhone(),
-//                savedCustomer.getAddress(),
-//                Roles.Customer
-//        );
-//
-//        CustomerResponseDTO responseDTO = new CustomerResponseDTO(
-//          accessToken,
-//          refreshTokenString,
-//          accountInfo
-//        );
-//
-//        return ResponseEntity
-//                .ok(new ApiResponse<>("Đăng ký thành công!!!", responseDTO));
-//    }
 }

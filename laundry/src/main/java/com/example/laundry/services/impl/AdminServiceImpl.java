@@ -213,6 +213,47 @@ public class AdminServiceImpl implements AdminService {
         return ResponseEntity.ok(response).getBody();
     }
 
+    @Override
+    public PagedResponse<OrderResponse> getOrdersByStatus(String status, int page, int size) {
+        OrderStatus orderStatus;
+        try {
+            orderStatus = OrderStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return new PagedResponse<>("Trạng thái đơn hàng không hợp lệ", null);
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Order> orderPage = orderRepository.findByOrderStatus(orderStatus, pageable);
+
+
+        List<OrderResponse> responseList = orderPage.getContent().stream()
+                .map(order -> {
+                    OrderResponse orderResponse = new OrderResponse();
+                    orderResponse.setId(order.getId());
+                    orderResponse.setTotalAmount(order.getTotalAmount());
+                    orderResponse.setOrderStatus(order.getOrderStatus());
+                    orderResponse.setImgProduct(order.getImgProduct());
+                    orderResponse.setLaundryShopName(order.getLaundryShop().getName());
+                    orderResponse.setServiceCategoryName(order.getServiceCategory().getName());
+                    orderResponse.setServiceName(order.getService().getName());
+                    orderResponse.setServicePrice(order.getService().getPrice());
+                    orderResponse.setOrderVolume(order.getOrderVolume());
+                    orderResponse.setCreatedAt(order.getCreatedAt());
+                    orderResponse.setInstructions(order.getInstructions());
+                    return orderResponse;
+                })
+                .collect(Collectors.toList());
+
+        Meta meta = new Meta(
+                orderPage.getNumber() + 1,
+                orderPage.getSize(),
+                orderPage.getTotalElements(),
+                orderPage.getTotalPages()
+        );
+
+        PagedData<OrderResponse> pagedData = new PagedData<>(meta, responseList);
+        return new PagedResponse<>("Lấy danh sách đơn hàng theo trạng thái thành công", pagedData);
+    }
 
     private List<OrderResponse> mapOrdersToOrderResponses(List<Order> orders) {
         return orders.stream()

@@ -90,4 +90,20 @@ public class AdminController {
                     .body(new ApiResponse<>("Lấy danh sách đơn hàng của khách hàng thất bại: " + e.getMessage(), null));
         }
     }
+
+    @GetMapping("/orders/status={status}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PagedResponse<OrderResponse>> getOrdersByStatus(
+            @PathVariable String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        try {
+            PagedResponse<OrderResponse> response = adminService.getOrdersByStatus(status, page, size);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new PagedResponse<>("Lấy danh sách đơn hàng theo trạng thái thất bại: " + e.getMessage(), null));
+        }
+    }
 }
