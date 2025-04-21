@@ -33,10 +33,10 @@ Các API :
 +GET http://localhost:8080/customer/{{customerId}}/history-order
 
 
-+ lich su order cho khach:GET http://localhost:8080/customer/orders/history?paged=0&size=5
++lich su order cho khach:GET http://localhost:8080/customer/orders/history?paged=0&size=5
 
 
-+ update customer:PUT http://localhost:8080/accounts/me
++update customer:PUT http://localhost:8080/accounts/me
 
   
 -ADMIN
