@@ -189,6 +189,7 @@ public class CustomerServiceImpl implements CustomerService {
         order.setOrderStatus(OrderStatus.IN_PROGRESS);
         order.setCreatedAt(orderDTO.getCreatedAt());
         order.setInstructions(orderDTO.getInstructions());
+        order.setImgProduct(orderDTO.getImgProduct());
         double totalAmount = orderDTO.getOrderVolume() * service.getPrice();
         order.setTotalAmount(totalAmount);
 

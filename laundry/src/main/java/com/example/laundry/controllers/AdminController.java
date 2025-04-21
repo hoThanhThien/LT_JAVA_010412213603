@@ -1,15 +1,22 @@
 package com.example.laundry.controllers;
 
+import com.example.laundry.dto.OrderDTO;
 import com.example.laundry.dto.OrderResponse;
 import com.example.laundry.dto.PagedResponse;
 import com.example.laundry.dto.StoreOwnerDTO;
+import com.example.laundry.models.user.Customer;
 import com.example.laundry.models.user.StoreOwner;
+import com.example.laundry.repository.CustomerRepository;
 import com.example.laundry.services.AdminService;
+import com.example.laundry.services.CustomerService;
 import com.example.laundry.utils.ApiResponse;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,8 +27,16 @@ import java.util.UUID;
 @RequestMapping("/admin")
 public class AdminController {
     @Autowired
+    private CustomerService customerService;
+    @Autowired
+    private CustomerRepository customerRepository;
+    @Autowired
     private AdminService adminService;
-
+    private Customer getCurrentCustomer() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        return customerRepository.findByUsername(currentUsername);
+    }
     @PostMapping("/storeowner/create")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StoreOwner>> createStoreOwner(@RequestBody StoreOwnerDTO storeOwnerDTO) {
