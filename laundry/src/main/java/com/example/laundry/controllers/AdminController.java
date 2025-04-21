@@ -53,52 +53,27 @@ public class AdminController {
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(adminService.getAllStoreOwners(page, size));
     }
-
     @GetMapping("/orders")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PagedResponse<OrderResponse>> getAllOrders(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getAllOrders() {
         try {
-            PagedResponse<OrderResponse> response = adminService.getAllOrders(page, size);
+            ApiResponse<List<OrderResponse>> response = adminService.getAllOrders();
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new PagedResponse<>("Lấy danh sách đơn hàng thất bại: " + e.getMessage(), null));
+                    .body(new ApiResponse<>("Lấy danh sách đơn hàng thất bại: " + e.getMessage(), null));
         }
     }
 
     @GetMapping("/orders/customer/{customerId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PagedResponse<OrderResponse>> getOrdersByCustomer(@PathVariable UUID customerId,
-                                                                            @RequestParam(defaultValue = "0") int page,
-                                                                            @RequestParam(defaultValue = "10") int size
-    ) {
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getOrdersByCustomer(@PathVariable UUID customerId) {
         try {
-            PagedResponse<OrderResponse> response = adminService.getOrdersByCustomer(customerId, page, size);
+            ApiResponse<List<OrderResponse>> response = adminService.getOrdersByCustomer(customerId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new PagedResponse<>("Lấy danh sách đơn hàng của khách hàng thất bại: " + e.getMessage(), null));
+                    .body(new ApiResponse<>("Lấy danh sách đơn hàng của khách hàng thất bại: " + e.getMessage(), null));
         }
     }
-
-    @GetMapping("/orders/status/{status}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PagedResponse<OrderResponse>> getOrdersByStatus(
-            @PathVariable String status,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        try {
-            PagedResponse<OrderResponse> response = adminService.getOrdersByStatus(status, page, size);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(new PagedResponse<>("Lấy danh sách đơn hàng theo trạng thái thất bại: " + e.getMessage(), null));
-        }
-    }
-
 }

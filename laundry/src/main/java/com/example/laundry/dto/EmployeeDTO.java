@@ -1,9 +1,11 @@
 package com.example.laundry.dto;
 
 import com.example.laundry.models.user.Employee;
+import com.example.laundry.models.user.Roles;
 import lombok.*;
 
 import java.io.Serializable;
+import java.util.Date;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -15,6 +17,9 @@ public class EmployeeDTO implements Serializable {
     private String email;
     private String phone;
     private String address;
+    private Roles role;
+    private Date createdAt;
+    private Date updatedAt;
     private String usernameStoreOwner;
 
     public EmployeeDTO(Employee employee) {
@@ -25,4 +30,15 @@ public class EmployeeDTO implements Serializable {
         this.address = employee.getAddress();
         this.usernameStoreOwner = employee.getStoreOwner().getUsername();
     }
+
+  public EmployeeDTO(String username, String password, String email, String phone, String address, Roles roles, Date createdAt, Date updatedAt) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.phone = phone;
+        this.address = address;
+        this.role = roles;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+  }
 }
