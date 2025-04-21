@@ -1,6 +1,6 @@
 package com.example.laundry.controllers;
 
-import com.example.laundry.dto.CustomerProfileDTO;
+import com.example.laundry.dto.CustomerDTO;
 import com.example.laundry.dto.GetInfoRequest;
 import com.example.laundry.dto.GetInfoResponse;
 import com.example.laundry.models.user.Customer;
@@ -42,23 +42,5 @@ public class AccountController {
     GetInfoRequest getInfoRequest = new GetInfoRequest(token);
     GetInfoResponse response = accountService.getInfo(getInfoRequest);
     return ResponseEntity.ok(response);
-  }
-  // New endpoint for updating customer profile
-  @PutMapping("/accounts/me")
-  @PreAuthorize("hasRole('CUSTOMER')")
-  public ResponseEntity<ApiResponse<CustomerProfileDTO>> updateProfile(@RequestBody CustomerProfileDTO profileDTO) {
-    try {
-      Customer customer = getCurrentCustomer();
-      if (customer == null) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ApiResponse<>("Không tìm thấy thông tin customer"));
-      }
-
-      ApiResponse<CustomerProfileDTO> response = customerService.updateCustomerProfile(customer, profileDTO);
-      return ResponseEntity.ok(response);
-    } catch (Exception e) {
-      return ResponseEntity.badRequest()
-              .body(new ApiResponse<>("Cập nhật thông tin thất bại: " + e.getMessage(), null));
-    }
   }
 }

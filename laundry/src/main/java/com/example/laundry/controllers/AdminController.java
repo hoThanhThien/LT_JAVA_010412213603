@@ -1,9 +1,6 @@
 package com.example.laundry.controllers;
 
-import com.example.laundry.dto.EmployeeDTO;
-import com.example.laundry.dto.OrderResponse;
-import com.example.laundry.dto.PagedResponse;
-import com.example.laundry.dto.StoreOwnerDTO;
+import com.example.laundry.dto.*;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.services.AdminService;
 import com.example.laundry.services.EmployeeService;
@@ -29,13 +26,7 @@ public class AdminController {
     private AdminService adminService;
     @Autowired
     private EmployeeService employeeService;
-    @GetMapping("/employees")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PagedResponse<EmployeeDTO>> getAllEmployees(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(adminService.getAllEmployees(page, size));
-    }
+
     @PostMapping("/storeowner/create")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StoreOwner>> createStoreOwner(@RequestBody StoreOwnerDTO storeOwnerDTO) {
@@ -67,11 +58,31 @@ public class AdminController {
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(adminService.getAllStoreOwners(page, size));
     }
+
+    @GetMapping("/employees")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PagedResponse<EmployeeDTO>> getAllEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(adminService.getAllEmployees(page, size));
+    }
+
+    @GetMapping("/customers")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PagedResponse<CustomerDTO>> getAllCustomers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(adminService.getAllCustomers(page, size));
+    }
+
     @GetMapping("/orders")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<OrderResponse>>> getAllOrders() {
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getAllOrders(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
         try {
-            ApiResponse<List<OrderResponse>> response = adminService.getAllOrders();
+            ApiResponse<List<OrderResponse>> response = adminService.getAllOrders(page, size);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest()

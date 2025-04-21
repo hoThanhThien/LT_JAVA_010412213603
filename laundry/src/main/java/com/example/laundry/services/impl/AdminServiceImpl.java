@@ -139,6 +139,40 @@ public class AdminServiceImpl implements AdminService {
         return ResponseEntity.ok(response).getBody();
     }
 
+    @Override
+    public ApiResponse<List<OrderResponse>> getAllOrders(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Order> orderPage = orderRepository.findAll(pageable);
+
+        List<OrderResponse> responseList = orderPage.getContent().stream()
+                .map(order -> {
+                    OrderResponse orderResponse = new OrderResponse();
+                    orderResponse.setId(order.getId());
+                    orderResponse.setTotalAmount(order.getTotalAmount());
+                    orderResponse.setOrderStatus(order.getOrderStatus());
+                    orderResponse.setImgProduct(order.getImgProduct());
+                    orderResponse.setLaundryShopName(order.getLaundryShop().getName());
+                    orderResponse.setServiceCategoryName(order.getServiceCategory().getName());
+                    orderResponse.setServiceName(order.getService().getName());
+                    orderResponse.setServicePrice(order.getService().getPrice());
+                    orderResponse.setOrderVolume(order.getOrderVolume());
+                    orderResponse.setCreatedAt(order.getCreatedAt());
+                    orderResponse.setInstructions(order.getInstructions());
+                    return orderResponse;
+                })
+                .collect(Collectors.toList());
+
+        Meta meta = new Meta(
+                orderPage.getNumber() + 1,
+                orderPage.getSize(),
+                orderPage.getTotalElements(),
+                orderPage.getTotalPages()
+        );
+
+        PagedData<OrderResponse> pagedData = new PagedData<>(meta, responseList);
+        return new PagedResponse<>("Lấy danh sách tất cả đơn hàng thành công", pagedData);
+    }
+
     private StoreOwner findStoreOwnerByInfo(StoreOwnerDTO storeOwnerDTO) {
         StoreOwner storeOwner = null;
         if (storeOwnerDTO.getEmail() != null) {
@@ -151,20 +185,6 @@ public class AdminServiceImpl implements AdminService {
             storeOwner = storeOwnerRepository.findByUsername(storeOwnerDTO.getUsername());
         }
         return storeOwner;
-    }
-    @Override
-    public ApiResponse<List<OrderResponse>> getAllOrders() {
-        ApiResponse<List<OrderResponse>> result;
-        List<Order> allOrders = orderRepository.findAll();
-
-        if (allOrders.isEmpty()) {
-            result = new ApiResponse<>("Không có đơn hàng nào trong hệ thống", null);
-        } else {
-            List<OrderResponse> responseList = mapOrdersToOrderResponses(allOrders);
-            result = new ApiResponse<>("Lấy danh sách tất cả đơn hàng thành công", responseList);
-        }
-
-        return result;
     }
 
     @Override
@@ -209,6 +229,37 @@ public class AdminServiceImpl implements AdminService {
 
         PagedData<EmployeeDTO> pagedData = new PagedData<>(meta, employeeDTOS);
         PagedResponse<EmployeeDTO> response = new PagedResponse<>("Lấy danh sách thành công", pagedData);
+
+        return ResponseEntity.ok(response).getBody();
+    }
+
+    @Override
+    public PagedResponse<CustomerDTO> getAllCustomers(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Customer> customerPage = customerRepository.findAll(pageable);
+
+        List<CustomerDTO> customerDTOs = customerPage.getContent().stream()
+                .map(customer -> new CustomerDTO(
+                        customer.getUsername(),
+                        null,
+                        customer.getEmail(),
+                        customer.getPhone(),
+                        customer.getAddress(),
+                        customer.getRoles(),
+                        customer.getCreatedAt(),
+                        customer.getUpdatedAt()
+                ))
+                .toList();
+
+        Meta meta = new Meta(
+                customerPage.getNumber() + 1,
+                customerPage.getSize(),
+                customerPage.getTotalElements(),
+                customerPage.getTotalPages()
+        );
+
+        PagedData<CustomerDTO> pagedData = new PagedData<>(meta, customerDTOs);
+        PagedResponse<CustomerDTO> response = new PagedResponse<>("Lấy danh sách thành công", pagedData);
 
         return ResponseEntity.ok(response).getBody();
     }

@@ -209,11 +209,6 @@ public class CustomerServiceImpl implements CustomerService {
         return new ApiResponse<>("Bạn đã ta đơn giặt hàng thành công. Vui lòng chú ý thông báo của chúng tôi!", responseDTO);
     }
 
-    @Override
-    public ApiResponse<List<OrderResponse>> historyOrder(Customer customer, OrderDTO orderDTO) {
-        return null;
-    }
-
     public PagedResponse<OrderResponse> historyOrder(Customer customer, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Order> orderPage = orderRepository.findByCustomerId(customer.getId(), pageable);
@@ -245,47 +240,49 @@ public class CustomerServiceImpl implements CustomerService {
         return new PagedResponse<>("Lấy lịch sử đơn hàng thành công", new PagedData<>(meta, orderResponses));
     }
 
-    // New method for updating customer profile
     @Override
     @Transactional
-    public ApiResponse<CustomerProfileDTO> updateCustomerProfile(Customer customer, CustomerProfileDTO profileDTO) {
+    public ApiResponse<CustomerDTO> updateCustomer(Customer customer, CustomerDTO customerDTO) {
         try {
             // Validate email if provided
-            if (profileDTO.getEmail() != null && !profileDTO.getEmail().isEmpty()) {
-                if (customerRepository.existsByEmail(profileDTO.getEmail()) &&
-                        !profileDTO.getEmail().equals(customer.getEmail())) {
+            if (customerDTO.getEmail() != null && !customerDTO.getEmail().isEmpty()) {
+                if (customerRepository.existsByEmail(customerDTO.getEmail()) &&
+                        !customerDTO.getEmail().equals(customer.getEmail())) {
                     return new ApiResponse<>("Email đã tồn tại trong hệ thống", null);
                 }
-                customer.setEmail(profileDTO.getEmail());
+                customer.setEmail(customerDTO.getEmail());
             }
 
             // Validate phone if provided
-            if (profileDTO.getPhone() != null && !profileDTO.getPhone().isEmpty() &&
-                    !profileDTO.getPhone().equals(customer.getPhone())) {
-                if (customerRepository.existsByPhone(profileDTO.getPhone())) {
+            if (customerDTO.getPhone() != null && !customerDTO.getPhone().isEmpty() &&
+                    !customerDTO.getPhone().equals(customer.getPhone())) {
+                if (customerRepository.existsByPhone(customerDTO.getPhone())) {
                     return new ApiResponse<>("Số điện thoại đã tồn tại trong hệ thống", null);
                 }
-                customer.setPhone(profileDTO.getPhone());
+                customer.setPhone(customerDTO.getPhone());
             }
 
             // Update other fields
-            if (profileDTO.getUsername() != null && !profileDTO.getUsername().isEmpty()) {
-                customer.setUsername(profileDTO.getUsername());
+            if (customerDTO.getUsername() != null && !customerDTO.getUsername().isEmpty()) {
+                customer.setUsername(customerDTO.getUsername());
             }
 
-            if (profileDTO.getAddress() != null) {
-                customer.setAddress(profileDTO.getAddress());
+            if (customerDTO.getAddress() != null) {
+                customer.setAddress(customerDTO.getAddress());
             }
 
             // Save the updated customer
             Customer updatedCustomer = customerRepository.save(customer);
 
             // Build response
-            CustomerProfileDTO responseDTO = new CustomerProfileDTO();
+            CustomerDTO responseDTO = new CustomerDTO();
             responseDTO.setUsername(updatedCustomer.getUsername());
             responseDTO.setEmail(updatedCustomer.getEmail());
             responseDTO.setPhone(updatedCustomer.getPhone());
             responseDTO.setAddress(updatedCustomer.getAddress());
+            responseDTO.setRole(updatedCustomer.getRoles());
+            responseDTO.setCreatedAt(updatedCustomer.getCreatedAt());
+            responseDTO.setUpdatedAt(updatedCustomer.getUpdatedAt());
             // Set other fields as needed
 
             return new ApiResponse<>("Cập nhật thông tin thành công", responseDTO);
@@ -293,60 +290,6 @@ public class CustomerServiceImpl implements CustomerService {
             return new ApiResponse<>("Cập nhật thông tin thất bại: " + e.getMessage(), null);
         }
     }
-
-    @Override
-    public ApiResponse<List<OrderResponse>> getOrdersByStatus(String status) {
-        return null;
-    }
-
-    @Override
-    public PagedResponse<OrderResponse> getOrdersByStatus(String status, int page, int size) {
-        OrderStatus orderStatus;
-        try {
-            orderStatus = OrderStatus.valueOf(status.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return new PagedResponse<>("Trạng thái đơn hàng không hợp lệ. Các trạng thái hợp lệ: " + Arrays.toString(OrderStatus.values()), null);
-        }
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Order> statusOrdersPage = (Page<Order>) orderRepository.findByOrderStatus(orderStatus, pageable);
-
-        List<OrderResponse> responseList = mapOrdersToOrderResponses(statusOrdersPage.getContent());
-
-        Meta meta = new Meta(
-                statusOrdersPage.getNumber() + 1,
-                statusOrdersPage.getSize(),
-                statusOrdersPage.getTotalElements(),
-                statusOrdersPage.getTotalPages()
-        );
-        PagedData<OrderResponse> pagedData = new PagedData<>(meta, responseList);
-
-        return new PagedResponse<>("Lấy danh sách đơn hàng theo trạng thái thành công", pagedData);
-    }
-    @Override
-    public PagedResponse<OrderResponse> historyOrder(UUID customerId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Order> orderPage = orderRepository.findByCustomerId(customerId, pageable);
-
-        List<OrderResponse> orderResponses = orderPage.getContent().stream()
-                .map(order -> {
-                    OrderResponse response = new OrderResponse();
-                    // set các field
-                    return response;
-                })
-                .collect(Collectors.toList());
-
-        Meta meta = new Meta(
-                orderPage.getNumber() + 1,
-                orderPage.getSize(),
-                orderPage.getTotalElements(),
-                orderPage.getTotalPages()
-        );
-
-        return new PagedResponse<>("Lấy lịch sử đơn hàng thành công", new PagedData<>(meta, orderResponses));
-    }
-
-
 
     private List<OrderResponse> mapOrdersToOrderResponses(List<Order> orders) {
         return orders.stream()
@@ -367,32 +310,6 @@ public class CustomerServiceImpl implements CustomerService {
                 })
                 .collect(Collectors.toList());
     }
-    
-    }
 
-
-//    @Override
-//    public Order bookOrder(Customer customer, LaundryShop laundryShop, Service service, String instructions) {
-//        return customerRepository.bookOrder(customer, laundryShop, service);
-//    }
-//
-//    @Override
-//    public void trackOrder(Customer customer, Order order) {
-//
-//    }
-//
-//    @Override
-//    public void makePayment(Customer customer, Order order, String paymentMethod, double amount) {
-//
-//    }
-//
-//    @Override
-//    public List<Order> getOrderHistory(Customer customer) {
-//        return null;
-//    }
-//
-//    @Override
-//    public List<LaundryShop> searchShops(Customer customer, String location) {
-//        return null;
-//    }
+}
 

@@ -1,20 +1,22 @@
 package com.example.laundry.dto;
 
+import com.example.laundry.models.user.Roles;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.Date;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CustomerProfileDTO {
+public class CustomerDTO {
     private String username;
+    private String password;
     private String email;
     private String phone;
     private String address;
-    private String fullName;
-    // Add other fields you want to allow customers to update
+    private Roles role;
+    private Date createdAt;
+    private Date updatedAt;
 }
