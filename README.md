@@ -33,9 +33,6 @@ Các API :
 +GET http://localhost:8080/customer/{{customerId}}/history-order
 
 
-+
-
-
 + lich su order cho khach:GET http://localhost:8080/customer/orders/history?paged=0&size=5
 
 
