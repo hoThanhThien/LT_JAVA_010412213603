@@ -16,7 +16,7 @@ public interface CustomerService extends UserService{
     ApiResponse<List<OrderResponse>> historyOrder(Customer customer, OrderDTO orderDTO);
     ApiResponse<CustomerProfileDTO> updateCustomerProfile(Customer customer, CustomerProfileDTO profileDTO);
 
-    ApiResponse<List<OrderResponse>> getOrdersByStatus(String status);
+    //ApiResponse<List<OrderResponse>> getOrdersByStatus(String status);
 
     PagedResponse<OrderResponse> getOrdersByStatus(String status, int page, int size);
 

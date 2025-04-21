@@ -11,7 +11,13 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderResponse {
+
     private Long id;
+    private String username;
+    private String phone;
+    private String email;
+    private String address;
+
     private Double totalAmount;
     private OrderStatus orderStatus;
     private String imgProduct;

@@ -85,7 +85,7 @@ public class AdminController {
         }
     }
 
-    @GetMapping("/orders/status/{status}")
+    @GetMapping("/orders/status={status}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PagedResponse<OrderResponse>> getOrdersByStatus(
             @PathVariable String status,

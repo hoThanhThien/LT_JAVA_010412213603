@@ -15,6 +15,7 @@ import java.util.Date;
 @NoArgsConstructor
 
 public class OrderDTO {
+
     private Double totalAmount;
     private OrderStatus orderStatus;
     private String imgProduct;

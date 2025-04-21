@@ -181,6 +181,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         Order order = new Order();
         order.setCustomer(customer);
+
         order.setLaundryShop(laundryShop);
         order.setServiceCategory(serviceCategory);
         order.setService(service);
@@ -195,6 +196,10 @@ public class CustomerServiceImpl implements CustomerService {
 
         OrderResponse responseDTO = new OrderResponse();
         responseDTO.setId(savedOrder.getId());
+        responseDTO.setUsername(customer.getUsername());
+        responseDTO.setPhone(customer.getPhone());
+        responseDTO.setEmail(customer.getEmail());
+        responseDTO.setAddress(customer.getAddress());
         responseDTO.setTotalAmount(savedOrder.getTotalAmount());
         responseDTO.setOrderStatus(savedOrder.getOrderStatus());
         responseDTO.setImgProduct(savedOrder.getImgProduct());
@@ -205,6 +210,8 @@ public class CustomerServiceImpl implements CustomerService {
         responseDTO.setOrderVolume(savedOrder.getOrderVolume());
         responseDTO.setCreatedAt(savedOrder.getCreatedAt());
         responseDTO.setInstructions(savedOrder.getInstructions());
+
+
 
         return new ApiResponse<>("Bạn đã ta đơn giặt hàng thành công. Vui lòng chú ý thông báo của chúng tôi!", responseDTO);
     }
@@ -294,10 +301,6 @@ public class CustomerServiceImpl implements CustomerService {
         }
     }
 
-    @Override
-    public ApiResponse<List<OrderResponse>> getOrdersByStatus(String status) {
-        return null;
-    }
 
     @Override
     public PagedResponse<OrderResponse> getOrdersByStatus(String status, int page, int size) {
