@@ -20,22 +20,51 @@ Các API :
 + lich su dat hang cho admin GET http://localhost:8080/admin/orders/history?page=0&size=5
 -STOREOWNER
 +POST http://localhost:8080/admin/storeowner/create
+
+
 +DELETE http://localhost:8080/storeowner/employee/delete
 
 
 +PUT http://localhost:8080/storeowner/employee/update
+
+
 +POST http://localhost:8080/storeowner/shop/create
+
+
 +POST http://localhost:8080/storeowner/shop/update
+
+
 +POST http://localhost:8080/storeowner/shop/delete
+
+
 +POST http://localhost:8080/storeowner/category/add
+
+
 +POST http://localhost:8080/storeowner/category/update
+
+
 +POST http://localhost:8080/storeowner/category/delete
+
+
 +POST http://localhost:8080/storeowner/service/add
+
+
 +POST http://localhost:8080/storeowner/service/delete
+
+
 -Category
+
+
 +GET http://localhost:8080/shop/{{shopId}}/category/{{categoryId}}/services
+
+
 +GET http://localhost:8080/shop/{{shopId}}/categories
+
+
 +GET http://localhost:8080/shop/{{shopId}}/category/{{categoryId}}/services
+
+
 -SHop laundry
+
 
 +GET http://localhost:8080/shops
