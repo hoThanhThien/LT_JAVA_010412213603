@@ -14,7 +14,7 @@ Các API :
 -CUSTOMER
 
 
-+ Register: POST http://localhost:8080/customer/register
++Register: POST http://localhost:8080/customer/register
 
 
 +POST http://localhost:8080/auth/refresh-token
