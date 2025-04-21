@@ -25,3 +25,16 @@ export const AccountRes = z
   .strict();
 
 export type AccountResType = z.TypeOf<typeof AccountRes>;
+
+export const UpdateMeBody = z
+  .object({
+    phone: z.string(),
+    username: z.string().optional(),
+    password: z.string().optional(),
+    email: z.string().email().optional(),
+    avtUser: z.string().optional(),
+    address: z.string().optional(),
+  })
+  .strict();
+
+export type UpdateMeType = z.TypeOf<typeof UpdateMeBody>;

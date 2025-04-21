@@ -6,7 +6,7 @@ import { HttpError } from "@/lib/http";
 
 export async function POST(request: Request) {
   const body = (await request.json()) as RegisterBodyType;
-  console.log("Register API called : ", body);
+  // console.log("Register API called : ", body);
   const cookieStore = cookies();
   try {
     const { payload } = await authApiRequests.sRegister(body);

@@ -4,6 +4,7 @@ import "@/app/globals.css";
 import { cn } from "@/lib/utils";
 import { ToastContainer } from "react-toastify";
 import AppProvider from "@/components/app-provider";
+import "@ant-design/v5-patch-for-react-19";
 
 const fontSans = FontSans({
   subsets: ["latin"],

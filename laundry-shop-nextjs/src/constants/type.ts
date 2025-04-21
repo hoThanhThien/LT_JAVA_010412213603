@@ -1,13 +1,13 @@
 export const Role = {
   Customer: "Customer",
   Employee: "Employee",
-  StoreManager: "StoreManager",
+  StoreOwner: "StoreOwner",
   Admin: "Admin",
 } as const;
 
 export const RoleValues = [
   Role.Customer,
   Role.Employee,
-  Role.StoreManager,
+  Role.StoreOwner,
   Role.Admin,
 ] as const;

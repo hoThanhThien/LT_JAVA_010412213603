@@ -23,7 +23,7 @@ export default function DropdownAvatar() {
   const { data } = useAccountMe();
   const account = data?.payload?.data?.account;
 
-  const { setIsAuth } = useAuthStore();
+  const { setIsAuth, setOpenSetting } = useAuthStore();
 
   const logout = async () => {
     if (logoutMutation.isPending) return;
@@ -59,9 +59,14 @@ export default function DropdownAvatar() {
         <DropdownMenuLabel>{account?.username}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={"/manage/setting"} className="cursor-pointer">
+          <div
+            className="cursor-pointer"
+            onClick={() => {
+              setOpenSetting(true);
+            }}
+          >
             Cài đặt
-          </Link>
+          </div>
         </DropdownMenuItem>
         <DropdownMenuItem>Hỗ trợ</DropdownMenuItem>
         <DropdownMenuSeparator />

@@ -7,6 +7,8 @@ import { getAccessTokenFromLocalStorage } from "@/lib/utils";
 import Auth from "./auth";
 import DropdownAvatar from "./dropdown-avatar";
 import { useAuthStore } from "@/lib/zustand";
+import Setting from "./setting";
+import Order from "./order";
 
 export default function Layout({
   children,
@@ -72,6 +74,8 @@ export default function Layout({
           </nav>
         </div>
         <Auth />
+        <Setting />
+        <Order />
       </header>
       <main className="flex flex-1 flex-col mt-24 gap-4 md:gap-8">
         {children}

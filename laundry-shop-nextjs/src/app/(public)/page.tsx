@@ -13,6 +13,7 @@ import { useSearchParams } from "next/navigation";
 export default function Home() {
   const { setOpenAuth } = useAuthStore();
   const searchParams = useSearchParams();
+  const { setOpenOrder } = useAuthStore();
   const reqLogin = searchParams.get("login");
   useEffect(() => {
     if (reqLogin) {
@@ -39,7 +40,12 @@ export default function Home() {
               cam kết mang đến trải nghiệm tuyệt vời với chất lượng cao cấp,
               tiện lợi & tuyệt đối an tâm cho quý khách hàng.
             </div>
-            <button className="mt-5 text-black hover:text-white w-[70%] text-xl py-3 rounded-[28px] font-medium cursor-pointer border-2 border-black">
+            <button
+              onClick={() => {
+                setOpenOrder(true);
+              }}
+              className="mt-5 text-black hover:text-white w-[70%] text-xl py-3 rounded-[28px] font-medium cursor-pointer border-2 border-black"
+            >
               ĐẶT LỊCH DỊCH VỤ NGAY
             </button>
             <button className="mt-5 text-white bg-black hover:bg-main w-[70%] text-xl py-3 rounded-[28px] font-medium cursor-pointer border-2 border-black">
