@@ -4,12 +4,10 @@ import com.example.laundry.dto.*;
 import com.example.laundry.models.order.Order;
 import com.example.laundry.models.order.OrderStatus;
 import com.example.laundry.models.user.Customer;
+import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.Roles;
 import com.example.laundry.models.user.StoreOwner;
-import com.example.laundry.repository.AdminRepository;
-import com.example.laundry.repository.CustomerRepository;
-import com.example.laundry.repository.OrderRepository;
-import com.example.laundry.repository.StoreOwnerRepository;
+import com.example.laundry.repository.*;
 import com.example.laundry.services.AdminService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
@@ -29,6 +27,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class AdminServiceImpl implements AdminService {
+    @Autowired
+    private EmployeeRepository employeeRepository;
     @Autowired
     private AdminRepository adminRepository;
     @Autowired
@@ -182,6 +182,36 @@ public class AdminServiceImpl implements AdminService {
         return new ApiResponse<>("Lấy danh sách đơn hàng của khách hàng thành công", responseList);
     }
 
+    @Override
+    public PagedResponse<EmployeeDTO> getAllEmployees(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Employee> employeePage = employeeRepository.findAll(pageable);
+
+        List<EmployeeDTO> employeeDTOS = employeePage.getContent().stream()
+                .map(employee -> new EmployeeDTO(
+                        employee.getUsername(),
+                        null,
+                        employee.getEmail(),
+                        employee.getPhone(),
+                        employee.getAddress(),
+                        employee.getRoles(),
+                        employee.getCreatedAt(),
+                        employee.getUpdatedAt()
+                ))
+                .toList();
+
+        Meta meta = new Meta(
+                employeePage.getNumber() + 1,
+                employeePage.getSize(),
+                employeePage.getTotalElements(),
+                employeePage.getTotalPages()
+        );
+
+        PagedData<EmployeeDTO> pagedData = new PagedData<>(meta, employeeDTOS);
+        PagedResponse<EmployeeDTO> response = new PagedResponse<>("Lấy danh sách thành công", pagedData);
+
+        return ResponseEntity.ok(response).getBody();
+    }
 
 
     private List<OrderResponse> mapOrdersToOrderResponses(List<Order> orders) {

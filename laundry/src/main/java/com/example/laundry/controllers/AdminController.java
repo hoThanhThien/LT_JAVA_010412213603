@@ -1,17 +1,23 @@
 package com.example.laundry.controllers;
 
+import com.example.laundry.dto.EmployeeDTO;
 import com.example.laundry.dto.OrderResponse;
 import com.example.laundry.dto.PagedResponse;
 import com.example.laundry.dto.StoreOwnerDTO;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.services.AdminService;
+import com.example.laundry.services.EmployeeService;
 import com.example.laundry.utils.ApiResponse;
+
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,7 +27,15 @@ import java.util.UUID;
 public class AdminController {
     @Autowired
     private AdminService adminService;
-
+    @Autowired
+    private EmployeeService employeeService;
+    @GetMapping("/employees")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PagedResponse<EmployeeDTO>> getAllEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(adminService.getAllEmployees(page, size));
+    }
     @PostMapping("/storeowner/create")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StoreOwner>> createStoreOwner(@RequestBody StoreOwnerDTO storeOwnerDTO) {
