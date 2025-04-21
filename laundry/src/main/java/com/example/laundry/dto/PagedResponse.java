@@ -12,4 +12,7 @@ import java.util.List;
 public class PagedResponse<T> {
   private String message;
   private PagedData<T> data;
+
+
+
 }

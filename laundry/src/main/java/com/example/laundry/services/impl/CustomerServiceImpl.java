@@ -18,13 +18,19 @@ import com.example.laundry.utils.ApiResponse;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
-import org.antlr.v4.runtime.misc.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
 public class CustomerServiceImpl implements CustomerService {
@@ -205,13 +211,14 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ApiResponse<List<OrderResponse>> historyOrder(Customer customer, OrderDTO orderDTO) {
-        List<Order> orderOfCustomer = orderRepository.findOrdersByCustomerId(customer.getId());
+        return null;
+    }
 
-        if (orderOfCustomer == null) {
-            return new ApiResponse<>("Bạn chưa có đơn đặt lịch nào!!!");
-        }
+    public PagedResponse<OrderResponse> historyOrder(Customer customer, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Order> orderPage = orderRepository.findByCustomerId(customer.getId(), pageable);
 
-        List<OrderResponse> responseList = orderOfCustomer.stream()
+        List<OrderResponse> orderResponses = orderPage.getContent().stream()
                 .map(order -> {
                     OrderResponse orderResponse = new OrderResponse();
                     orderResponse.setId(order.getId());
@@ -224,12 +231,146 @@ public class CustomerServiceImpl implements CustomerService {
                     orderResponse.setOrderVolume(order.getOrderVolume());
                     orderResponse.setCreatedAt(order.getCreatedAt());
                     return orderResponse;
-                })
-                .collect(java.util.stream.Collectors.toList());
 
-        return new ApiResponse<>("Lấy lịch sử đơn hàng thành công", responseList);
+                })
+                .collect(Collectors.toList());
+
+        Meta meta = new Meta(
+                orderPage.getNumber() + 1,
+                orderPage.getSize(),
+                orderPage.getTotalElements(),
+                orderPage.getTotalPages()
+        );
+
+        return new PagedResponse<>("Lấy lịch sử đơn hàng thành công", new PagedData<>(meta, orderResponses));
     }
-}
+
+    // New method for updating customer profile
+    @Override
+    @Transactional
+    public ApiResponse<CustomerProfileDTO> updateCustomerProfile(Customer customer, CustomerProfileDTO profileDTO) {
+        try {
+            // Validate email if provided
+            if (profileDTO.getEmail() != null && !profileDTO.getEmail().isEmpty()) {
+                if (customerRepository.existsByEmail(profileDTO.getEmail()) &&
+                        !profileDTO.getEmail().equals(customer.getEmail())) {
+                    return new ApiResponse<>("Email đã tồn tại trong hệ thống", null);
+                }
+                customer.setEmail(profileDTO.getEmail());
+            }
+
+            // Validate phone if provided
+            if (profileDTO.getPhone() != null && !profileDTO.getPhone().isEmpty() &&
+                    !profileDTO.getPhone().equals(customer.getPhone())) {
+                if (customerRepository.existsByPhone(profileDTO.getPhone())) {
+                    return new ApiResponse<>("Số điện thoại đã tồn tại trong hệ thống", null);
+                }
+                customer.setPhone(profileDTO.getPhone());
+            }
+
+            // Update other fields
+            if (profileDTO.getUsername() != null && !profileDTO.getUsername().isEmpty()) {
+                customer.setUsername(profileDTO.getUsername());
+            }
+
+            if (profileDTO.getAddress() != null) {
+                customer.setAddress(profileDTO.getAddress());
+            }
+
+            // Save the updated customer
+            Customer updatedCustomer = customerRepository.save(customer);
+
+            // Build response
+            CustomerProfileDTO responseDTO = new CustomerProfileDTO();
+            responseDTO.setUsername(updatedCustomer.getUsername());
+            responseDTO.setEmail(updatedCustomer.getEmail());
+            responseDTO.setPhone(updatedCustomer.getPhone());
+            responseDTO.setAddress(updatedCustomer.getAddress());
+            // Set other fields as needed
+
+            return new ApiResponse<>("Cập nhật thông tin thành công", responseDTO);
+        } catch (Exception e) {
+            return new ApiResponse<>("Cập nhật thông tin thất bại: " + e.getMessage(), null);
+        }
+    }
+
+    @Override
+    public ApiResponse<List<OrderResponse>> getOrdersByStatus(String status) {
+        return null;
+    }
+
+    @Override
+    public PagedResponse<OrderResponse> getOrdersByStatus(String status, int page, int size) {
+        OrderStatus orderStatus;
+        try {
+            orderStatus = OrderStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return new PagedResponse<>("Trạng thái đơn hàng không hợp lệ. Các trạng thái hợp lệ: " + Arrays.toString(OrderStatus.values()), null);
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Order> statusOrdersPage = (Page<Order>) orderRepository.findByOrderStatus(orderStatus, pageable);
+
+        List<OrderResponse> responseList = mapOrdersToOrderResponses(statusOrdersPage.getContent());
+
+        Meta meta = new Meta(
+                statusOrdersPage.getNumber() + 1,
+                statusOrdersPage.getSize(),
+                statusOrdersPage.getTotalElements(),
+                statusOrdersPage.getTotalPages()
+        );
+        PagedData<OrderResponse> pagedData = new PagedData<>(meta, responseList);
+
+        return new PagedResponse<>("Lấy danh sách đơn hàng theo trạng thái thành công", pagedData);
+    }
+    @Override
+    public PagedResponse<OrderResponse> historyOrder(UUID customerId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Order> orderPage = orderRepository.findByCustomerId(customerId, pageable);
+
+        List<OrderResponse> orderResponses = orderPage.getContent().stream()
+                .map(order -> {
+                    OrderResponse response = new OrderResponse();
+                    // set các field
+                    return response;
+                })
+                .collect(Collectors.toList());
+
+        Meta meta = new Meta(
+                orderPage.getNumber() + 1,
+                orderPage.getSize(),
+                orderPage.getTotalElements(),
+                orderPage.getTotalPages()
+        );
+
+        return new PagedResponse<>("Lấy lịch sử đơn hàng thành công", new PagedData<>(meta, orderResponses));
+    }
+
+
+
+    private List<OrderResponse> mapOrdersToOrderResponses(List<Order> orders) {
+        return orders.stream()
+                .map(order -> {
+                    OrderResponse orderResponse = new OrderResponse();
+                    orderResponse.setId(order.getId());
+                    orderResponse.setTotalAmount(order.getTotalAmount());
+                    orderResponse.setOrderStatus(order.getOrderStatus());
+                    orderResponse.setImgProduct(order.getImgProduct());
+                    orderResponse.setLaundryShopName(order.getLaundryShop().getName());
+                    orderResponse.setServiceCategoryName(order.getServiceCategory().getName());
+                    orderResponse.setServiceName(order.getService().getName());
+                    orderResponse.setServicePrice(order.getService().getPrice());
+                    orderResponse.setOrderVolume(order.getOrderVolume());
+                    orderResponse.setCreatedAt(order.getCreatedAt());
+                    orderResponse.setInstructions(order.getInstructions());
+                    return orderResponse;
+                })
+                .collect(Collectors.toList());
+    }
+    
+    }
+
+
 //    @Override
 //    public Order bookOrder(Customer customer, LaundryShop laundryShop, Service service, String instructions) {
 //        return customerRepository.bookOrder(customer, laundryShop, service);
