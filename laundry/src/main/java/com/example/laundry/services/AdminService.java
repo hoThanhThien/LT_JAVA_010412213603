@@ -14,6 +14,7 @@ public interface AdminService extends UserService {
     ApiResponse<StoreOwner> createStoreOwner(StoreOwnerDTO storeOwnerDTO);
     ApiResponse<String> removeStoreOwner(StoreOwnerDTO storeOwnerDTO);
     PagedResponse<StoreOwnerDTO> getAllStoreOwners(int page, int size);
+    PagedResponse<EmployeeDTO> getAllEmployees(int page, int size);
     ApiResponse<List<OrderResponse>> getAllOrders();
     ApiResponse<List<OrderResponse>> getOrdersByCustomer(UUID customerId);
 }

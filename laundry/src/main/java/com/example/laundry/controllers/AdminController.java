@@ -1,10 +1,12 @@
 package com.example.laundry.controllers;
 
+import com.example.laundry.dto.EmployeeDTO;
 import com.example.laundry.dto.OrderResponse;
 import com.example.laundry.dto.PagedResponse;
 import com.example.laundry.dto.StoreOwnerDTO;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.services.AdminService;
+import com.example.laundry.services.EmployeeService;
 import com.example.laundry.utils.ApiResponse;
 
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,8 @@ import java.util.UUID;
 public class AdminController {
     @Autowired
     private AdminService adminService;
+  @Autowired
+  private EmployeeService employeeService;
 
     @PostMapping("/storeowner/create")
     @PreAuthorize("hasRole('ADMIN')")
@@ -53,6 +57,15 @@ public class AdminController {
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(adminService.getAllStoreOwners(page, size));
     }
+
+    @GetMapping("/employees")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PagedResponse<EmployeeDTO>> getAllEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(adminService.getAllEmployees(page, size));
+    }
+
     @GetMapping("/orders")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<OrderResponse>>> getAllOrders() {

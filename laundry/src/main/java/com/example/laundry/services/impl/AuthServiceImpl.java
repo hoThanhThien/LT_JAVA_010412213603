@@ -9,6 +9,7 @@ import com.example.laundry.repository.UserRepository;
 import com.example.laundry.security.JwtUtil;
 import com.example.laundry.services.AuthService;
 import com.example.laundry.services.RefreshTokenService;
+import com.example.laundry.utils.ApiResponse;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -43,8 +44,11 @@ public class AuthServiceImpl implements AuthService {
     try {
       User phone = userRepository.findByPhone(loginRequest.getPhone());
       if (phone == null) {
-        System.out.println("Số điện thoại không tồn tại: " + loginRequest.getPhone());
-        throw new RuntimeException("Số điện thoại hoặc mật khẩu không đúng");
+        return new LoginResponse(null, "Số điện thoại sai. Vui lòng nhập lại!!!!");
+      }
+
+      if (!isPasswordValid(phone, loginRequest.getPassword())) {
+        return new LoginResponse(null, "Mật khẩu không đúng. Vui lòng nhập lại!!!");
       }
 
       if (isPasswordValid(phone, loginRequest.getPassword())) {
