@@ -1,10 +1,8 @@
 package com.example.laundry.services.impl;
 
-import com.example.laundry.dto.OrderResponse;
-import com.example.laundry.dto.StoreOwnerDTO;
+import com.example.laundry.dto.*;
 import com.example.laundry.models.order.Order;
 import com.example.laundry.models.order.OrderStatus;
-import com.example.laundry.models.user.Customer;
 import com.example.laundry.models.user.Roles;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.AdminRepository;
@@ -16,6 +14,11 @@ import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
 import com.example.laundry.utils.UserValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -105,6 +108,36 @@ public class AdminServiceImpl implements AdminService {
         return new ApiResponse<>("Đã xóa Store Owner thành công", null);
     }
 
+    @Override
+    public PagedResponse<StoreOwnerDTO> getAllStoreOwners(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<StoreOwner> storeOwnerPage = storeOwnerRepository.findAll(pageable);
+
+        List<StoreOwnerDTO> storeOwnerDTOs = storeOwnerPage.getContent().stream()
+                .map(owner -> new StoreOwnerDTO(
+                        owner.getUsername(),
+                        null,
+                        owner.getEmail(),
+                        owner.getPhone(),
+                        owner.getAddress(),
+                        owner.getRoles(),
+                        owner.getCreatedAt(),
+                        owner.getUpdatedAt()
+                ))
+                .toList();
+
+        Meta meta = new Meta(
+                storeOwnerPage.getNumber() + 1,
+                storeOwnerPage.getSize(),
+                storeOwnerPage.getTotalElements(),
+                storeOwnerPage.getTotalPages()
+        );
+        PagedData<StoreOwnerDTO> pagedData = new PagedData<>(meta, storeOwnerDTOs);
+        PagedResponse<StoreOwnerDTO> response = new PagedResponse<>("Lấy danh sách thành công", pagedData);
+
+        return ResponseEntity.ok(response).getBody();
+    }
+
 
 
     private StoreOwner findStoreOwnerByInfo(StoreOwnerDTO storeOwnerDTO) {
@@ -121,55 +154,104 @@ public class AdminServiceImpl implements AdminService {
         return storeOwner;
     }
     @Override
-    public ApiResponse<List<OrderResponse>> getAllOrders() {
-        ApiResponse<List<OrderResponse>> result;
-        List<Order> allOrders = orderRepository.findAll();
+    public PagedResponse<OrderResponse> getAllOrders(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Order> orderPage = orderRepository.findAll(pageable);
 
-        if (allOrders.isEmpty()) {
-            result = new ApiResponse<>("Không có đơn hàng nào trong hệ thống", null);
-        } else {
-            List<OrderResponse> responseList = mapOrdersToOrderResponses(allOrders);
-            result = new ApiResponse<>("Lấy danh sách tất cả đơn hàng thành công", responseList);
-        }
+        List<OrderResponse> responseList = orderPage.getContent().stream()
+                .map(order -> {
+                    OrderResponse orderResponse = new OrderResponse();
+                    orderResponse.setId(order.getId());
+                    orderResponse.setTotalAmount(order.getTotalAmount());
+                    orderResponse.setOrderStatus(order.getOrderStatus());
+                    orderResponse.setImgProduct(order.getImgProduct());
+                    orderResponse.setLaundryShopName(order.getLaundryShop().getName());
+                    orderResponse.setServiceCategoryName(order.getServiceCategory().getName());
+                    orderResponse.setServiceName(order.getService().getName());
+                    orderResponse.setServicePrice(order.getService().getPrice());
+                    orderResponse.setOrderVolume(order.getOrderVolume());
+                    orderResponse.setCreatedAt(order.getCreatedAt());
+                    orderResponse.setInstructions(order.getInstructions());
+                    return orderResponse;
+                })
+                .collect(Collectors.toList());
 
-        return result;
+        Meta meta = new Meta(
+                orderPage.getNumber() + 1,
+                orderPage.getSize(),
+                orderPage.getTotalElements(),
+                orderPage.getTotalPages()
+        );
+
+        PagedData<OrderResponse> pagedData = new PagedData<>(meta, responseList);
+        return new PagedResponse<>("Lấy danh sách tất cả đơn hàng thành công", pagedData);
     }
 
-    @Override
-    public ApiResponse<List<OrderResponse>> getOrdersByCustomer(UUID customerId) {
-        Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng với ID: " + customerId));
+        @Override
+        public PagedResponse<OrderResponse> getOrdersByCustomer(UUID customerId, int page, int size) {
 
-        List<Order> customerOrders = orderRepository.findOrdersByCustomerId(customerId);
+            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+            Page<Order> orderPage = orderRepository.findByCustomerId(customerId, pageable);
 
-        if (customerOrders.isEmpty()) {
-            return new ApiResponse<>("Khách hàng chưa có đơn hàng nào", null);
+            if (orderPage.isEmpty()) {
+                return new PagedResponse<>("Khách hàng chưa có đơn hàng nào", new PagedData<>(null, List.of()));
+            }
+
+            List<OrderResponse> responseList = mapOrdersToOrderResponses(orderPage.getContent());
+
+            Meta meta = new Meta(
+                    orderPage.getNumber() + 1,
+                    orderPage.getSize(),
+                    orderPage.getTotalElements(),
+                    orderPage.getTotalPages()
+            );
+
+            return new PagedResponse<>("Lấy danh sách đơn hàng thành công", new PagedData<>(meta, responseList));
         }
 
-        List<OrderResponse> responseList = mapOrdersToOrderResponses(customerOrders);
-        return new ApiResponse<>("Lấy danh sách đơn hàng của khách hàng thành công", responseList);
-    }
-
     @Override
-    public ApiResponse<List<OrderResponse>> getOrdersByStatus(String status) {
+    public PagedResponse<OrderResponse> getOrdersByStatus(String status, int page, int size) {
         OrderStatus orderStatus;
         try {
             orderStatus = OrderStatus.valueOf(status.toUpperCase());
         } catch (IllegalArgumentException e) {
-            return new ApiResponse<>("Trạng thái đơn hàng không hợp lệ", null);
+            return new PagedResponse<>("Trạng thái đơn hàng không hợp lệ", null);
         }
 
-        List<Order> statusOrders = orderRepository.findAll().stream()
-                .filter(order -> order.getOrderStatus() == orderStatus)
-                .collect(Collectors.toList()).reversed();
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Order> orderPage = orderRepository.findByOrderStatus(orderStatus, pageable);
 
-        if (statusOrders.isEmpty()) {
-            return new ApiResponse<>("Không có đơn hàng nào với trạng thái: " + status, null);
-        }
 
-        List<OrderResponse> responseList = mapOrdersToOrderResponses(statusOrders);
-        return new ApiResponse<>("Lấy danh sách đơn hàng theo trạng thái thành công", responseList);
+        List<OrderResponse> responseList = orderPage.getContent().stream()
+                .map(order -> {
+                    OrderResponse orderResponse = new OrderResponse();
+                    orderResponse.setId(order.getId());
+                    orderResponse.setTotalAmount(order.getTotalAmount());
+                    orderResponse.setOrderStatus(order.getOrderStatus());
+                    orderResponse.setImgProduct(order.getImgProduct());
+                    orderResponse.setLaundryShopName(order.getLaundryShop().getName());
+                    orderResponse.setServiceCategoryName(order.getServiceCategory().getName());
+                    orderResponse.setServiceName(order.getService().getName());
+                    orderResponse.setServicePrice(order.getService().getPrice());
+                    orderResponse.setOrderVolume(order.getOrderVolume());
+                    orderResponse.setCreatedAt(order.getCreatedAt());
+                    orderResponse.setInstructions(order.getInstructions());
+                    return orderResponse;
+                })
+                .collect(Collectors.toList());
+
+        Meta meta = new Meta(
+                orderPage.getNumber() + 1,
+                orderPage.getSize(),
+                orderPage.getTotalElements(),
+                orderPage.getTotalPages()
+        );
+
+        PagedData<OrderResponse> pagedData = new PagedData<>(meta, responseList);
+        return new PagedResponse<>("Lấy danh sách đơn hàng theo trạng thái thành công", pagedData);
     }
+
+
 
     private List<OrderResponse> mapOrdersToOrderResponses(List<Order> orders) {
         return orders.stream()

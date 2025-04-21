@@ -1,11 +1,13 @@
 package com.example.laundry.dto;
 
+import com.example.laundry.models.user.Roles;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.Date;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,6 +19,9 @@ public class StoreOwnerDTO implements Serializable {
     private String email;
     private String phone;
     private String address;
+    private Roles role;
+    private Date createdAt;
+    private Date updatedAt;
 
     public String getUsername() {
         return username;

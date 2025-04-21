@@ -14,6 +14,14 @@ public class LaundryShopDTO {
   private double averageRating;
   private StoreOwnerSimpleDTO  storeOwner;
 
+  public LaundryShopDTO(Long id, String name, String address, String description, String openingHours) {
+    this.id = id;
+    this.name = name;
+    this.address = address;
+    this.description = description;
+    this.openingHours = openingHours;
+  }
+
   @Data
   public static class StoreOwnerSimpleDTO {
     private String username;

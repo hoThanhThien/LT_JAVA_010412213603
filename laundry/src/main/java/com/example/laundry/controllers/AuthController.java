@@ -16,8 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @CrossOrigin(origins = "http://127.0.0.1:3000", allowCredentials = "true")
 @RestController
 @RequestMapping("/auth")
@@ -35,7 +33,6 @@ public class AuthController {
   private RefreshTokenRepository refreshTokenRepository;
   @Autowired
   private CustomerService customerService;
-
   @PostMapping("/login")
   public LoginResponse login(@RequestBody LoginRequest loginRequest) {
     return authService.login(loginRequest);
@@ -64,7 +61,6 @@ public class AuthController {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
   }
-
   @PostMapping("/register")
   @PreAuthorize("hasRole('CUSTOMER')")
   public ResponseEntity<CustomerResponseDTO> register(@RequestBody RegisterRequest registerRequest) {
@@ -72,4 +68,3 @@ public class AuthController {
     return ResponseEntity.ok(response);
   }
 }
-

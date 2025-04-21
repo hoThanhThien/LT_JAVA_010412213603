@@ -2,6 +2,10 @@ package com.example.laundry.models.shop;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import com.example.laundry.models.order.Order;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -39,6 +43,9 @@ public class Service {
     @ManyToOne
     @JoinColumn(name = "category_id")
     private ServiceCategory category;
+
+    @OneToMany(mappedBy = "service", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Order> orders = new ArrayList<>();
 
     public Service(String name, double price, String description, String estimatedTime) {
         this.name = name;

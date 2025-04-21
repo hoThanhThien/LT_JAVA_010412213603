@@ -1,9 +1,7 @@
 package com.example.laundry.controllers;
 
-import com.example.laundry.dto.CustomerResponseDTO;
-import com.example.laundry.dto.OrderDTO;
-import com.example.laundry.dto.OrderResponse;
-import com.example.laundry.dto.RegisterRequest;
+import com.example.laundry.dto.*;
+import com.example.laundry.models.order.OrderStatus;
 import com.example.laundry.models.user.Customer;
 import com.example.laundry.repository.CustomerRepository;
 import com.example.laundry.security.JwtUtil;
@@ -11,6 +9,9 @@ import com.example.laundry.services.CustomerService;
 import com.example.laundry.services.RefreshTokenService;
 import com.example.laundry.utils.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -85,8 +86,79 @@ public class CustomerController {
                     .body(new ApiResponse<>("Lấy lịch sử đơn hàng thất bại: " + e.getMessage(), null));
         }
     }
+    // New endpoint for updating customer profile
+    @PutMapping("/accounts/me")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<ApiResponse<CustomerProfileDTO>> updateProfile(@RequestBody CustomerProfileDTO profileDTO) {
+        try {
+            Customer customer = getCurrentCustomer();
+            if (customer == null) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ApiResponse<>("Không tìm thấy thông tin customer"));
+            }
+
+            ApiResponse<CustomerProfileDTO> response = customerService.updateCustomerProfile(customer, profileDTO);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("Cập nhật thông tin thất bại: " + e.getMessage(), null));
+        }
+    }
+
+    @GetMapping("/orders/history")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<PagedResponse<OrderResponse>> historyOrder(
+            @RequestParam(defaultValue = "0", name = "paged") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        try {
+            Customer customer = getCurrentCustomer();
+            if (customer == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new PagedResponse<>("Không tìm thấy thông tin khách hàng", null));
+            }
+
+            PagedResponse<OrderResponse> response = customerService.historyOrder(customer, page, size);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new PagedResponse<>("Lấy lịch sử đơn hàng thất bại: " + e.getMessage(), null));
+        }
+    }
 
 
+
+    // Simplified endpoint for creating orders
+    @PostMapping("/orders/create")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<ApiResponse<OrderResponse>> createOrder(@RequestBody OrderDTO orderDTO) {
+        try {
+            Customer customer = getCurrentCustomer();
+            if (customer == null) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ApiResponse<>("Không tìm thấy thông tin customer"));
+            }
+
+            ApiResponse<OrderResponse> response = customerService.bookService(customer, orderDTO);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("Tạo đơn hàng thất bại: " + e.getMessage(), null));
+        }
+    }
+    @GetMapping("/orders/status/{status}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getOrdersByStatus(@PathVariable String status) {
+        try {
+            CustomerController adminService = null;
+            ApiResponse<List<OrderResponse>> response = adminService.getOrdersByStatus(status).getBody();
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>("Lấy danh sách đơn hàng theo trạng thái thất bại: " + e.getMessage(), null));
+        }
+    }
 //    @PostMapping("/register")
 //    public ResponseEntity<ApiResponse<CustomerResponseDTO>> createCustomer(@RequestBody CustomerDTO customerDTO){
 //        //Kiểm tra dữ liệu

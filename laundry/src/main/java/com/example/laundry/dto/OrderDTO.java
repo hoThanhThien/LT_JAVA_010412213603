@@ -4,13 +4,10 @@ import com.example.laundry.models.order.OrderStatus;
 import com.example.laundry.models.shop.LaundryShop;
 import com.example.laundry.models.shop.Service;
 import com.example.laundry.models.shop.ServiceCategory;
-import com.example.laundry.models.user.Customer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
-import java.math.BigDecimal;
 import java.util.Date;
 
 @Data

@@ -52,6 +52,7 @@ public class Order {
 
     @CreationTimestamp
     private Date createdAt;
+    private Date updatedAt;
     private String instructions;
 
     public Order(OrderStatus orderStatus, LaundryShop laundryShop, Customer customer, ServiceCategory serviceCategory, Service service, Double orderVolume, String instructions) {
