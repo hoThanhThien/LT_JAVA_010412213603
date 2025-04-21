@@ -21,6 +21,8 @@ Các API :
 -STOREOWNER
 +POST http://localhost:8080/admin/storeowner/create
 +DELETE http://localhost:8080/storeowner/employee/delete
+
+
 +PUT http://localhost:8080/storeowner/employee/update
 +POST http://localhost:8080/storeowner/shop/create
 +POST http://localhost:8080/storeowner/shop/update
