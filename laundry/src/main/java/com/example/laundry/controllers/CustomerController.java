@@ -48,6 +48,13 @@ public class CustomerController {
         return customerRepository.findByUsername(currentUsername);
     }
 
+    @PostMapping("/register")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<CustomerResponseDTO> register(@RequestBody RegisterRequest registerRequest) {
+        CustomerResponseDTO response = customerService.register(registerRequest);
+        return ResponseEntity.ok(response);
+    }
+
     //order cho customer
     @PostMapping("/{customerId}/orders")
     @PreAuthorize("hasRole('CUSTOMER')")
