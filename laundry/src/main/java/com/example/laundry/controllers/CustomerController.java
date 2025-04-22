@@ -69,22 +69,7 @@ public class CustomerController {
         }
     }
 
-    @PostMapping("/{customerId}/orders")
-    @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<ApiResponse<OrderResponse>> bookService(
-            @PathVariable UUID customerId,
-            @RequestBody OrderDTO orderDTO) {
 
-        try {
-            Customer customer = customerRepository.findById(customerId)
-                    .orElseThrow(() -> new RuntimeException("Customer not found with id: " + customerId));
-            ApiResponse<OrderResponse> newOrder = customerService.bookService(customer, orderDTO);
-            return ResponseEntity.ok(newOrder);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>("Đặt hàng thất bại: " + e.getMessage(), null));
-        }
-    }
 
     @GetMapping("/orders/history")
     @PreAuthorize("hasRole('CUSTOMER')")

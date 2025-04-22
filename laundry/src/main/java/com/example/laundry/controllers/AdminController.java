@@ -113,10 +113,10 @@ public class AdminController {
         }
     }
 
-    @GetMapping("/orders/status={status}")
+    @GetMapping("/orders?status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PagedResponse<OrderResponse>> getOrdersByStatus(
-            @PathVariable String status,
+            @RequestParam String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         try {
