@@ -114,7 +114,7 @@ public class CustomerServiceImpl implements CustomerService {
 
             Customer savedCustomer = customerRepository.save(customer);
             //Tạo access token
-            String accessToken = jwtUtil.generateAccessToken(savedCustomer.getUsername());
+            String accessToken = jwtUtil.generateAccessToken(savedCustomer.getUsername(), savedCustomer.getRoles());
 
             //Tạo refresh token
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedCustomer);

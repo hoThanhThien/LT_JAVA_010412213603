@@ -53,7 +53,7 @@ public class AuthController {
 
       //Tạo access token mới
       User user = refreshToken.getUser();
-      String newAccessToken = jwtUtil.generateAccessToken(user.getUsername());
+      String newAccessToken = jwtUtil.generateAccessToken(user.getUsername(), user.getRoles());
 
       return ResponseEntity.ok(new ApiResponse<>("", new RefreshTokenResponse(refreshToken.getToken(), newAccessToken)));
     }

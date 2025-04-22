@@ -61,7 +61,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Tạo accessToken
-        String accessToken = jwtUtil.generateAccessToken(phone.getUsername());
+        String accessToken = jwtUtil.generateAccessToken(phone.getUsername(), phone.getRoles());
 
         //Tạo refreshToken
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(phone);

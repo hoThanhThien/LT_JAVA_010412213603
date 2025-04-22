@@ -1,5 +1,6 @@
 package com.example.laundry.security;
 
+import com.example.laundry.models.user.Roles;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -25,10 +26,11 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateAccessToken(String username) {
+    public String generateAccessToken(String username, Roles role) {
         return Jwts.builder()
                 .subject("Laundry Management System")
                 .claim("username", username)
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .issuer("LAUNDRY")
@@ -36,10 +38,11 @@ public class JwtUtil {
                 .compact();
     }
 
-    public String generateRefreshToken(String username) {
+    public String generateRefreshToken(String username, Roles role) {
         return Jwts.builder()
                 .subject("Laundry Management System")
                 .claim("username", username)
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION))
                 .issuer("LAUNDRY")
