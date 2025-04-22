@@ -262,4 +262,19 @@ public class StoreOwnerController {
 
         return  ResponseEntity.ok(response);
     }
+
+    @GetMapping("/manager/service")
+    @PreAuthorize("hasRole('STOREOWNER')")
+    public ResponseEntity<PagedResponse<CategoryWithServiceDTO>> getAllCategoriesWithServicesByStore(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+      try {
+        StoreOwner storeOwner = getCurrentStoreOwner();
+        PagedResponse<CategoryWithServiceDTO> response = storeOwnerService.getAllCategoriesWithServicesByStore(storeOwner, page, size);
+        return ResponseEntity.ok(response);
+      } catch (Exception e) {
+        return ResponseEntity.badRequest()
+                .body(new PagedResponse<>("Lấy danh sách nhân viên thất bại: " + e.getMessage(), null));
+      }
+    }
 }

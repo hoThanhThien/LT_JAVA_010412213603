@@ -7,6 +7,8 @@ import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.utils.ApiResponse;
 
+import java.util.List;
+
 public interface StoreOwnerService extends UserService {
     void addStoreOwner(StoreOwner storeOwner);
     void deleteStoreOwner(StoreOwner storeOwner);
@@ -23,4 +25,5 @@ public interface StoreOwnerService extends UserService {
     ApiResponse<ServiceDTO> createService(StoreOwner storeOwner, ServiceDTO serviceDTO);
     ApiResponse<ServiceDTO>  updateService(StoreOwner storeOwner, ServiceDTO serviceDTO);
     ApiResponse<Integer>  deleteService(StoreOwner storeOwner, ServiceDTO serviceDTO);
+    PagedResponse<CategoryWithServiceDTO> getAllCategoriesWithServicesByStore(StoreOwner storeOwner, int page, int size);
 }

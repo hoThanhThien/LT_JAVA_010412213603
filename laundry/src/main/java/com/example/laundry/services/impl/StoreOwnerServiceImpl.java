@@ -465,6 +465,50 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         return new ApiResponse<>("Đã xóa dịch vụ thành công", null);
     }
 
+    @Override
+    public PagedResponse<CategoryWithServiceDTO> getAllCategoriesWithServicesByStore(StoreOwner storeOwner, int page, int size) {
+        LaundryShop shop = laundryShopRepository.findByStoreOwner(storeOwner);
+        if (shop == null) {
+            return new PagedResponse<>("Không tìm thấy cửa hàng", null);
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+
+        Page<ServiceCategory> categoryPage = serviceCategoryRepository.findServiceCategoryByShop(shop, pageable);
+
+        // Chuyển đổi dữ liệu thành danh sách CategoryWithServiceDTO
+        List<CategoryWithServiceDTO> categoryDTOs = categoryPage.getContent().stream()
+                .map(category -> {
+                    List<ServiceDTO> services = serviceRepository.findByCategory(category).stream()
+                            .map(service -> new ServiceDTO(
+                                    service.getId(),
+                                    service.getName(),
+                                    service.getEstimatedTime(),
+                                    service.getPrice()
+                            )).toList();
+
+                    return new CategoryWithServiceDTO(
+                            category.getId(),
+                            category.getName(),
+                            services
+                    );
+                }).toList();
+
+        // Tạo Meta object cho phân trang
+        Meta<CategoryWithServiceDTO> meta = new Meta<>(
+                page,
+                size,
+                categoryPage.getTotalElements(),
+                categoryPage.getTotalPages()
+        );
+
+        // Tạo PagedData
+        PagedData<CategoryWithServiceDTO> pagedData = new PagedData<>(meta, categoryDTOs);
+
+        // Tạo PagedResponse
+        return new PagedResponse<>("Lấy danh sách dịch vụ thành công", pagedData);
+    }
+
     private Employee findEmployeeByInfo(EmployeeDTO employeeDTO) {
         Employee employee = null;
 

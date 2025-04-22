@@ -14,4 +14,11 @@ public class ServiceDTO {
     private String estimatedTime;
     private String imageDesc;
     private Double price;
+
+    public ServiceDTO(Long id, String name, String estimatedTime, Double price) {
+        this.id = id;
+        this.name = name;
+        this.estimatedTime = estimatedTime;
+        this.price = price;
+    }
 }

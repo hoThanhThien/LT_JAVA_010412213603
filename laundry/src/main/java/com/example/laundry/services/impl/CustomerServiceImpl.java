@@ -216,6 +216,7 @@ public class CustomerServiceImpl implements CustomerService {
         return new ApiResponse<>("Bạn đã ta đơn giặt hàng thành công. Vui lòng chú ý thông báo của chúng tôi!", responseDTO);
     }
 
+    @Override
     public PagedResponse<OrderResponse> historyOrder(Customer customer, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Order> orderPage = orderRepository.findByCustomerId(customer.getId(), pageable);
