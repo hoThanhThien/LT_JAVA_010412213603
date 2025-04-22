@@ -26,6 +26,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
   @Autowired
   private JwtUtil jwtUtil;
+
   @Transactional
   @Override
   public RefreshToken createRefreshToken(User user) {

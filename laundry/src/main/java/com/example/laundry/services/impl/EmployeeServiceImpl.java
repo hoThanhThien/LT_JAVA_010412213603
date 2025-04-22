@@ -1,11 +1,9 @@
 package com.example.laundry.services.impl;
 
-import com.example.laundry.dto.EmployeeDTO;
-import com.example.laundry.dto.Meta;
-import com.example.laundry.dto.PagedData;
-import com.example.laundry.dto.PagedResponse;
+import com.example.laundry.dto.*;
 import com.example.laundry.models.order.Order;
 import com.example.laundry.models.order.OrderStatus;
+import com.example.laundry.models.shop.LaundryShop;
 import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.EmployeeRepository;
@@ -17,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -46,8 +45,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeRepository.save(employee);
     }
 
-  @Override
-  public ApiResponse<Order> updateOrderStatus(Integer orderId, OrderStatus status, Employee employee) {
+    @Override
+    public ApiResponse<Order> updateOrderStatus(Integer orderId, OrderStatus status, Employee employee) {
     // Kiểm tra đơn hàng tồn tại
     Optional<Order> orderOptional = orderRepository.findById(orderId);
     if (orderOptional.isEmpty()) {
@@ -71,8 +70,42 @@ public class EmployeeServiceImpl implements EmployeeService {
     return new ApiResponse<>(message);
   }
 
-  @Override
-  public PagedResponse<EmployeeDTO> getAllEmployees(int page, int size) {
+    @Override
+    public PagedResponse<OrderResponse> getOrders(Employee employee, int page, int size) {
+      LaundryShop laundryShop = employee.getShop();
+
+      Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+
+      Page<Order> orderPage = orderRepository.findOrdersByLaundryShop(laundryShop, pageable);
+
+      List<OrderResponse> orderResponses = orderPage.getContent().stream()
+              .map(order -> {
+                OrderResponse response = new OrderResponse();
+                response.setId(order.getId());
+                response.setUsername(order.getCustomer().getUsername());
+                response.setOrderStatus(order.getOrderStatus());
+                response.setTotalAmount(order.getTotalAmount());
+                response.setCreatedAt(order.getCreatedAt());
+
+                return response;
+              })
+              .toList();
+
+      Meta meta = new Meta(
+              orderPage.getNumber() + 1,
+              orderPage.getSize(),
+              orderPage.getTotalElements(),
+              orderPage.getTotalPages()
+      );
+
+      PagedData<OrderResponse> pagedData = new PagedData<>(meta, orderResponses);
+      PagedResponse<OrderResponse> response = new PagedResponse<>("Lấy danh sách thành công", pagedData);
+
+      return ResponseEntity.ok(response).getBody();
+    }
+
+    @Override
+    public PagedResponse<EmployeeDTO> getAllEmployees(int page, int size) {
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
     Page<Employee> employeePage = employeeRepository.findAll(pageable);
 
@@ -91,8 +124,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     return new PagedResponse<>("Lấy danh sách nhân viên thành công", pagedData);
   }
 
-  @Override
-  public PagedResponse<EmployeeDTO> getAllEmployeesByStoreOwner(StoreOwner storeOwner, int page, int size) {
+    @Override
+    public PagedResponse<EmployeeDTO> getAllEmployeesByStoreOwner(StoreOwner storeOwner, int page, int size) {
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
     Page<Employee> employeePage = employeeRepository.findByStoreOwner(storeOwner, pageable);
 
@@ -111,8 +144,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     return new PagedResponse<>("Lấy danh sách nhân viên thành công", pagedData);
   }
 
-
-  private EmployeeDTO convertToDTO(Employee employee) {
+    private EmployeeDTO convertToDTO(Employee employee) {
     EmployeeDTO dto = new EmployeeDTO();
     dto.setUsername(employee.getUsername());
     dto.setEmail(employee.getEmail());

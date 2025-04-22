@@ -1,7 +1,11 @@
 package com.example.laundry.repository;
 
+import com.example.laundry.dto.OrderResponse;
+import com.example.laundry.dto.PagedResponse;
 import com.example.laundry.models.order.Order;
 import com.example.laundry.models.order.OrderStatus;
+import com.example.laundry.models.shop.LaundryShop;
+import com.example.laundry.models.user.StoreOwner;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,21 +18,10 @@ import java.util.UUID;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order,Integer> {
-    List<Order> findOrdersByCustomerId(UUID customerId);
     Page<Order> findByOrderStatus(OrderStatus status, Pageable pageable);
-
-    @Query("SELECT o FROM Order o WHERE o.customer.id = :customerId AND o.orderStatus = :status")
-    List<Order> findOrdersByCustomerIdAndStatus(@Param("customerId") UUID customerId, @Param("status") OrderStatus status);
     @Query("SELECT o FROM Order o ORDER BY o.createdAt DESC")
-    List<Order> findAllOrdersOrderByCreatedAtDesc();
-
-    Page<Order> findByCustomerIdAndOrderStatus(UUID id, OrderStatus status, Pageable pageable);
-
     Page<Order> findByCustomerId(UUID id, Pageable pageable);
 
-//    void findById(int id);
-//    void save(Order order);
-//    void deleteById(int id);
-//    void updateOrderStatus(int orderId, String status);
-//    void notifyCustomer(int orderId, String message);
+    Page<Order> findOrdersByLaundryShop(LaundryShop laundryShop, Pageable pageable);
+    Page<Order> findOrderByOrderStatus(OrderStatus orderStatus, Pageable pageable);
 }

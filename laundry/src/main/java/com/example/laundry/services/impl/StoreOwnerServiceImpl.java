@@ -1,6 +1,7 @@
 package com.example.laundry.services.impl;
 
 import com.example.laundry.dto.*;
+import com.example.laundry.models.order.Order;
 import com.example.laundry.models.shop.LaundryShop;
 import com.example.laundry.models.shop.Service;
 import com.example.laundry.models.shop.ServiceCategory;
@@ -9,6 +10,7 @@ import com.example.laundry.models.user.Roles;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.*;
 import com.example.laundry.services.EmployeeService;
+import com.example.laundry.services.OrderService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
 import com.example.laundry.utils.UserValidator;
@@ -48,6 +50,10 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
 
     @Autowired
     private ServiceRepository serviceRepository;
+  @Autowired
+  private OrderRepository orderRepository;
+  @Autowired
+  private OrderService orderService;
 
     // Lấy store owner hiện tại
     private StoreOwner getCurrentStoreOwner() {
@@ -507,6 +513,39 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
 
         // Tạo PagedResponse
         return new PagedResponse<>("Lấy danh sách dịch vụ thành công", pagedData);
+    }
+
+    @Override
+    public PagedResponse<OrderResponse> getAllOrdersByStoreOwner(StoreOwner storeOwner, int page, int size) {
+        LaundryShop shop = laundryShopRepository.findByStoreOwner(storeOwner);
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+
+        Page<Order> orderPage = orderRepository.findOrdersByLaundryShop(shop, pageable);
+
+        List<OrderResponse> orderResponses = orderPage.getContent().stream()
+                .map(order -> {
+                    OrderResponse response = new OrderResponse();
+                    response.setId(order.getId());
+                    response.setUsername(order.getCustomer().getUsername());
+                    response.setOrderStatus(order.getOrderStatus());
+                    response.setTotalAmount(order.getTotalAmount());
+                    response.setCreatedAt(order.getCreatedAt());
+
+                    return response;
+                })
+                .toList();
+
+        Meta meta = new Meta(
+                orderPage.getNumber() + 1,
+                orderPage.getSize(),
+                orderPage.getTotalElements(),
+                orderPage.getTotalPages()
+        );
+        PagedData<OrderResponse> pagedData = new PagedData<>(meta, orderResponses);
+        PagedResponse<OrderResponse> response = new PagedResponse<>("Lấy danh sách thành công", pagedData);
+
+        return ResponseEntity.ok(response).getBody();
     }
 
     private Employee findEmployeeByInfo(EmployeeDTO employeeDTO) {

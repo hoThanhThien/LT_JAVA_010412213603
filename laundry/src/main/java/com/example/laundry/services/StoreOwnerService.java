@@ -26,4 +26,5 @@ public interface StoreOwnerService extends UserService {
     ApiResponse<ServiceDTO>  updateService(StoreOwner storeOwner, ServiceDTO serviceDTO);
     ApiResponse<Integer>  deleteService(StoreOwner storeOwner, ServiceDTO serviceDTO);
     PagedResponse<CategoryWithServiceDTO> getAllCategoriesWithServicesByStore(StoreOwner storeOwner, int page, int size);
+    PagedResponse<OrderResponse> getAllOrdersByStoreOwner(StoreOwner storeOwner, int page, int size);
 }

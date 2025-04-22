@@ -54,9 +54,10 @@ public class Order {
     private Date createdAt;
     private Date updatedAt;
     private String instructions;
-    private String username;
+
     public Order(OrderStatus orderStatus,String imgProduct, LaundryShop laundryShop, Customer customer, ServiceCategory serviceCategory, Service service, Double orderVolume, String instructions) {
         this.orderStatus = orderStatus;
+        this.imgProduct = imgProduct;
         this.laundryShop = laundryShop;
         this.customer = customer;
         this.serviceCategory = serviceCategory;

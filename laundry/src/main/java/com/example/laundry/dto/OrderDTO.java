@@ -42,4 +42,11 @@ public class OrderDTO {
         this.createdAt = createdAt;
         this.instructions = instructions;
     }
+
+    public OrderDTO(Long id, String username, OrderStatus orderStatus, Double totalAmount) {
+        this.customerId = id;
+        this.orderStatus = orderStatus;
+        this.totalAmount = totalAmount;
+        this.createdAt = new Date();
+    }
 }
