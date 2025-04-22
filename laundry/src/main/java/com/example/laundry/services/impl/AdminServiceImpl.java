@@ -9,6 +9,7 @@ import com.example.laundry.models.user.Roles;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.*;
 import com.example.laundry.services.AdminService;
+import com.example.laundry.services.OrderService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
 import com.example.laundry.utils.UserValidator;
@@ -43,6 +44,8 @@ public class AdminServiceImpl implements AdminService {
     @Autowired
     private CustomerRepository customerRepository;
 
+    @Autowired
+    private OrderService orderService;
     @Override
     public ApiResponse<StoreOwner> createStoreOwner(StoreOwnerDTO storeOwnerDTO) {
         // Kiểm tra dữ liệu
@@ -158,6 +161,12 @@ public class AdminServiceImpl implements AdminService {
                     orderResponse.setOrderVolume(order.getOrderVolume());
                     orderResponse.setCreatedAt(order.getCreatedAt());
                     orderResponse.setInstructions(order.getInstructions());
+                    if (order.getCustomer() != null) {
+                        orderResponse.setUsername(order.getCustomer().getUsername());
+                        orderResponse.setPhone(order.getCustomer().getPhone());
+                        orderResponse.setEmail(order.getCustomer().getEmail());
+                        orderResponse.setAddress(order.getCustomer().getAddress());
+                    }
                     return orderResponse;
                 })
                 .collect(Collectors.toList());
@@ -271,6 +280,12 @@ public class AdminServiceImpl implements AdminService {
                     orderResponse.setOrderVolume(order.getOrderVolume());
                     orderResponse.setCreatedAt(order.getCreatedAt());
                     orderResponse.setInstructions(order.getInstructions());
+                    if (order.getCustomer() != null) {
+                        orderResponse.setUsername(order.getCustomer().getUsername());
+                        orderResponse.setPhone(order.getCustomer().getPhone());
+                        orderResponse.setEmail(order.getCustomer().getEmail());
+                        orderResponse.setAddress(order.getCustomer().getAddress());
+                    }
                     return orderResponse;
                 })
                 .collect(Collectors.toList());
