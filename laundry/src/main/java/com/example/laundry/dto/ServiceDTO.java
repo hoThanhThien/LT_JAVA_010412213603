@@ -12,7 +12,7 @@ public class ServiceDTO {
     private String name;
     private String description;
     private String estimatedTime;
-    private String imageDesc;
+    private byte[] imageDesc;
     private Double price;
 
     public ServiceDTO(Long id, String name, String estimatedTime, Double price) {

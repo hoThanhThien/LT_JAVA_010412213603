@@ -31,8 +31,9 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
-    @Column(name = "img_product")
-    private  String imgProduct;
+    @Lob
+    @Column(name = "img_product", columnDefinition = "MEDIUMBLOB")
+    private  byte[] imgProduct;
 
     @ManyToOne
     private Customer customer;
@@ -55,7 +56,7 @@ public class Order {
     private Date updatedAt;
     private String instructions;
 
-    public Order(OrderStatus orderStatus,String imgProduct, LaundryShop laundryShop, Customer customer, ServiceCategory serviceCategory, Service service, Double orderVolume, String instructions) {
+    public Order(OrderStatus orderStatus, byte[] imgProduct, LaundryShop laundryShop, Customer customer, ServiceCategory serviceCategory, Service service, Double orderVolume, String instructions) {
         this.orderStatus = orderStatus;
         this.imgProduct = imgProduct;
         this.laundryShop = laundryShop;

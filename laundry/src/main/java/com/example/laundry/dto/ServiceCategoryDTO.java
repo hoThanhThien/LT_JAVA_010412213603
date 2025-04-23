@@ -9,6 +9,6 @@ import lombok.*;
 public class ServiceCategoryDTO {
   private Long id;
   private String name;
-  private String imageDesc;
+  private byte[] imageDesc;
   private String description;
 }

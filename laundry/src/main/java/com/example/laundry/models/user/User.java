@@ -54,8 +54,9 @@ public abstract class User implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
-    @Column(name = "avt_user")
-    private String avtUser;
+    @Lob
+    @Column(name = "avt_user", columnDefinition = "MEDIUMBLOB")
+    private byte[] avtUser;
 
     // Constructor, getters, and setters
 

@@ -18,7 +18,7 @@ public class OrderDTO {
     private Long customerId;
     private Double totalAmount;
     private OrderStatus orderStatus;
-    private String imgProduct;
+    private byte[] imgProduct;
     private LaundryShop laundryShop;
     private ServiceCategory serviceCategory;
     private Service service;
@@ -26,7 +26,7 @@ public class OrderDTO {
     private Date createdAt;
     private String instructions;
 
-    public OrderDTO(Double totalAmount, OrderStatus orderStatus, String imgProduct,
+    public OrderDTO(Double totalAmount, OrderStatus orderStatus, byte[] imgProduct,
                     Long laundryShopId, Long serviceCategoryId, Long serviceId,
                     Double orderVolume, Date createdAt, String instructions) {
         this.totalAmount = totalAmount;

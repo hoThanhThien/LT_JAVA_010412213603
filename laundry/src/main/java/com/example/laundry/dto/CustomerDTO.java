@@ -17,7 +17,7 @@ public class CustomerDTO {
     private String phone;
     private String address;
     private Roles role;
-    private String avtUser;
+    private byte[] avtUser;
     private Date createdAt;
     private Date updatedAt;
 }

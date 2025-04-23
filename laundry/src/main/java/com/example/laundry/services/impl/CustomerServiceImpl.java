@@ -302,7 +302,7 @@ public class CustomerServiceImpl implements CustomerService {
                 customer.setPassword(passwordEncoder.encode(customerDTO.getPassword()));
             }
 
-            if (customerDTO.getAvtUser() != null && !customerDTO.getAvtUser().isEmpty()) {
+            if (customerDTO.getAvtUser() != null && customerDTO.getAvtUser().length > 0) {
                 customer.setAvtUser(customerDTO.getAvtUser());
             }
 

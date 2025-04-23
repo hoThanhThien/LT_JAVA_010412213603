@@ -20,7 +20,7 @@ public class OrderResponse {
     private String address;
     private Double totalAmount;
     private OrderStatus orderStatus;
-    private String imgProduct;
+    private byte[] imgProduct;
     private String laundryShopName;
     private String serviceCategoryName;
     private String serviceName;

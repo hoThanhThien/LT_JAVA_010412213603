@@ -185,7 +185,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
             employee.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
         }
 
-        if (employeeDTO.getAvtUser() != null && !employeeDTO.getAvtUser().isEmpty()) {
+        if (employeeDTO.getAvtUser() != null && employeeDTO.getAvtUser().length > 0) {
             employee.setAvtUser(employeeDTO.getAvtUser());
         }
 
