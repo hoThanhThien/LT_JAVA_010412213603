@@ -36,7 +36,7 @@ public class Order {
 
     @ManyToOne
     private Customer customer;
-
+    private String address;
     @ManyToOne
     private LaundryShop laundryShop;
 
@@ -75,4 +75,6 @@ public class Order {
     public void setSpecialInstructions(String instructions) {
         this.instructions = instructions;
     }
+
+
 }

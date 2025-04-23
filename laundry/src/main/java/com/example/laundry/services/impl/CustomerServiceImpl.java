@@ -196,6 +196,7 @@ public class CustomerServiceImpl implements CustomerService {
         order.setCreatedAt(orderDTO.getCreatedAt());
         order.setInstructions(orderDTO.getInstructions());
         order.setImgProduct(orderDTO.getImgProduct());
+        order.setAddress(orderDTO.getAddress());
         double totalAmount = orderDTO.getOrderVolume() * service.getPrice();
         order.setTotalAmount(totalAmount);
 
@@ -206,7 +207,7 @@ public class CustomerServiceImpl implements CustomerService {
         responseDTO.setUsername(customer.getUsername());
         responseDTO.setPhone(customer.getPhone());
         responseDTO.setEmail(customer.getEmail());
-        responseDTO.setAddress(customer.getAddress());
+        responseDTO.setAddress(savedOrder.getAddress());
         responseDTO.setId(savedOrder.getId());
         responseDTO.setTotalAmount(savedOrder.getTotalAmount());
         responseDTO.setOrderStatus(savedOrder.getOrderStatus());
