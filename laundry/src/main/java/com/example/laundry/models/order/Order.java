@@ -24,6 +24,8 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "username") //  lưu thêm username
+    private String username;
     @Column
     private Double totalAmount;
 

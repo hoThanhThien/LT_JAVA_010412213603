@@ -24,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -152,7 +153,7 @@ public class CustomerServiceImpl implements CustomerService {
         // Kiem tra customer
         Customer customerId = customerRepository.findById(customer.getId())
                 .orElseThrow(() -> new RuntimeException("Customer not found with id: " + customer));
-
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         // Load LaundryShop từ database
         LaundryShop laundryShop = null;
         if (orderDTO.getLaundryShop() != null && orderDTO.getLaundryShop().getId() != null) {
@@ -187,7 +188,8 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         Order order = new Order();
-        order.setCustomer(customer);
+        order.setCustomer(customer); // dùng để liên kết
+        order.setUsername(customer.getUsername()); // lưu thêm username vào order
         order.setLaundryShop(laundryShop);
         order.setServiceCategory(serviceCategory);
         order.setService(service);
@@ -208,7 +210,6 @@ public class CustomerServiceImpl implements CustomerService {
         responseDTO.setPhone(customer.getPhone());
         responseDTO.setEmail(customer.getEmail());
         responseDTO.setAddress(savedOrder.getAddress());
-        responseDTO.setId(savedOrder.getId());
         responseDTO.setTotalAmount(savedOrder.getTotalAmount());
         responseDTO.setOrderStatus(savedOrder.getOrderStatus());
         responseDTO.setImgProduct(savedOrder.getImgProduct());
@@ -219,6 +220,7 @@ public class CustomerServiceImpl implements CustomerService {
         responseDTO.setOrderVolume(savedOrder.getOrderVolume());
         responseDTO.setCreatedAt(savedOrder.getCreatedAt());
         responseDTO.setInstructions(savedOrder.getInstructions());
+
 
         return new ApiResponse<>("Bạn đã ta đơn giặt hàng thành công. Vui lòng chú ý thông báo của chúng tôi!", responseDTO);
     }
