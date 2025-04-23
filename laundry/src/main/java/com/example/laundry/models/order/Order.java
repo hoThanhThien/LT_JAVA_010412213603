@@ -24,6 +24,8 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "username") //  lưu thêm username
+    private String username;
     @Column
     private Double totalAmount;
 
@@ -37,7 +39,7 @@ public class Order {
 
     @ManyToOne
     private Customer customer;
-
+    private String address;
     @ManyToOne
     private LaundryShop laundryShop;
 
@@ -76,4 +78,6 @@ public class Order {
     public void setSpecialInstructions(String instructions) {
         this.instructions = instructions;
     }
+
+
 }

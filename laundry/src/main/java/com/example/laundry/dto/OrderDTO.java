@@ -16,6 +16,7 @@ import java.util.Date;
 
 public class OrderDTO {
     private Long customerId;
+    private String address;
     private Double totalAmount;
     private OrderStatus orderStatus;
     private byte[] imgProduct;
@@ -26,9 +27,11 @@ public class OrderDTO {
     private Date createdAt;
     private String instructions;
 
-    public OrderDTO(Double totalAmount, OrderStatus orderStatus, byte[] imgProduct,
+
+    public OrderDTO(String address,Double totalAmount, OrderStatus orderStatus, byte[] imgProduct,
                     Long laundryShopId, Long serviceCategoryId, Long serviceId,
                     Double orderVolume, Date createdAt, String instructions) {
+        this.address = address;
         this.totalAmount = totalAmount;
         this.orderStatus = orderStatus;
         this.imgProduct = imgProduct;
