@@ -9,6 +9,8 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
+
 @Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
@@ -39,6 +41,11 @@ public class Employee extends User {
     }
 
     public Employee(String username, String encodedPassword, String email, String phone, String address, Roles roles, StoreOwner storeOwner) {
+        super(username, encodedPassword, email, phone, address, Roles.Employee);
+        this.storeOwner = storeOwner;
+    }
+
+    public Employee(String username, String encodedPassword, String email, String phone, String address, Roles roles, byte[] avtUser, Date createdAt, Date updatedAt, StoreOwner storeOwner) {
         super(username, encodedPassword, email, phone, address, Roles.Employee);
         this.storeOwner = storeOwner;
     }

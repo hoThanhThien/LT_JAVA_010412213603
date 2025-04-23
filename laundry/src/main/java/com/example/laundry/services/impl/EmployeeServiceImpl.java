@@ -31,8 +31,9 @@ public class EmployeeServiceImpl implements EmployeeService {
   private OrderRepository orderRepository;
 
     @Override
-    public void addEmployee(Employee employee) {
+    public Employee addEmployee(Employee employee) {
         employeeRepository.save(employee);
+      return employee;
     }
 
     @Override

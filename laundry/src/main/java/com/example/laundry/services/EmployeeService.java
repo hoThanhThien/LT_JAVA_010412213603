@@ -9,10 +9,8 @@ import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.utils.ApiResponse;
 
-import java.util.List;
-
 public interface EmployeeService extends UserService {
-    void addEmployee(Employee employee);
+    Employee addEmployee(Employee employee);
     void deleteEmployee(Employee employee);
     void updateEmployee(Employee employee);
     ApiResponse<Order> updateOrderStatus(Integer orderId, OrderStatus status, Employee employee);

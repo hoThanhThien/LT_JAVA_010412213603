@@ -12,7 +12,7 @@ import java.util.List;
 public interface StoreOwnerService extends UserService {
     void addStoreOwner(StoreOwner storeOwner);
     void deleteStoreOwner(StoreOwner storeOwner);
-    ApiResponse<Employee> createEmployee(StoreOwner storeOwner, EmployeeDTO employeeDTO);
+    ApiResponse<EmployeeDTO> createEmployee(StoreOwner storeOwner, EmployeeDTO employeeDTO);
     ApiResponse<String> deleteEmployee(StoreOwner storeOwner, EmployeeDTO employeeDTO);
     ApiResponse<EmployeeDTO> updateEmployee(StoreOwner storeOwner, EmployeeDTO employeeDTO);
     ApiResponse<LaundryShopDTO> createShop(StoreOwner storeOwner, LaundryShopDTO laundryShopDTO);

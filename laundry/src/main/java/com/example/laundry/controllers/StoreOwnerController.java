@@ -46,29 +46,37 @@ public class StoreOwnerController {
                     .body(new ApiResponse<>("Không tìm thấy thông tin StoreOwner", null));
         }
 
-        ApiResponse<Employee> response = storeOwnerService.createEmployee(storeOwner, employeeDTO);
+        ApiResponse<EmployeeDTO> responseDTO = storeOwnerService.createEmployee(storeOwner, employeeDTO);
 
-        if (response.getData() == null) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(response.getMessage(), null));
+        if (responseDTO.getData() == null) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(responseDTO.getMessage(), null));
         }
 
-        EmployeeDTO responseDTO = new EmployeeDTO(response.getData());
-
-        return ResponseEntity.ok(new ApiResponse<>("Tạo nhân viên thành công", responseDTO));
+      return ResponseEntity.ok(responseDTO);
     }
 
     @DeleteMapping("/employee/delete")
     @PreAuthorize("hasRole('STOREOWNER')")
-    public ResponseEntity<ApiResponse<String>> deleteEmployee(@RequestBody EmployeeDTO employeeDTO) {
-        // Lấy thông tin StoreOwner hiện tại
-        StoreOwner storeOwner = getCurrentStoreOwner();
-        if (storeOwner == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse<>("Không tìm thấy thông tin StoreOwner", null));
-        }
-        ApiResponse<String> response = storeOwnerService.deleteEmployee(storeOwner, employeeDTO);
+    public ResponseEntity<ApiResponse<String>> deleteEmployee(
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String username) {
 
-        return ResponseEntity.ok(response);
+      StoreOwner storeOwner = getCurrentStoreOwner();
+      if (storeOwner == null) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse<>("Không tìm thấy thông tin StoreOwner", null));
+      }
+
+      // Tạo EmployeeDTO từ các param
+      EmployeeDTO employeeDTO = new EmployeeDTO();
+      employeeDTO.setEmail(email);
+      employeeDTO.setPhone(phone);
+      employeeDTO.setUsername(username);
+
+      ApiResponse<String> response = storeOwnerService.deleteEmployee(storeOwner, employeeDTO);
+
+      return ResponseEntity.ok(response);
     }
 
     @PutMapping("/employee/update")
@@ -144,13 +152,17 @@ public class StoreOwnerController {
 
     @PostMapping("/shop/delete")
     @PreAuthorize("hasRole('STOREOWNER')")
-    public ResponseEntity<ApiResponse<String>> deleteShop(@RequestBody LaundryShopDTO laundryShopDTO) {
+    public ResponseEntity<ApiResponse<String>> deleteShop(
+            @RequestBody LaundryShopDTO laundryShopDTO,
+            @RequestParam(required = false) Long id) {
         //Kiểm tra thông tin storeowner
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>("Không tìm thấy thông tin storeowner"));
         }
+
+        laundryShopDTO.setId(id);
 
         ApiResponse<String> response = storeOwnerService.deleteLaundryShop(storeOwner, laundryShopDTO);
 
@@ -197,13 +209,17 @@ public class StoreOwnerController {
 
     @PostMapping("/category/delete")
     @PreAuthorize("hasRole('STOREOWNER')")
-    public ResponseEntity<ApiResponse<Integer>> deleteServiceCategory(@RequestBody ServiceCategoryDTO serviceCategoryDTO) {
+    public ResponseEntity<ApiResponse<Integer>> deleteServiceCategory(
+            @RequestBody ServiceCategoryDTO serviceCategoryDTO,
+            @RequestParam(required = false) Long categoryId) {
         //Kiểm tra thông tin storeowner
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>("Không tìm thấy thông tin storeowner"));
         }
+
+        serviceCategoryDTO.setId(categoryId);
 
         ApiResponse<Integer> response = storeOwnerService.deleteServiceCategory(storeOwner, serviceCategoryDTO);
 
@@ -250,13 +266,17 @@ public class StoreOwnerController {
 
     @PostMapping("/service/delete")
     @PreAuthorize("hasRole('STOREOWNER')")
-    public ResponseEntity<ApiResponse<Integer>> deleteService(@RequestBody ServiceDTO serviceDTO) {
+    public ResponseEntity<ApiResponse<Integer>> deleteService(
+            @RequestBody ServiceDTO serviceDTO,
+            @RequestParam(required = false) Long serviceId) {
         //Kiểm tra thông tin storeowner
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>("Không tìm thấy thông tin storeowner"));
         }
+
+        serviceDTO.setId(serviceId);
 
         ApiResponse<Integer> response = storeOwnerService.deleteService(storeOwner, serviceDTO);
 

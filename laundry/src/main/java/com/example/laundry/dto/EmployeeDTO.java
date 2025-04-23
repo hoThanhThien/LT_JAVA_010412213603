@@ -32,7 +32,7 @@ public class EmployeeDTO implements Serializable {
         this.usernameStoreOwner = employee.getStoreOwner().getUsername();
     }
 
-  public EmployeeDTO(String username, String password, String email, String phone, String address, Roles roles, byte[] avtUser, Date createdAt, Date updatedAt) {
+  public EmployeeDTO(String username, String password, String email, String phone, String address, Roles roles, byte[] avtUser, Date createdAt, Date updatedAt, Employee employee) {
         this.username = username;
         this.password = password;
         this.email = email;
@@ -42,5 +42,6 @@ public class EmployeeDTO implements Serializable {
         this.avtUser = avtUser;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.usernameStoreOwner = employee.getStoreOwner().getUsername();
   }
 }
