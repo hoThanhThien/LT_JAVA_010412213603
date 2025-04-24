@@ -12,6 +12,9 @@ const accountApiRequests = {
         Authorization: `Bearer ${accessToken}`,
       },
     }),
+
+  updateMe: (body: UpdateMeType) =>
+    http.put<AccountResType>("/customer/update", body),
 };
 
 export default accountApiRequests;

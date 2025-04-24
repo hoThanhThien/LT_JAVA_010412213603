@@ -9,6 +9,7 @@ import DownloadApp from "@/components/dowload-app";
 import { useAuthStore } from "@/lib/zustand";
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import ButtonOrder from "@/components/ui/buttonOrder";
 
 export default function Home() {
   const { setOpenAuth } = useAuthStore();
@@ -40,14 +41,11 @@ export default function Home() {
               cam kết mang đến trải nghiệm tuyệt vời với chất lượng cao cấp,
               tiện lợi & tuyệt đối an tâm cho quý khách hàng.
             </div>
-            <button
-              onClick={() => {
-                setOpenOrder(true);
-              }}
-              className="mt-5 text-black hover:text-white w-[70%] text-xl py-3 rounded-[28px] font-medium cursor-pointer border-2 border-black"
-            >
-              ĐẶT LỊCH DỊCH VỤ NGAY
-            </button>
+            <ButtonOrder>
+              <button className="mt-5 text-black hover:text-white w-[70%] text-xl py-3 rounded-[28px] font-medium cursor-pointer border-2 border-black">
+                ĐẶT LỊCH DỊCH VỤ NGAY
+              </button>
+            </ButtonOrder>
             <button className="mt-5 text-white bg-black hover:bg-main w-[70%] text-xl py-3 rounded-[28px] font-medium cursor-pointer border-2 border-black">
               TẢI ỨNG DỤNG
             </button>

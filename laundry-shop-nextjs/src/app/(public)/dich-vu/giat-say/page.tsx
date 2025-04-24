@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/swiper-bundle.css";
 import { Navigation } from "swiper/modules";
+import ButtonMessage from "@/components/ui/buttonMessage";
 
 const listIntructions = [
   {
@@ -98,9 +99,7 @@ export default function GiatSay() {
                 biệt cùng HERAMO ngay hôm nay!
               </div>
             </div>
-            <button className="bg-black text-white hover:bg-transparent hover:text-black border border-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[50%] ">
-              NHẬN TƯ VẤN NGAY
-            </button>
+            <ButtonMessage className="bg-black text-white hover:bg-transparent hover:text-black border border-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[50%] " />
           </div>
         </div>
         <div className="py-12">

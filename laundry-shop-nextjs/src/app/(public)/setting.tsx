@@ -1,7 +1,7 @@
 "use client";
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useAuthStore } from "@/lib/zustand";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
@@ -12,11 +12,15 @@ import { Upload } from "lucide-react";
 
 import { UpdateMeBody, UpdateMeType } from "@/schemaValidations/account.schema";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useUpdateMeMutation } from "@/queries/useAccount";
+import { toast } from "react-toastify";
+import { handleErrorApi } from "@/lib/utils";
 
 export default function Setting() {
   const { openSetting, setOpenSetting } = useAuthStore();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [previewAvatar, setPreviewAvatar] = useState("");
+  const updateMeMutation = useUpdateMeMutation();
 
   const form = useForm<UpdateMeType>({
     resolver: zodResolver(UpdateMeBody),
@@ -54,14 +58,33 @@ export default function Setting() {
       }
     }
   };
-
-  const avatar = form.watch("avtUser");
   const name = form.watch("username");
 
   // const previewAvatar = file ? URL.createObjectURL(file) : avatar;
 
   const reset = () => {
     form.reset();
+  };
+
+  const onSubmit = async (values: UpdateMeType) => {
+    console.log(values);
+
+    // if (updateMeMutation.isPending) return;
+    // try {
+    //   let body = values;
+    //   const result = await updateMeMutation.mutateAsync(body);
+    //   toast.success(result.payload.message, {
+    //     position: "bottom-left",
+    //     autoClose: 3000,
+    //     hideProgressBar: false,
+    //     closeOnClick: false,
+    //   });
+    // } catch (error) {
+    //   handleErrorApi({
+    //     error,
+    //     setError: form.setError,
+    //   });
+    // }
   };
 
   return (
@@ -93,8 +116,8 @@ export default function Setting() {
                   <form
                     className="space-y-3"
                     noValidate
-                    onSubmit={form.handleSubmit(() => {
-                      console.log(previewAvatar);
+                    onSubmit={form.handleSubmit(onSubmit, (err) => {
+                      console.warn(err);
                     })}
                   >
                     <FormField

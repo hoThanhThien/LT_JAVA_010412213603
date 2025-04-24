@@ -5,6 +5,7 @@ import { EntityError } from "./http";
 import { toast } from "sonner";
 import authApiRequests from "@/apiRequests/auth";
 import jwt from "jsonwebtoken";
+import dayjs from "dayjs";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -105,4 +106,8 @@ export const checkAndRefreshToken = async (param?: {
       param?.onError && param.onError();
     }
   }
+};
+
+export const formatDate = (day: any) => {
+  return dayjs(day).format("DD-MM-YYYY");
 };

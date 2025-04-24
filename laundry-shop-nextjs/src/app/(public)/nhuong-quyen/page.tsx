@@ -1,3 +1,5 @@
+"use client";
+
 import Founder from "@/components/founder";
 import Image from "next/image";
 import Communication from "@/components/communication";
@@ -16,6 +18,7 @@ import FounderComment from "@/components/founder-comment";
 import Services from "@/components/services";
 import FAQ from "@/components/faq";
 import Link from "next/link";
+import ButtonMessage from "@/components/ui/buttonMessage";
 
 export default function NhuongQuyen() {
   return (
@@ -34,9 +37,7 @@ export default function NhuongQuyen() {
               đồng xây dựng bởi chuyên gia nhượng quyền Nguyễn Phi Vân.
             </div>
             <div className="mt-10">
-              <button className="bg-black text-white px-9 py-3 rounded-4xl font-bold cursor-pointer w-[80%]">
-                NHẬN TƯ VẤN NGAY
-              </button>
+              <ButtonMessage className="bg-black text-white px-9 py-3 rounded-4xl font-bold cursor-pointer w-[80%]" />
             </div>
           </div>
           <div className="w-[50%]">
@@ -115,9 +116,7 @@ export default function NhuongQuyen() {
           Bình Tân.
         </div>
         <div className="flex justify-center items-center py-12">
-          <button className="bg-black text-white hover:bg-transparent hover:text-black border border-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%] ">
-            NHẬN TƯ VẤN NGAY
-          </button>
+          <ButtonMessage className="bg-black text-white hover:bg-transparent hover:text-black border border-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%] " />
         </div>
       </div>
       <div>
@@ -184,9 +183,7 @@ export default function NhuongQuyen() {
             </ul>
           </div>
           <div className="w-full flex justify-center items-center py-12">
-            <button className="bg-main text-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%]">
-              NHẬN TƯ VẤN NGAY
-            </button>
+            <ButtonMessage className="bg-main text-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%]" />
           </div>
         </div>
       </div>
@@ -212,9 +209,7 @@ export default function NhuongQuyen() {
           </ul>
         </div>
         <div className="w-full flex justify-center items-center py-12">
-          <button className="bg-main text-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%]">
-            NHẬN TƯ VẤN NGAY
-          </button>
+          <ButtonMessage className="bg-main text-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%]" />
         </div>
       </div>
       <div className="bg-[url('/nhuong-quyen/why-3.jpg')] bg-no-repeat bg-[length:100%_100%] min-h-[640px] flex flex-col justify-end items-center">
@@ -244,9 +239,7 @@ export default function NhuongQuyen() {
           </ul>
         </div>
         <div className="w-full flex justify-center items-center py-12">
-          <button className="bg-main text-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%]">
-            NHẬN TƯ VẤN NGAY
-          </button>
+          <ButtonMessage className="bg-main text-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%]" />
         </div>
       </div>
       <div className="bg-[url('/nhuong-quyen/why-4.jpg')] bg-no-repeat bg-[length:100%_100%] min-h-[640px] flex flex-col justify-end items-center">
@@ -373,9 +366,7 @@ export default function NhuongQuyen() {
         </Table>
 
         <div className="w-full flex justify-center items-center py-12">
-          <button className="bg-main text-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%]">
-            NHẬN TƯ VẤN NGAY
-          </button>
+          <ButtonMessage className="bg-main text-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%]" />
         </div>
       </div>
       <div className="py-24">
@@ -423,9 +414,7 @@ export default function NhuongQuyen() {
           </div>
         </div>
         <div className="w-full flex justify-center items-center pt-12">
-          <button className="bg-main text-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%]">
-            NHẬN TƯ VẤN NGAY
-          </button>
+          <ButtonMessage className="bg-main text-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%]" />
         </div>
       </div>
       <div>
@@ -462,9 +451,7 @@ export default function NhuongQuyen() {
               href="https://docs.google.com/forms/d/1Sjlp5MS6UEFGYifjnZJJ0qsUPSsiSwgke3xtUxMgB-c"
             >
               <div className="flex justify-center items-center">
-                <button className="bg-black text-white px-9 py-3 rounded-4xl font-bold cursor-pointer">
-                  NHẬN TƯ VẤN NGAY
-                </button>
+                <ButtonMessage className="bg-black text-white px-9 py-3 rounded-4xl font-bold cursor-pointer" />
               </div>
             </Link>
           </div>

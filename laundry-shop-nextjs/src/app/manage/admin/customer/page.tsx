@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { AccountType } from "@/schemaValidations/account.schema";
 import { ProTable } from "@ant-design/pro-components";
-import { Ellipsis, EllipsisIcon } from "lucide-react";
+import { EllipsisIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,

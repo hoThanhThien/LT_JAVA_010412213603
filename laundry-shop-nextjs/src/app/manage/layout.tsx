@@ -4,12 +4,14 @@ import { ConfigProvider, Layout, Menu } from "antd";
 import { ArrowLeftToLine, ArrowRightToLine } from "lucide-react";
 import enUS from "antd/locale/en_US";
 import { useState } from "react";
-import { SiderAdmin } from "./menuItems";
+import { SiderAdmin, SiderEmployee, SiderStoreOwner } from "./menuItems";
+import { usePathname } from "next/navigation";
 const { Content, Sider } = Layout;
 
 export default function layout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [activeMenu, setActiveMenu] = useState("1");
+  const pathname = usePathname();
   return (
     <>
       <ConfigProvider locale={enUS}>
@@ -26,7 +28,13 @@ export default function layout({ children }: { children: React.ReactNode }) {
             <Menu
               selectedKeys={[activeMenu]}
               mode="inline"
-              items={SiderAdmin}
+              items={
+                pathname.startsWith("/manage/admin")
+                  ? SiderAdmin
+                  : pathname.startsWith("/manage/storeowner")
+                  ? SiderStoreOwner
+                  : SiderEmployee
+              }
               onClick={(e) => setActiveMenu(e.key)}
             />
           </Sider>

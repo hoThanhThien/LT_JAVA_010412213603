@@ -4,6 +4,7 @@ import Link from "next/link";
 import YouTubeVideos from "./youtube-videos";
 import Image from "next/image";
 import News from "./news";
+import ButtonMessage from "./ui/buttonMessage";
 
 export default function Communication() {
   return (
@@ -41,9 +42,7 @@ export default function Communication() {
         <News />
       </div>
       <div className="flex justify-center items-center mt-10">
-        <button className="bg-black text-white px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%] ">
-          NHẬN TƯ VẤN NGAY
-        </button>
+        <ButtonMessage className="bg-black text-white px-9 py-3 rounded-4xl font-bold cursor-pointer w-[30%] " />
       </div>
     </div>
   );

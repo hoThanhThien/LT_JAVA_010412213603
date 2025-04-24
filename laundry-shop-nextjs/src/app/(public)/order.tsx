@@ -1,7 +1,7 @@
 "use client";
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useAuthStore } from "@/lib/zustand";
 import {
   Form,
@@ -27,6 +27,9 @@ import { OrderSchema, OrderType } from "@/schemaValidations/order.schema";
 import { CategoryType, ServiceType } from "@/schemaValidations/shop.schema";
 import { useShops } from "@/queries/useShop";
 import shopApiRequests from "@/apiRequests/shop";
+import { useOrderMutation } from "@/queries/useOrder";
+import { toast } from "react-toastify";
+import { handleErrorApi } from "@/lib/utils";
 
 export default function Order() {
   const { openOrder, setOpenOrder } = useAuthStore();
@@ -35,6 +38,8 @@ export default function Order() {
   const [shopId, setShopId] = useState<number>(0);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [previewAvatar, setPreviewAvatar] = useState("");
+
+  const orderMutation = useOrderMutation();
 
   const { data } = useShops();
   const allShops = data?.payload.data;
@@ -80,17 +85,36 @@ export default function Order() {
 
   const reset = () => {
     form.reset();
+    setPreviewAvatar("");
   };
 
   const onSubmit = async (data: OrderType) => {
-    console.log(data);
+    if (orderMutation.isPending) return;
+    try {
+      const result = await orderMutation.mutateAsync(data);
+      setOpenOrder(false);
+      reset();
+      toast.success(result.payload.message, {
+        position: "bottom-left",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: false,
+      });
+    } catch (error) {
+      handleErrorApi({ error, setError: form.setError });
+    }
   };
 
   return (
     <>
       <Dialog
         open={openOrder}
-        onOpenChange={(open: boolean) => setOpenOrder(open)}
+        onOpenChange={(open: boolean) => {
+          if (!open) {
+            reset(); // Reset form khi dialog đóng
+          }
+          setOpenOrder(open);
+        }}
       >
         <DialogContent
           className="border-none w-full max-w-lg sm:max-w-xl md:max-w-2xl"
@@ -153,80 +177,82 @@ export default function Order() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="serviceCategory.id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Label>Loại hình dịch vụ</Label>
-                      <Select
-                        onValueChange={async (value: any) => {
-                          field.onChange(parseInt(value)); // Fix: Call onChange with the value
-                          const allServices = await shopApiRequests.services(
-                            shopId,
-                            parseInt(value)
-                          );
-                          setServices(allServices.payload.data);
-                        }}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {categories &&
-                            categories.map((item) => (
-                              <SelectItem
-                                key={item.id}
-                                value={item.id.toString()}
-                                className="cursor-pointer"
-                              >
-                                {item.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
+                <div className="grid grid-cols-2 gap-10">
+                  <FormField
+                    control={form.control}
+                    name="serviceCategory.id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label>Loại hình dịch vụ</Label>
+                        <Select
+                          onValueChange={async (value: any) => {
+                            field.onChange(parseInt(value)); // Fix: Call onChange with the value
+                            const allServices = await shopApiRequests.services(
+                              shopId,
+                              parseInt(value)
+                            );
+                            setServices(allServices.payload.data);
+                          }}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {categories &&
+                              categories.map((item) => (
+                                <SelectItem
+                                  key={item.id}
+                                  value={item.id.toString()}
+                                  className="cursor-pointer"
+                                >
+                                  {item.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
 
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="service.id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Label>Dịch vụ</Label>
-                      <Select
-                        onValueChange={async (value: any) => {
-                          field.onChange(parseInt(value)); // Fix: Call onChange with the value
-                        }}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {services &&
-                            services.map((item) => (
-                              <SelectItem
-                                key={item.id}
-                                value={item.id.toString()}
-                                className="cursor-pointer"
-                              >
-                                {item.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
+                  <FormField
+                    control={form.control}
+                    name="service.id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label>Dịch vụ</Label>
+                        <Select
+                          onValueChange={async (value: any) => {
+                            field.onChange(parseInt(value)); // Fix: Call onChange with the value
+                          }}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {services &&
+                              services.map((item) => (
+                                <SelectItem
+                                  key={item.id}
+                                  value={item.id.toString()}
+                                  className="cursor-pointer"
+                                >
+                                  {item.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
 
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <FormField
                   control={form.control}
@@ -235,7 +261,7 @@ export default function Order() {
                     <FormItem>
                       <div>
                         <label className="block text-sm/6 font-medium text-gray-900">
-                          Khối lượng
+                          Khối lượng (kg)
                         </label>
                         <div className="mt-2">
                           <input

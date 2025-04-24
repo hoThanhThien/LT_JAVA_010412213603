@@ -5,6 +5,7 @@ export const OrderStatus = z.enum(["IN_PROGRESS", "DONE"]);
 
 export const OrderListSchema = z.object({
   id: z.number().int().positive(),
+  username: z.string(),
   totalAmount: z.number().nonnegative(),
   orderStatus: OrderStatus,
   imgProduct: z.string().nullable(),
@@ -31,20 +32,22 @@ export const OrderListResSchema = z
 
 export type OrderListResType = z.TypeOf<typeof OrderListResSchema>;
 
-export const OrderSchema = z.object({
-  laundryShop: z.object({
-    id: z.number(),
-  }),
-  serviceCategory: z.object({
-    id: z.number(),
-  }),
-  service: z.object({
-    id: z.number(),
-  }),
-  orderVolume: z.number(),
-  imgProduct: z.string(),
-  instructions: z.string(),
-});
+export const OrderSchema = z
+  .object({
+    laundryShop: z.object({
+      id: z.any(),
+    }),
+    serviceCategory: z.object({
+      id: z.any(),
+    }),
+    service: z.object({
+      id: z.any(),
+    }),
+    orderVolume: z.number(),
+    imgProduct: z.string(),
+    instructions: z.string(),
+  })
+  .strict();
 
 export type OrderType = z.TypeOf<typeof OrderSchema>;
 

@@ -208,7 +208,7 @@ export default function Comment() {
               />
             </div>
           </div>
-          <div>
+          {/* <div>
             <label className="block text-sm/6 font-medium text-gray-900">
               Bạn cần dịch vụ gì?
             </label>
@@ -219,7 +219,7 @@ export default function Comment() {
                 className="block w-full rounded-md bg-white px-3 py-2.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
               />
             </div>
-          </div>
+          </div> */}
           <button className="bg-main hover:text-white text-[18px] px-5 py-0 rounded-[28px] h-12 font-medium cursor-pointer mx-auto block">
             ĐẶT DỊCH VỤ NGAY
           </button>
