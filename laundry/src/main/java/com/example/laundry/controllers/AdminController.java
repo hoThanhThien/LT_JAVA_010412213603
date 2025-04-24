@@ -2,15 +2,19 @@ package com.example.laundry.controllers;
 
 import com.example.laundry.dto.*;
 import com.example.laundry.models.user.StoreOwner;
+import com.example.laundry.repository.StoreOwnerRepository;
 import com.example.laundry.services.AdminService;
 import com.example.laundry.services.EmployeeService;
 import com.example.laundry.services.LaundryShopService;
 import com.example.laundry.utils.ApiResponse;
 
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,11 +33,25 @@ public class AdminController {
     private EmployeeService employeeService;
     @Autowired
     private LaundryShopService laundryShopService;
+    @Autowired
+    private StoreOwnerRepository storeOwnerRepository;
 
     @PostMapping("/storeowner/create")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StoreOwner>> createStoreOwner(@RequestBody StoreOwnerDTO storeOwnerDTO) {
         ApiResponse<StoreOwner> response = adminService.createStoreOwner(storeOwnerDTO);
+
+        if (response.getData() == null) {
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/storeowner/update")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<StoreOwnerDTO>> updateStoreOwner(@RequestBody StoreOwnerDTO storeOwnerDTO) {
+        ApiResponse<StoreOwnerDTO> response = adminService.updateStoreOwner(storeOwnerDTO);
 
         if (response.getData() == null) {
             return ResponseEntity.badRequest().body(response);
@@ -54,13 +72,13 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/storeowners")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PagedResponse<StoreOwnerDTO>> getAllStoreOwners(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(adminService.getAllStoreOwners(page, size));
-    }
+//    @GetMapping("/storeowners")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<PagedResponse<StoreOwnerDTO>> getAllStoreOwners(
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size) {
+//        return ResponseEntity.ok(adminService.getAllStoreOwners(page, size));
+//    }
 
     @GetMapping("/employees")
     @PreAuthorize("hasRole('ADMIN')")
@@ -69,6 +87,20 @@ public class AdminController {
             @RequestParam(defaultValue = "10") int size) {
         try {
             PagedResponse<EmployeeDTO> response = employeeService.getAllEmployees(page, size);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new PagedResponse<>("Lấy danh sách nhân viên thất bại: " + e.getMessage(), null));
+        }
+    }
+
+    @GetMapping("/storeowners")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PagedResponse<StoreOwnerWithEmployeeDTO>> getAllEmployee(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            PagedResponse<StoreOwnerWithEmployeeDTO> response = adminService.getAllEmployeesBelongToStoreOwner(page, size);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest()

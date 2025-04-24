@@ -222,7 +222,7 @@ public class CustomerServiceImpl implements CustomerService {
         responseDTO.setInstructions(savedOrder.getInstructions());
 
 
-        return new ApiResponse<>("Bạn đã ta đơn giặt hàng thành công. Vui lòng chú ý thông báo của chúng tôi!", responseDTO);
+        return new ApiResponse<>("Bạn đã tạo đơn giặt hàng thành công. Vui lòng chú ý thông báo của chúng tôi!", responseDTO);
     }
 
     @Override

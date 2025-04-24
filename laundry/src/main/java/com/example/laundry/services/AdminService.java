@@ -9,8 +9,10 @@ import java.util.UUID;
 
 public interface AdminService extends UserService {
     ApiResponse<StoreOwner> createStoreOwner(StoreOwnerDTO storeOwnerDTO);
+    ApiResponse<StoreOwnerDTO> updateStoreOwner(StoreOwnerDTO storeOwnerDTO);
     ApiResponse<String> removeStoreOwner(StoreOwnerDTO storeOwnerDTO);
     PagedResponse<StoreOwnerDTO> getAllStoreOwners(int page, int size);
+    PagedResponse<StoreOwnerWithEmployeeDTO> getAllEmployeesBelongToStoreOwner(int page, int size);
     PagedResponse<OrderResponse> getAllOrders(int page, int size);
     PagedResponse<OrderResponse> getOrdersByCustomer(UUID customerId, int page, int size);
     PagedResponse<OrderResponse> getOrdersByStatus(String status, int page, int size);

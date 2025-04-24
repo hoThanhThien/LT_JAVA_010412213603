@@ -9,6 +9,7 @@ import com.example.laundry.models.user.Roles;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.*;
 import com.example.laundry.services.AdminService;
+import com.example.laundry.services.EmployeeService;
 import com.example.laundry.services.OrderService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
@@ -46,6 +47,9 @@ public class AdminServiceImpl implements AdminService {
 
     @Autowired
     private OrderService orderService;
+    @Autowired
+    private EmployeeService employeeService;
+
     @Override
     public ApiResponse<StoreOwner> createStoreOwner(StoreOwnerDTO storeOwnerDTO) {
         // Kiểm tra dữ liệu
@@ -92,6 +96,49 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    public ApiResponse<StoreOwnerDTO> updateStoreOwner(StoreOwnerDTO storeOwnerDTO) {
+      StoreOwner storeOwner = findStoreOwnerByInfo(storeOwnerDTO);
+
+      if (storeOwner == null) {
+        return new ApiResponse<>("Không tìm thấy chủ cửa hàng với thông tin đã cung cấp!", null);
+      }
+
+      if (storeOwnerDTO.getUsername() != null && !storeOwnerDTO.getUsername().isEmpty()) {
+        storeOwner.setUsername(storeOwnerDTO.getUsername());
+      }
+
+      if (storeOwnerDTO.getAddress() != null) {
+        storeOwner.setAddress(storeOwnerDTO.getAddress());
+      }
+
+      if (storeOwnerDTO.getPassword() != null && !storeOwnerDTO.getPassword().isEmpty()) {
+        if (!UserValidator.isValidPassword(storeOwnerDTO.getPassword())) {
+          return new ApiResponse<>("Mật khẩu không hợp lệ!", null);
+        }
+
+        storeOwner.setPassword(passwordEncoder.encode(storeOwnerDTO.getPassword()));
+      }
+
+      if (storeOwnerDTO.getAvtUser() != null && storeOwnerDTO.getAvtUser().length > 0) {
+        storeOwner.setAvtUser(storeOwnerDTO.getAvtUser());
+      }
+
+      StoreOwner updatedStoreOwner = storeOwnerRepository.save(storeOwner);
+
+      StoreOwnerDTO responseDTO = new StoreOwnerDTO();
+      responseDTO.setUsername(updatedStoreOwner.getUsername());
+      responseDTO.setEmail(updatedStoreOwner.getEmail());
+      responseDTO.setPhone(updatedStoreOwner.getPhone());
+      responseDTO.setAddress(updatedStoreOwner.getAddress());
+      responseDTO.setRole(updatedStoreOwner.getRoles());
+      responseDTO.setAvtUser(updatedStoreOwner.getAvtUser());
+      responseDTO.setCreatedAt(updatedStoreOwner.getCreatedAt());
+      responseDTO.setUpdatedAt(updatedStoreOwner.getUpdatedAt());
+
+      return new ApiResponse<>("Cập nhật nhân viên thành công!", responseDTO);
+    }
+
+    @Override
     public ApiResponse<String> removeStoreOwner(StoreOwnerDTO storeOwnerDTO) {
         if (storeOwnerDTO.getEmail() == null && storeOwnerDTO.getPhone() == null && storeOwnerDTO.getUsername() == null) {
             return new ApiResponse<>("Không đủ thông tin để xóa!!!", null);
@@ -125,6 +172,7 @@ public class AdminServiceImpl implements AdminService {
                         owner.getPhone(),
                         owner.getAddress(),
                         owner.getRoles(),
+                        owner.getAvtUser(),
                         owner.getCreatedAt(),
                         owner.getUpdatedAt()
                 ))
@@ -143,61 +191,106 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public PagedResponse<OrderResponse> getAllOrders(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Order> orderPage = orderRepository.findAll(pageable);
+    public PagedResponse<StoreOwnerWithEmployeeDTO> getAllEmployeesBelongToStoreOwner(int page, int size) {
+      Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+      Page<StoreOwner> storeOwnerPage = storeOwnerRepository.findAll(pageable);
 
-        List<OrderResponse> responseList = orderPage.getContent().stream()
-                .map(order -> {
-                    OrderResponse orderResponse = new OrderResponse();
-                    orderResponse.setId(order.getId());
-                    orderResponse.setTotalAmount(order.getTotalAmount());
-                    orderResponse.setOrderStatus(order.getOrderStatus());
-                    orderResponse.setImgProduct(order.getImgProduct());
-                    orderResponse.setLaundryShopName(order.getLaundryShop().getName());
-                    orderResponse.setServiceCategoryName(order.getServiceCategory().getName());
-                    orderResponse.setServiceName(order.getService().getName());
-                    orderResponse.setServicePrice(order.getService().getPrice());
-                    orderResponse.setOrderVolume(order.getOrderVolume());
-                    orderResponse.setCreatedAt(order.getCreatedAt());
-                    orderResponse.setInstructions(order.getInstructions());
-                    if (order.getCustomer() != null) {
-                        orderResponse.setUsername(order.getCustomer().getUsername());
-                        orderResponse.setPhone(order.getCustomer().getPhone());
-                        orderResponse.setEmail(order.getCustomer().getEmail());
-                        orderResponse.setAddress(order.getCustomer().getAddress());
-                    }
-                    return orderResponse;
-                })
-                .collect(Collectors.toList());
+      List<StoreOwnerWithEmployeeDTO> ownerDTOS = storeOwnerPage.getContent().stream()
+              .map(owner -> {
+                List<EmployeeDTO> employees = employeeRepository.findByStoreOwner(owner, pageable).stream()
+                        .map(employee -> new EmployeeDTO(
+                                employee.getUsername(),
+                                employee.getPhone(),
+                                employee.getEmail(),
+                                employee.getAddress(),
+                                employee.getAvtUser(),
+                                employee.getRoles(),
+                                employee.getShop(),
+                                employee.getCreatedAt(),
+                                employee.getUpdatedAt()
+                        )).toList();
+                return new StoreOwnerWithEmployeeDTO(
+                        owner.getId(),
+                        owner.getUsername(),
+                        owner.getPhone(),
+                        owner.getEmail(),
+                        owner.getAddress(),
+                        owner.getAvtUser(),
+                        owner.getRoles(),
+                        owner.getCreatedAt(),
+                        owner.getUpdatedAt(),
+                        employees
+                );
+              }).toList();
 
-        Meta meta = new Meta(
-                orderPage.getNumber() + 1,
-                orderPage.getSize(),
-                orderPage.getTotalElements(),
-                orderPage.getTotalPages()
-        );
+      Meta<StoreOwnerWithEmployeeDTO>  meta = new Meta<>(
+              page,
+              size,
+              storeOwnerPage.getTotalElements(),
+              storeOwnerPage.getTotalPages()
+      );
 
-        PagedData<OrderResponse> pagedData = new PagedData<>(meta, responseList);
-        return new PagedResponse<>("Lấy danh sách tất cả đơn hàng thành công", pagedData);
+      PagedData<StoreOwnerWithEmployeeDTO> pagedData = new PagedData<>(meta, ownerDTOS);
+
+      return new PagedResponse<>("Lấy danh sách nhân viên thành công!!!", pagedData);
     }
+
+    @Override
+    public PagedResponse<OrderResponse> getAllOrders(int page, int size) {
+          Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+          Page<Order> orderPage = orderRepository.findAll(pageable);
+
+          List<OrderResponse> responseList = orderPage.getContent().stream()
+                  .map(order -> {
+                      OrderResponse orderResponse = new OrderResponse();
+                      orderResponse.setId(order.getId());
+                      orderResponse.setTotalAmount(order.getTotalAmount());
+                      orderResponse.setOrderStatus(order.getOrderStatus());
+                      orderResponse.setImgProduct(order.getImgProduct());
+                      orderResponse.setLaundryShopName(order.getLaundryShop().getName());
+                      orderResponse.setServiceCategoryName(order.getServiceCategory().getName());
+                      orderResponse.setServiceName(order.getService().getName());
+                      orderResponse.setServicePrice(order.getService().getPrice());
+                      orderResponse.setOrderVolume(order.getOrderVolume());
+                      orderResponse.setCreatedAt(order.getCreatedAt());
+                      orderResponse.setInstructions(order.getInstructions());
+                      if (order.getCustomer() != null) {
+                          orderResponse.setUsername(order.getCustomer().getUsername());
+                          orderResponse.setPhone(order.getCustomer().getPhone());
+                          orderResponse.setEmail(order.getCustomer().getEmail());
+                          orderResponse.setAddress(order.getCustomer().getAddress());
+                      }
+                      return orderResponse;
+                  })
+                  .collect(Collectors.toList());
+
+          Meta meta = new Meta(
+                  orderPage.getNumber() + 1,
+                  orderPage.getSize(),
+                  orderPage.getTotalElements(),
+                  orderPage.getTotalPages()
+          );
+
+          PagedData<OrderResponse> pagedData = new PagedData<>(meta, responseList);
+          return new PagedResponse<>("Lấy danh sách tất cả đơn hàng thành công", pagedData);
+      }
 
     private StoreOwner findStoreOwnerByInfo(StoreOwnerDTO storeOwnerDTO) {
-        StoreOwner storeOwner = null;
-        if (storeOwnerDTO.getEmail() != null) {
-            storeOwner = storeOwnerRepository.findByEmail(storeOwnerDTO.getEmail());
-        }
-        if (storeOwner == null && storeOwnerDTO.getPhone() != null) {
-            storeOwner = storeOwnerRepository.findByPhone(storeOwnerDTO.getPhone());
-        }
-        if (storeOwner == null && storeOwnerDTO.getUsername() != null) {
-            storeOwner = storeOwnerRepository.findByUsername(storeOwnerDTO.getUsername());
-        }
-        return storeOwner;
+    StoreOwner storeOwner = null;
+    if (storeOwnerDTO.getEmail() != null) {
+      storeOwner = storeOwnerRepository.findByEmail(storeOwnerDTO.getEmail());
     }
+    if (storeOwner == null && storeOwnerDTO.getPhone() != null) {
+      storeOwner = storeOwnerRepository.findByPhone(storeOwnerDTO.getPhone());
+    }
+    if (storeOwner == null && storeOwnerDTO.getUsername() != null) {
+      storeOwner = storeOwnerRepository.findByUsername(storeOwnerDTO.getUsername());
+    }
+    return storeOwner;
+  }
 
-  @Override
-  public PagedResponse<OrderResponse> getOrdersByCustomer(UUID customerId, int page, int size) {
+    @Override
+    public PagedResponse<OrderResponse> getOrdersByCustomer(UUID customerId, int page, int size) {
     Customer customer = customerRepository.findById(customerId)
             .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng với ID: " + customerId));
 

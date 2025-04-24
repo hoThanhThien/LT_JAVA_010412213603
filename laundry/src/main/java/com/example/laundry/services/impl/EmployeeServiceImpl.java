@@ -27,8 +27,8 @@ import java.util.stream.Collectors;
 public class EmployeeServiceImpl implements EmployeeService {
     @Autowired
     private EmployeeRepository employeeRepository;
-  @Autowired
-  private OrderRepository orderRepository;
+    @Autowired
+    private OrderRepository orderRepository;
 
     @Override
     public Employee addEmployee(Employee employee) {
@@ -84,9 +84,19 @@ public class EmployeeServiceImpl implements EmployeeService {
                 OrderResponse response = new OrderResponse();
                 response.setId(order.getId());
                 response.setUsername(order.getCustomer().getUsername());
-                response.setOrderStatus(order.getOrderStatus());
+                response.setPhone(order.getCustomer().getPhone());
+                response.setEmail(order.getCustomer().getEmail());
+                response.setAddress(order.getCustomer().getAddress());
                 response.setTotalAmount(order.getTotalAmount());
+                response.setOrderStatus(order.getOrderStatus());
+                response.setImgProduct(order.getImgProduct());
+                response.setLaundryShopName(order.getLaundryShop().getName());
+                response.setServiceCategoryName(order.getServiceCategory().getName());
+                response.setServiceName(order.getService().getName());
+                response.setServicePrice(order.getService().getPrice());
+                response.setOrderVolume(order.getOrderVolume());
                 response.setCreatedAt(order.getCreatedAt());
+                response.setInstructions(order.getInstructions());
 
                 return response;
               })
