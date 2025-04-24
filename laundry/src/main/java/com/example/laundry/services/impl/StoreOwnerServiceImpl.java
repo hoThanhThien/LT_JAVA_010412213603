@@ -556,9 +556,9 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
                     OrderResponse response = new OrderResponse();
                     response.setId(order.getId());
                     response.setUsername(order.getCustomer().getUsername());
-                    response.setUsername(order.getCustomer().getPhone());
-                    response.setUsername(order.getCustomer().getEmail());
-                    response.setUsername(order.getCustomer().getAddress());
+                    response.setPhone(order.getCustomer().getPhone());
+                    response.setEmail(order.getCustomer().getEmail());
+                    response.setAddress(order.getCustomer().getAddress());
                     response.setTotalAmount(order.getTotalAmount());
                     response.setOrderStatus(order.getOrderStatus());
                     response.setImgProduct(order.getImgProduct());
