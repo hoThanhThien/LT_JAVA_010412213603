@@ -13,4 +13,6 @@ public class PaymentResponse {
   private String accountHolder;
   private String bankName;
   private String accountNumber;
+  private String transferContent;
+  private String paymentStatus;
 }

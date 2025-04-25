@@ -18,7 +18,7 @@ public class OrderDTO {
     private String address;
     private Double totalAmount;
     private OrderStatus orderStatus;
-    private byte[] imgProduct;
+    private String imgProduct;
     private LaundryShop laundryShop;
     private ServiceCategory serviceCategory;
     private Service service;
@@ -27,7 +27,7 @@ public class OrderDTO {
     private String instructions;
 
 
-    public OrderDTO(String address,Double totalAmount, OrderStatus orderStatus, byte[] imgProduct,
+    public OrderDTO(String address,Double totalAmount, OrderStatus orderStatus, String imgProduct,
                     Long laundryShopId, Long serviceCategoryId, Long serviceId,
                     Double orderVolume, Date createdAt, String instructions) {
         this.address = address;

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface LaundryShopRepository extends JpaRepository<LaundryShop, Integer> {
@@ -15,4 +16,5 @@ public interface LaundryShopRepository extends JpaRepository<LaundryShop, Intege
   boolean existsByStoreOwner(StoreOwner storeOwner);
   boolean existsByName(String name);
   Optional<LaundryShop> findById(@NonNull Integer id);
+  Optional<LaundryShop> findByStoreOwnerId(UUID storeOwner_Id);
 }

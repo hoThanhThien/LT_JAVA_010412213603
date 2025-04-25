@@ -195,7 +195,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
             employee.setPassword(passwordEncoder.encode(employeeDTO.getPassword()));
         }
 
-        if (employeeDTO.getAvtUser() != null && employeeDTO.getAvtUser().length > 0) {
+        if (employeeDTO.getAvtUser() != null && employeeDTO.getAvtUser().isEmpty()) {
             employee.setAvtUser(employeeDTO.getAvtUser());
         }
 
@@ -569,6 +569,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
                     response.setOrderVolume(order.getOrderVolume());
                     response.setCreatedAt(order.getCreatedAt());
                     response.setInstructions(order.getInstructions());
+                    response.setStatus(order.getOrderStatus());
 
                     return response;
                 })

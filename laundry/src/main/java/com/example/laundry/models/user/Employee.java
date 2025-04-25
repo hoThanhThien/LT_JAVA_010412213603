@@ -45,12 +45,12 @@ public class Employee extends User {
         this.storeOwner = storeOwner;
     }
 
-    public Employee(String username, String encodedPassword, String email, String phone, String address, Roles roles, byte[] avtUser, Date createdAt, Date updatedAt, StoreOwner storeOwner) {
+    public Employee(String username, String encodedPassword, String email, String phone, String address, Roles roles, String avtUser, Date createdAt, Date updatedAt, StoreOwner storeOwner) {
         super(username, encodedPassword, email, phone, address, Roles.Employee);
         this.storeOwner = storeOwner;
     }
 
-    @Override
+  @Override
     public void displayRole() {
         System.out.println("Role: Employee at ");
     }

@@ -188,8 +188,8 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         Order order = new Order();
-        order.setCustomer(customer); // dùng để liên kết
-        order.setUsername(customer.getUsername()); // lưu thêm username vào order
+        order.setCustomer(customer);
+        order.setUsername(customer.getUsername());
         order.setLaundryShop(laundryShop);
         order.setServiceCategory(serviceCategory);
         order.setService(service);
@@ -220,6 +220,7 @@ public class CustomerServiceImpl implements CustomerService {
         responseDTO.setOrderVolume(savedOrder.getOrderVolume());
         responseDTO.setCreatedAt(savedOrder.getCreatedAt());
         responseDTO.setInstructions(savedOrder.getInstructions());
+        responseDTO.setStatus(savedOrder.getOrderStatus());
 
 
         return new ApiResponse<>("Bạn đã tạo đơn giặt hàng thành công. Vui lòng chú ý thông báo của chúng tôi!", responseDTO);
@@ -305,7 +306,7 @@ public class CustomerServiceImpl implements CustomerService {
                 customer.setPassword(passwordEncoder.encode(customerDTO.getPassword()));
             }
 
-            if (customerDTO.getAvtUser() != null && customerDTO.getAvtUser().length > 0) {
+            if (customerDTO.getAvtUser() != null && customerDTO.getAvtUser().isEmpty()) {
                 customer.setAvtUser(customerDTO.getAvtUser());
             }
 

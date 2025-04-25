@@ -20,7 +20,7 @@ public class OrderResponse {
     private String address;
     private Double totalAmount;
     private OrderStatus orderStatus;
-    private byte[] imgProduct;
+    private String imgProduct;
     private String laundryShopName;
     private String serviceCategoryName;
     private String serviceName;
@@ -28,6 +28,7 @@ public class OrderResponse {
     private Double orderVolume;
     private Date createdAt;
     private String instructions;
+    private OrderStatus status;
 
     public OrderResponse(Long id, String username, OrderStatus orderStatus, Double totalAmount) {
         this.id = id;

@@ -3,6 +3,7 @@ package com.example.laundry.services.impl;
 import com.example.laundry.dto.*;
 import com.example.laundry.models.order.Order;
 import com.example.laundry.models.order.OrderStatus;
+import com.example.laundry.models.shop.LaundryShop;
 import com.example.laundry.models.user.Customer;
 import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.Roles;
@@ -24,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -41,7 +43,8 @@ public class AdminServiceImpl implements AdminService {
     private StoreOwnerService storeOwnerService;
     @Autowired
     private OrderRepository orderRepository;
-
+    @Autowired
+    private LaundryShopRepository laundryShopRepository;
     @Autowired
     private CustomerRepository customerRepository;
 
@@ -119,7 +122,7 @@ public class AdminServiceImpl implements AdminService {
         storeOwner.setPassword(passwordEncoder.encode(storeOwnerDTO.getPassword()));
       }
 
-      if (storeOwnerDTO.getAvtUser() != null && storeOwnerDTO.getAvtUser().length > 0) {
+      if (storeOwnerDTO.getAvtUser() != null && storeOwnerDTO.getAvtUser().isEmpty()) {
         storeOwner.setAvtUser(storeOwnerDTO.getAvtUser());
       }
 
@@ -197,6 +200,14 @@ public class AdminServiceImpl implements AdminService {
 
       List<StoreOwnerWithEmployeeDTO> ownerDTOS = storeOwnerPage.getContent().stream()
               .map(owner -> {
+                Optional<LaundryShop> optionalShop = laundryShopRepository.findByStoreOwnerId(owner.getId());
+
+                Long shopId = null;
+                String shopName = null;
+                if (optionalShop.isPresent()) {
+                  shopId = optionalShop.get().getId();
+                  shopName = optionalShop.get().getName();
+                }
                 List<EmployeeDTO> employees = employeeRepository.findByStoreOwner(owner, pageable).stream()
                         .map(employee -> new EmployeeDTO(
                                 employee.getUsername(),
@@ -216,6 +227,8 @@ public class AdminServiceImpl implements AdminService {
                         owner.getEmail(),
                         owner.getAddress(),
                         owner.getAvtUser(),
+                        shopId,
+                        shopName,
                         owner.getRoles(),
                         owner.getCreatedAt(),
                         owner.getUpdatedAt(),
@@ -295,7 +308,7 @@ public class AdminServiceImpl implements AdminService {
             .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng với ID: " + customerId));
 
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-    Page<Order> customerOrders = orderRepository.findByCustomerId(customerId, pageable);
+    Page<Order> customerOrders = orderRepository.findByCustomerId(customer.getId(), pageable);
 
     if (customerOrders.isEmpty()) {
       return new PagedResponse<>("Khách hàng chưa có đơn hàng nào", null);
@@ -350,7 +363,7 @@ public class AdminServiceImpl implements AdminService {
     public PagedResponse<OrderResponse> getOrdersByStatus(String status, int page, int size) {
         OrderStatus orderStatus;
         try {
-            orderStatus = OrderStatus.valueOf(status.toUpperCase());
+            orderStatus = OrderStatus.valueOf(status);
         } catch (IllegalArgumentException e) {
             return new PagedResponse<>("Trạng thái đơn hàng không hợp lệ", null);
         }
@@ -359,29 +372,7 @@ public class AdminServiceImpl implements AdminService {
         Page<Order> orderPage = orderRepository.findByOrderStatus(orderStatus, pageable);
 
 
-        List<OrderResponse> responseList = orderPage.getContent().stream()
-                .map(order -> {
-                    OrderResponse orderResponse = new OrderResponse();
-                    orderResponse.setId(order.getId());
-                    orderResponse.setTotalAmount(order.getTotalAmount());
-                    orderResponse.setOrderStatus(order.getOrderStatus());
-                    orderResponse.setImgProduct(order.getImgProduct());
-                    orderResponse.setLaundryShopName(order.getLaundryShop().getName());
-                    orderResponse.setServiceCategoryName(order.getServiceCategory().getName());
-                    orderResponse.setServiceName(order.getService().getName());
-                    orderResponse.setServicePrice(order.getService().getPrice());
-                    orderResponse.setOrderVolume(order.getOrderVolume());
-                    orderResponse.setCreatedAt(order.getCreatedAt());
-                    orderResponse.setInstructions(order.getInstructions());
-                    if (order.getCustomer() != null) {
-                        orderResponse.setUsername(order.getCustomer().getUsername());
-                        orderResponse.setPhone(order.getCustomer().getPhone());
-                        orderResponse.setEmail(order.getCustomer().getEmail());
-                        orderResponse.setAddress(order.getCustomer().getAddress());
-                    }
-                    return orderResponse;
-                })
-                .collect(Collectors.toList());
+        List<OrderResponse> responseList = mapOrdersToOrderResponses(orderPage.getContent());
 
         Meta meta = new Meta(
                 orderPage.getNumber() + 1,

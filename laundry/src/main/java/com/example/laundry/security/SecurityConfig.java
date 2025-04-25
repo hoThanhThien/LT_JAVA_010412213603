@@ -44,6 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/shops").permitAll()
                         .requestMatchers("/shop/*/categories").permitAll()
                         .requestMatchers("/shop/*/category/*/services").permitAll()
+                        .requestMatchers("/api/payments/info").permitAll()
                         .requestMatchers("/admin/customer/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
@@ -61,6 +62,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://127.0.0.1:3000"));
+        configuration.setAllowedOrigins(List.of("https://oauth.casso.vn"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

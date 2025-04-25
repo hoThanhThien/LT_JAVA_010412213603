@@ -35,7 +35,7 @@ public class Order {
 
     @Lob
     @Column(name = "img_product", columnDefinition = "MEDIUMBLOB")
-    private  byte[] imgProduct;
+    private  String imgProduct;
 
     @ManyToOne
     private Customer customer;
@@ -58,7 +58,11 @@ public class Order {
     private Date updatedAt;
     private String instructions;
 
-    public Order(OrderStatus orderStatus, byte[] imgProduct, LaundryShop laundryShop, Customer customer, ServiceCategory serviceCategory, Service service, Double orderVolume, String instructions) {
+    @Column(name = "payment_status")
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
+
+    public Order(OrderStatus orderStatus, String imgProduct, LaundryShop laundryShop, Customer customer, ServiceCategory serviceCategory, Service service, Double orderVolume, String instructions) {
         this.orderStatus = orderStatus;
         this.imgProduct = imgProduct;
         this.laundryShop = laundryShop;

@@ -58,7 +58,7 @@ public class LaundryShopServiceImpl implements LaundryShopService {
         );
 
         PagedData<LaundryShopDTO> pagedData = new PagedData<>(meta, dtos);
-        return new PagedResponse<>("Lấy danh sách nhân viên thành công", pagedData);
+        return new PagedResponse<>("Lấy danh sách tất cả cửa hàng thành công", pagedData);
     }
 
     @Override
@@ -66,15 +66,8 @@ public class LaundryShopServiceImpl implements LaundryShopService {
         List<LaundryShop> laundryShops = laundryShopRepository.findAll();
 
         List<LaundryShopDTO> laundryShopDTOs = laundryShops.stream()
-                .map(shop -> new LaundryShopDTO(
-                        shop.getId(),
-                        shop.getName(),
-                        shop.getAddress(),
-                        shop.getDescription(),
-                        shop.getOpeningHours()
-                ))
+                .map(this::convertToDTO)
                 .toList();
-
 
         return new ApiResponse<>("Danh sách các cửa hàng", laundryShopDTOs);
     }

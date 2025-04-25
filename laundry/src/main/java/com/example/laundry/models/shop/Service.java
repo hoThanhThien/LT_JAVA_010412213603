@@ -39,7 +39,7 @@ public class Service {
 
     @Lob
     @Column(name = "image_desc", columnDefinition = "MEDIUMBLOB")
-    private byte[] imageDesc;
+    private String imageDesc;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
@@ -55,7 +55,7 @@ public class Service {
         this.estimatedTime = estimatedTime;
     }
 
-    public Service(Long id, String name, String description, String estimateTime, Double price, byte[] imageDesc) {
+    public Service(Long id, String name, String description, String estimateTime, Double price, String imageDesc) {
         this.id = id;
         this.name = name;
         this.description = description;

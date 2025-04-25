@@ -56,7 +56,7 @@ public abstract class User implements Serializable {
 
     @Lob
     @Column(name = "avt_user", columnDefinition = "MEDIUMBLOB")
-    private byte[] avtUser;
+    private String avtUser;
 
     // Constructor, getters, and setters
 

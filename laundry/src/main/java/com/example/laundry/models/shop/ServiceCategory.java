@@ -24,7 +24,7 @@ public class ServiceCategory {
 
   @Lob
   @Column(name = "image_desc", columnDefinition = "MEDIUMBLOB")
-  private byte[] imageDesc;
+  private String imageDesc;
 
   @ManyToOne
   @JoinColumn(name = "shop_id")
@@ -33,7 +33,7 @@ public class ServiceCategory {
   @OneToMany(mappedBy = "category")
   private List<Service> services;
 
-  public ServiceCategory(Long id, String name, String description, byte[] imageDesc) {
+  public ServiceCategory(Long id, String name, String description, String imageDesc) {
     this.id = id;
     this.name = name;
     this.description = description;

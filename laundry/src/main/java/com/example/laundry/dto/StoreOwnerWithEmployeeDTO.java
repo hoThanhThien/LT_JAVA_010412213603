@@ -20,7 +20,9 @@ public class StoreOwnerWithEmployeeDTO {
   private String phone;
   private String email;
   private String address;
-  private byte[] avtUser;
+  private String avtUser;
+  private Long shopId;
+  private String shopName;
   private Roles roles;
   private Date createdAt;
   private Date updatedAt;

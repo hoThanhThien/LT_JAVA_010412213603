@@ -22,7 +22,7 @@ public class StoreOwnerDTO implements Serializable {
     private String phone;
     private String address;
     private Roles role;
-    private byte[] avtUser;
+    private String avtUser;
     private Date createdAt;
     private Date updatedAt;
 }

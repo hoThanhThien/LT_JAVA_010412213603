@@ -12,11 +12,11 @@ public class ServiceDTO {
     private String name;
     private String description;
     private String estimatedTime;
-    private byte[] imageDesc;
+    private String imageDesc;
     private Double price;
     private Long categoryId;
 
-    public ServiceDTO(Long id, String name, String description, String estimatedTime, byte[] imageDesc, Double price) {
+    public ServiceDTO(Long id, String name, String description, String estimatedTime, String imageDesc, Double price) {
         this.id = id;
         this.name = name;
         this.description = description;

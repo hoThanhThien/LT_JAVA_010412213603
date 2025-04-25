@@ -1,5 +1,6 @@
 package com.example.laundry.dto;
 
+import com.example.laundry.models.user.StoreOwner;
 import lombok.*;
 
 import java.util.Date;
