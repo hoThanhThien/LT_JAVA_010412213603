@@ -1,4 +1,5 @@
 import z from "zod";
+import { MetaSchema } from "./pagination.schema";
 
 export const ShopSchema = z.object({
   id: z.number(),
@@ -8,7 +9,9 @@ export const ShopSchema = z.object({
   openingHours: z.string(),
   averageRating: z.number(),
   createdAt: z.string().nullable(),
-  storeOwner: z.string().nullable(),
+  storeOwner: z.object({
+    username: z.string(),
+  }),
 });
 
 export type ShopType = z.infer<typeof ShopSchema>;
@@ -19,6 +22,18 @@ export const ShopResSchema = z.object({
 });
 
 export type ShopResType = z.infer<typeof ShopResSchema>;
+
+export const ShopListResBody = z
+  .object({
+    data: z.object({
+      meta: MetaSchema,
+      result: z.array(ShopSchema),
+    }),
+    message: z.string(),
+  })
+  .strict();
+
+export type ShopListResType = z.TypeOf<typeof ShopListResBody>;
 
 export const CategorySchema = z.object({
   id: z.number(),

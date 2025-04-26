@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { OrderListType } from "@/schemaValidations/order.schema";
 import orderApiRequests from "@/apiRequests/order";
+import { Tag } from "antd";
 import { Detail } from "./detail";
 
 export default function AdminOrder() {
@@ -20,7 +21,7 @@ export default function AdminOrder() {
   const [dataViewDetail, setDataViewDetail] = useState<OrderListType | null>(
     null
   );
-  const [imgProduct, setImgProduct] = useState<string>("");
+
   const actionRef = useRef<ActionType>(null);
   const [meta, setMeta] = useState({
     page: 0,
@@ -92,17 +93,28 @@ export default function AdminOrder() {
     {
       title: "Số điện thoại",
       align: "center",
-      // dataIndex: "serviceName",
+      dataIndex: "phone",
     },
     {
       title: "Dịch vụ",
-      dataIndex: "serviceCategoryName",
       align: "center",
+      render(_, entity) {
+        return (
+          <div>
+            {entity.serviceCategoryName} - {entity.serviceName}
+          </div>
+        );
+      },
     },
     {
       title: "Trạng thái",
-      dataIndex: "orderStatus",
+
       align: "center",
+      render: (_, entity) => (
+        <Tag color={entity.orderStatus === "DONE" ? "green" : "yellow"}>
+          {entity.orderStatus}
+        </Tag>
+      ),
     },
     {
       title: "Tổng tiền (VND)",
@@ -124,8 +136,6 @@ export default function AdminOrder() {
                   onClick={() => {
                     setOpenViewDetail(true);
                     setDataViewDetail(entity);
-
-                    setImgProduct(entity.imgProduct ? entity.imgProduct : "");
                   }}
                   className="cursor-pointer"
                 >
@@ -145,12 +155,7 @@ export default function AdminOrder() {
         columns={columns}
         actionRef={actionRef}
         cardBordered
-        search={{
-          searchText: "Tìm kiếm",
-          resetText: "Làm mới",
-          collapseRender: (collapsed) =>
-            collapsed ? "Mở rộng +" : "Thu gọn -",
-        }}
+        search={false}
         request={async () => {
           return await fetchData(currentPage, pageSize);
         }}
@@ -178,8 +183,6 @@ export default function AdminOrder() {
         setOpenViewDetail={setOpenViewDetail}
         dataViewDetail={dataViewDetail}
         setDataViewDetail={setDataViewDetail}
-        imgProduct={imgProduct}
-        setImgProduct={setImgProduct}
       />
     </>
   );

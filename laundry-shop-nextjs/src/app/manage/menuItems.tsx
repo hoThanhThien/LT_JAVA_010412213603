@@ -2,6 +2,7 @@ import type { MenuProps } from "antd";
 import {
   Package,
   ScrollText,
+  ShieldUser,
   Store,
   UserRound,
   UsersRound,
@@ -12,13 +13,18 @@ type MenuItem = Required<MenuProps>["items"][number];
 
 export const SiderAdmin: MenuItem[] = [
   {
-    key: "storeOwner",
-    label: <Link href="/manage/admin/account">Cửa hàng trưởng</Link>,
+    key: "storeowner",
+    label: <Link href="/manage/admin/storeowner">Cửa hàng trưởng</Link>,
+    icon: <ShieldUser />,
+  },
+  {
+    key: "store",
+    label: <Link href="/manage/admin/store">Cửa hàng</Link>,
     icon: <Store />,
   },
   {
     key: "employee",
-    label: <Link href="/manage/admin/account">Nhân viên</Link>,
+    label: <Link href="/manage/admin/employee">Nhân viên</Link>,
     icon: <UsersRound />,
   },
   {
@@ -31,9 +37,19 @@ export const SiderAdmin: MenuItem[] = [
     label: <Link href="/manage/admin/order">Đơn hàng</Link>,
     icon: <Package />,
   },
+  {
+    key: "packageDone",
+    label: <Link href="/manage/admin/order_done">Hoàn thành</Link>,
+    icon: <Package />,
+  },
 ];
 
 export const SiderStoreOwner: MenuItem[] = [
+  {
+    key: "shop",
+    label: <Link href="/manage/storeowner/">Cửa hàng</Link>,
+    icon: <Store />,
+  },
   {
     key: "employee",
     label: <Link href="/manage/storeowner/employee">Nhân viên</Link>,
@@ -54,7 +70,7 @@ export const SiderStoreOwner: MenuItem[] = [
 export const SiderEmployee: MenuItem[] = [
   {
     key: "package",
-    label: <Link href="/manage/admin/order">Đơn hàng</Link>,
+    label: <Link href="/manage/employee/order">Đơn hàng</Link>,
     icon: <Package />,
   },
 ];

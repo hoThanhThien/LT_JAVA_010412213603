@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { OrderListType } from "@/schemaValidations/order.schema";
 import orderApiRequests from "@/apiRequests/order";
+import { Tag } from "antd";
 
 export default function AdminOrder() {
   const [mounted, setMounted] = useState(false);
@@ -77,30 +78,42 @@ export default function AdminOrder() {
       title: "Mã đơn",
       dataIndex: "id",
       copyable: true,
+      hideInSearch: true,
     },
     {
       title: "Họ tên",
-      // dataIndex: "serviceName",
+      dataIndex: "username",
+      hideInSearch: true,
     },
     {
       title: "Số điện thoại",
-      // dataIndex: "serviceName",
+      dataIndex: "phone",
+      hideInSearch: true,
     },
     {
       title: "Dịch vụ",
       dataIndex: "serviceCategoryName",
+      hideInSearch: true,
     },
     {
       title: "Cửa hàng",
       dataIndex: "laundryShopName",
+      hideInSearch: true,
     },
     {
       title: "Trạng thái",
       dataIndex: "orderStatus",
+      align: "center",
+      render: (_, entity) => (
+        <Tag color={entity.orderStatus === "DONE" ? "green" : "yellow"}>
+          {entity.orderStatus}
+        </Tag>
+      ),
     },
     {
       title: "Tổng tiền",
       dataIndex: "totalAmount",
+      hideInSearch: true,
     },
     {
       hideInSearch: true,
@@ -133,12 +146,7 @@ export default function AdminOrder() {
         columns={columns}
         actionRef={actionRef}
         cardBordered
-        search={{
-          searchText: "Tìm kiếm",
-          resetText: "Làm mới",
-          collapseRender: (collapsed) =>
-            collapsed ? "Mở rộng +" : "Thu gọn -",
-        }}
+        search={false}
         request={async () => {
           return await fetchData(currentPage, pageSize);
         }}
@@ -158,7 +166,7 @@ export default function AdminOrder() {
             </div>
           ),
         }}
-        headerTitle="Quản lý khách hàng"
+        headerTitle="Quản lý đơn hàng"
         loading={loading}
       />
     </>

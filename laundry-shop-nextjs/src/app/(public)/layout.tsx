@@ -9,6 +9,7 @@ import DropdownAvatar from "./dropdown-avatar";
 import { useAuthStore } from "@/lib/zustand";
 import Setting from "./setting";
 import Order from "./order";
+import DropdownService from "./dropdown-services";
 
 export default function Layout({
   children,
@@ -45,9 +46,7 @@ export default function Layout({
                 Nhượng quyền
               </Link>
 
-              <Link href="/manage/admin/customer" className="hover:text-main">
-                Dịch vụ
-              </Link>
+              <DropdownService />
 
               <Link href="/tuyen-dung" className="hover:text-main">
                 Tuyển dụng

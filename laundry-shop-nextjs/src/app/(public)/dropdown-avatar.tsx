@@ -12,10 +12,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useLogoutMutation } from "@/queries/useAuth";
-import { handleErrorApi } from "@/lib/utils";
+import { getAccessTokenFromLocalStorage, handleErrorApi } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useAccountMe } from "@/queries/useAccount";
 import { useAuthStore } from "@/lib/zustand";
+import jwt from "jsonwebtoken";
 
 export default function DropdownAvatar() {
   const logoutMutation = useLogoutMutation();
@@ -24,6 +25,10 @@ export default function DropdownAvatar() {
   const account = data?.payload?.data?.account;
 
   const { setIsAuth, setOpenSetting } = useAuthStore();
+
+  const decodedAccessToken = jwt.decode(getAccessTokenFromLocalStorage()!) as {
+    role: string;
+  };
 
   const logout = async () => {
     if (logoutMutation.isPending) return;
@@ -68,7 +73,35 @@ export default function DropdownAvatar() {
             Cài đặt
           </div>
         </DropdownMenuItem>
-        <DropdownMenuItem>Hỗ trợ</DropdownMenuItem>
+        <DropdownMenuItem>
+          <Link
+            href="https://www.messenger.com/t/331186783932984/"
+            target="_blank"
+          >
+            Hỗ trợ
+          </Link>
+        </DropdownMenuItem>
+        {decodedAccessToken && decodedAccessToken.role === "Admin" && (
+          <DropdownMenuItem>
+            <Link href="/manage/admin" target="_blank">
+              Quản lý
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {decodedAccessToken && decodedAccessToken.role === "StoreOwner" && (
+          <DropdownMenuItem>
+            <Link href="/manage/storeowner" target="_blank">
+              Quản lý
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {decodedAccessToken && decodedAccessToken.role === "Employee" && (
+          <DropdownMenuItem>
+            <Link href="/manage/employee" target="_blank">
+              Quản lý
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={logout}>Đăng xuất</DropdownMenuItem>
       </DropdownMenuContent>

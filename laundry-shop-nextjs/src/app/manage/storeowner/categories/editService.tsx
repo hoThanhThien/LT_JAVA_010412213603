@@ -99,7 +99,7 @@ export const EditService = (props: {
   return (
     <>
       <Modal
-        title="Chỉnh sửa"
+        title="Chỉnh sửa dịch vụ"
         open={openModalUpdate}
         onCancel={() => {
           setOpenModalUpdate(false);
@@ -135,22 +135,24 @@ export const EditService = (props: {
             type="primary"
             danger
             onClick={async () => {
-              // try {
-              //   const deleteResult =
-              //     await employeeApiRequests.deleteByStoreOwner(
-              //       dataUpdate?.phone!
-              //     );
-              //   setOpenModalUpdate(false);
-              //   toast.success(deleteResult.payload.message, {
-              //     position: "bottom-left",
-              //     autoClose: 3000,
-              //     hideProgressBar: false,
-              //     closeOnClick: false,
-              //   });
-              // } catch (error) {
-              //   setOpenModalUpdate(false);
-              //   console.log(error);
-              // }
+              try {
+                setIsDelete(true);
+                const deleteResult = await serviceApiRequests.deleteService(
+                  dataUpdate?.id!
+                );
+                setOpenModalUpdate(false);
+                toast.success(deleteResult.payload.message, {
+                  position: "bottom-left",
+                  autoClose: 3000,
+                  hideProgressBar: false,
+                  closeOnClick: false,
+                });
+                refreshAndClose();
+                setIsDelete(false);
+              } catch (error) {
+                setOpenModalUpdate(false);
+                console.log(error);
+              }
             }}
           >
             Xoá dữ liệu

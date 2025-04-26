@@ -4,6 +4,7 @@ import {
   OrderResType,
   OrderType,
 } from "@/schemaValidations/order.schema";
+import { NormalType } from "@/schemaValidations/pagination.schema";
 
 const orderApiRequests = {
   sCustomerOrder: (body: OrderType, accessToken: string) =>
@@ -19,6 +20,26 @@ const orderApiRequests = {
 
   adminOrder: (page: number, size: number) =>
     http.get<OrderListResType>(`admin/orders?page=${page}&size=${size}`),
+
+  adminOrderDone: (page: number, size: number) =>
+    http.get<OrderListResType>(
+      `admin/orders/status/DONE?page=${page}&size=${size}`
+    ),
+
+  employeeOrder: (page: number, size: number) =>
+    http.get<OrderListResType>(`employee/orders?page=${page}&size=${size}`),
+
+  updateByEmployee: (body: number) =>
+    http.post<NormalType>("api/order/e/update", body, {
+      baseUrl: "",
+    }),
+
+  sUpdateByEmployee: (body: number, accessToken: string) =>
+    http.put<NormalType>(`employee/${body}/status?status=DONE`, null, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }),
 
   storeOwnerOrder: (page: number, size: number) =>
     http.get<OrderListResType>(

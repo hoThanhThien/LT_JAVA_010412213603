@@ -6,6 +6,9 @@ export const OrderStatus = z.enum(["IN_PROGRESS", "DONE"]);
 export const OrderListSchema = z.object({
   id: z.number().int().positive(),
   username: z.string(),
+  phone: z.string(),
+  email: z.string().email(),
+  address: z.string(),
   totalAmount: z.number().nonnegative(),
   orderStatus: OrderStatus,
   imgProduct: z.string().nullable(),

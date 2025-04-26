@@ -19,6 +19,7 @@ import { Detail } from "./detail";
 import { EditCategory } from "./editCategory";
 import { Button } from "antd/lib";
 import { CreateCategory } from "./createCategory";
+import { Image } from "antd";
 
 export default function StoreOwnerManageService() {
   const [mounted, setMounted] = useState(false);
@@ -104,15 +105,21 @@ export default function StoreOwnerManageService() {
       align: "center",
     },
     {
-      title: "Tên",
+      title: "Tên nhóm dịch vụ",
       dataIndex: "name",
       align: "center",
+    },
+    {
+      title: "Ảnh",
+      align: "center",
+      render: (_, entity) => <Image width={100} src={entity.image_desc} />,
     },
 
     {
       title: "Mô tả",
       dataIndex: "description",
       align: "center",
+      width: 500,
     },
     {
       hideInSearch: true,
@@ -133,7 +140,7 @@ export default function StoreOwnerManageService() {
                   }}
                   className="cursor-pointer"
                 >
-                  Xem chi tiết
+                  Thêm dịch vụ
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
@@ -158,12 +165,7 @@ export default function StoreOwnerManageService() {
         columns={columns}
         actionRef={actionRef}
         cardBordered
-        search={{
-          searchText: "Tìm kiếm",
-          resetText: "Làm mới",
-          collapseRender: (collapsed) =>
-            collapsed ? "Mở rộng +" : "Thu gọn -",
-        }}
+        search={false}
         request={async () => {
           return await fetchData(currentPage, pageSize);
         }}

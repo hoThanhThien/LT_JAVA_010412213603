@@ -39,19 +39,17 @@ export default function Services() {
         <div className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer">
           <div className="w-full max-w-[320px]">
             <Image
-              src="/service-1.png"
+              src="/service-2.png"
               alt="Giặt hấp, giặt khô"
               width="0"
               height="0"
               sizes="100vw"
               className="w-full h-[180px]"
             />
-            <div className="mt-5 text-center text-xl font-bold">
-              Giặt hấp, giặt khô
-            </div>
+            <div className="mt-5 text-center text-xl font-bold">Giặt sấy</div>
             <div className="mt-2 text-center">
-              Chăm sóc tủ đồ với quy trình giặt hấp, giặt khô đúng chuẩn. Máy
-              móc hiện đại và dung dịch chuyên dụng
+              Giao và nhận lại đồ sạch thơm chỉ trong 24H. Giặt sấy máy riêng.
+              Gói giặt theo tháng tiết kiệm
             </div>
             <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
               Xem chi tiết
@@ -62,7 +60,7 @@ export default function Services() {
         <div className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer">
           <div className="w-full max-w-[320px]">
             <Image
-              src="/service-1.png"
+              src="/service-3.png"
               alt="Giặt hấp, giặt khô"
               width="0"
               height="0"
@@ -70,11 +68,11 @@ export default function Services() {
               className="w-full h-[180px]"
             />
             <div className="mt-5 text-center text-xl font-bold">
-              Giặt hấp, giặt khô
+              Vệ sinh giày
             </div>
             <div className="mt-2 text-center">
-              Chăm sóc tủ đồ với quy trình giặt hấp, giặt khô đúng chuẩn. Máy
-              móc hiện đại và dung dịch chuyên dụng
+              Đầy đủ các dịch vụ vệ sinh, phục hồi chuyên sâu. Chăm sóc giày
+              toàn diện, chu đáo
             </div>
             <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
               Xem chi tiết
@@ -85,7 +83,7 @@ export default function Services() {
         <div className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer">
           <div className="w-full max-w-[320px]">
             <Image
-              src="/service-1.png"
+              src="/service-4.png"
               alt="Giặt hấp, giặt khô"
               width="0"
               height="0"
@@ -93,11 +91,12 @@ export default function Services() {
               className="w-full h-[180px]"
             />
             <div className="mt-5 text-center text-xl font-bold">
-              Giặt hấp, giặt khô
+              Vệ sinh spa túi xách
             </div>
             <div className="mt-2 text-center">
-              Chăm sóc tủ đồ với quy trình giặt hấp, giặt khô đúng chuẩn. Máy
-              móc hiện đại và dung dịch chuyên dụng
+              Đa dạng các dịch vụ cao cấp: vệ sinh spa túi, sơn nhuộm, sửa túi,
+              phục hồi,... Khôi phục vẻ đẹp hoàn hảo bởi các kỹ thuật viên
+              chuyên nghiệp
             </div>
             <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
               Xem chi tiết
@@ -108,7 +107,7 @@ export default function Services() {
         <div className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer">
           <div className="w-full max-w-[320px]">
             <Image
-              src="/service-1.png"
+              src="/service-5.jpg"
               alt="Giặt hấp, giặt khô"
               width="0"
               height="0"
@@ -116,11 +115,11 @@ export default function Services() {
               className="w-full h-[180px]"
             />
             <div className="mt-5 text-center text-xl font-bold">
-              Giặt hấp, giặt khô
+              Vệ sinh sofa, nệm, rèm, thảm
             </div>
             <div className="mt-2 text-center">
-              Chăm sóc tủ đồ với quy trình giặt hấp, giặt khô đúng chuẩn. Máy
-              móc hiện đại và dung dịch chuyên dụng
+              Bảo vệ sức khỏe cả gia đình với dịch vụ vệ sinh nhà cửa định kỳ.
+              Kỹ thuật viên chuyên nghiệp, giàu kinh nghiệm
             </div>
             <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
               Xem chi tiết
@@ -131,7 +130,7 @@ export default function Services() {
         <div className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer">
           <div className="w-full max-w-[320px]">
             <Image
-              src="/service-1.png"
+              src="/service-6.png"
               alt="Giặt hấp, giặt khô"
               width="0"
               height="0"
@@ -139,11 +138,11 @@ export default function Services() {
               className="w-full h-[180px]"
             />
             <div className="mt-5 text-center text-xl font-bold">
-              Giặt hấp, giặt khô
+              Vệ sinh máy lạnh
             </div>
             <div className="mt-2 text-center">
-              Chăm sóc tủ đồ với quy trình giặt hấp, giặt khô đúng chuẩn. Máy
-              móc hiện đại và dung dịch chuyên dụng
+              Cải thiện chất lượng không khí, nâng cao sức khỏe gia đình. Đầy đủ
+              dịch vụ vệ sinh, bơm ga các dòng máy
             </div>
             <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
               Xem chi tiết

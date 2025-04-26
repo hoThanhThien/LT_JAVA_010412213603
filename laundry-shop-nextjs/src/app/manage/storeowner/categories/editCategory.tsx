@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import employeeApiRequests from "@/apiRequests/employee";
 import { CategoryManageType } from "@/schemaValidations/category.schema";
 import serviceApiRequests from "@/apiRequests/service";
+import { getAccessTokenFromLocalStorage } from "@/lib/utils";
 
 export const EditCategory = (props: {
   openModalUpdate: boolean;
@@ -69,7 +70,7 @@ export const EditCategory = (props: {
         description: dataUpdate.description,
         id: dataUpdate.id,
       });
-      setPreviewAvatar(dataUpdate.imageDesc);
+      setPreviewAvatar(dataUpdate.image_desc);
     }
   }, [dataUpdate]);
 
@@ -77,7 +78,7 @@ export const EditCategory = (props: {
     values
   ) => {
     setIsSubmit(true);
-    values.imageDesc = previewAvatar;
+    values.image_desc = previewAvatar;
 
     try {
       const result = await serviceApiRequests.updateCategory(values);
@@ -137,23 +138,24 @@ export const EditCategory = (props: {
             type="primary"
             danger
             onClick={async () => {
-              // try {
-              //   const deleteResult =
-              //     await employeeApiRequests.deleteByStoreOwner(
-              //       dataUpdate?.phone!
-              //     );
-              //   setOpenModalUpdate(false);
-              //   refreshTable();
-              //   toast.success(deleteResult.payload.message, {
-              //     position: "bottom-left",
-              //     autoClose: 3000,
-              //     hideProgressBar: false,
-              //     closeOnClick: false,
-              //   });
-              // } catch (error) {
-              //   setOpenModalUpdate(false);
-              //   console.log(error);
-              // }
+              try {
+                setIsDelete(true);
+                const deleteResult = await serviceApiRequests.deleteCategory(
+                  dataUpdate?.id!
+                );
+                setOpenModalUpdate(true);
+                refreshTable();
+                toast.success(deleteResult.payload.message, {
+                  position: "bottom-left",
+                  autoClose: 3000,
+                  hideProgressBar: false,
+                  closeOnClick: false,
+                });
+                setIsDelete(false);
+              } catch (error) {
+                setOpenModalUpdate(false);
+                console.log(error);
+              }
             }}
           >
             Xoá dữ liệu
@@ -199,7 +201,7 @@ export const EditCategory = (props: {
           <Form.Item<CategoryManageType>
             labelCol={{ span: 24 }}
             label="Avatar"
-            name="imageDesc"
+            name="image_desc"
           >
             <div className="flex gap-2 items-start justify-start">
               <Avatar className="aspect-square w-[100px] h-[100px] rounded-md object-cover">

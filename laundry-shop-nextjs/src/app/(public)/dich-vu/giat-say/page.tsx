@@ -54,6 +54,24 @@ const listIntructions = [
   },
 ];
 
+const listPrice = [
+  {
+    id: 1,
+    title: "Ủi xếp",
+    description: "Ủi thẳng đồ và đóng bao khi giao. Tính theo món đồ",
+    price: "15,000đ",
+    image: "/dich-vu/giat-say/p1.png",
+  },
+  {
+    id: 2,
+    title: "Ủi treo",
+    description:
+      "Ủi treo các loại áo sơ mi, quần tây, đầm váy, áo khoác. Tính theo món đồ",
+    price: "Từ 30,000đ - 80,000đ",
+    image: "/dich-vu/giat-say/p2.png",
+  },
+];
+
 export default function GiatSay() {
   return (
     <div>
@@ -154,6 +172,38 @@ export default function GiatSay() {
                 );
               })}
             </Swiper>
+          </div>
+        </div>
+        <div className="py-12">
+          <div className="text-4xl text-center font-bold mb-12">
+            Bảng giá dịch vụ giặt sấy
+          </div>
+          <div className="flex flex-wrap gap-5 justify-center items-center">
+            {listPrice.map((item) => {
+              return (
+                <div
+                  key={item.id}
+                  className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer"
+                >
+                  <div className="w-full max-w-[320px]">
+                    <Image
+                      src={item.image}
+                      alt="image"
+                      width="200"
+                      height="200"
+                      className="w-[200px] h-[200px]"
+                    />
+                    <div className="mt-5 text-center text-xl font-bold">
+                      {item.title}
+                    </div>
+                    <div className="mt-2 text-center">☑️{item.description}</div>
+                    <div className="flex justify-center items-center">
+                      <ButtonMessage className="mt-5 mx-auto bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer" />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Button, Divider, Modal } from "antd";
+import { Button, Divider, Image, Modal } from "antd";
 import { SquarePen } from "lucide-react";
 import { ProTable } from "@ant-design/pro-components";
 import type { ProColumns, ActionType } from "@ant-design/pro-components";
@@ -61,8 +61,14 @@ export const Detail = (props: {
       align: "center",
     },
     {
+      title: "Ảnh",
+      align: "center",
+      render: (_, entity) => <Image width={100} src={entity.imageDesc} />,
+    },
+    {
       title: "Mô tả",
       dataIndex: "description",
+      width: 300,
     },
     {
       title: "Thao tác",

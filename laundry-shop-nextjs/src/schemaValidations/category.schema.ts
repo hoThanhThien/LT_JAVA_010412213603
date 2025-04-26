@@ -7,7 +7,7 @@ export const ServiceBody = z.object({
   imageDesc: z.string(),
   description: z.string(),
   estimatedTime: z.string(),
-  price: z.number(),
+  price: z.number().positive(),
   categoryId: z.number().nullable(),
 });
 
@@ -25,7 +25,7 @@ export type ServicesUpdateType = z.TypeOf<typeof ServicesUpdateBody>;
 export const CategoryBody = z.object({
   id: z.number().int().positive().optional(),
   name: z.string(),
-  imageDesc: z.string(),
+  image_desc: z.string(),
   description: z.string(),
   services: z.array(ServiceBody),
 });
@@ -52,3 +52,11 @@ export const ServicesListResBody = z
   .strict();
 
 export type ServicesListResType = z.TypeOf<typeof ServicesListResBody>;
+
+export const DeleteCategoryBody = z.number();
+
+export type DeleteCategoryType = z.TypeOf<typeof DeleteCategoryBody>;
+
+export const DeleteServiceBody = z.number();
+
+export type DeleteServiceType = z.TypeOf<typeof DeleteServiceBody>;

@@ -86,3 +86,27 @@ export const DeleteEmployeeResSchema = z
   .strict();
 
 export type DeleteEmployeeResType = z.TypeOf<typeof DeleteEmployeeResSchema>;
+
+const AdminEmployeeBody = z.object({
+  username: z.string(),
+  email: z.string().email().optional(),
+  phone: z.string(),
+  address: z.string().optional(),
+  role: z.enum(RoleValues),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+export type AdminEmployeeType = z.TypeOf<typeof AdminEmployeeBody>;
+
+export const AdminEmployeeResBody = z
+  .object({
+    data: z.object({
+      meta: MetaSchema,
+      result: z.array(z.object({})),
+    }),
+    message: z.string(),
+  })
+  .strict();
+
+export type AdminEmployeeResType = z.TypeOf<typeof AdminEmployeeResBody>;

@@ -8,3 +8,10 @@ export const MetaSchema = z.object({
 });
 
 export type MetaType = z.TypeOf<typeof MetaSchema>;
+
+export const NormalSchema = z.object({
+  data: z.any().nullable(),
+  message: z.string(),
+});
+
+export type NormalType = z.TypeOf<typeof NormalSchema>;

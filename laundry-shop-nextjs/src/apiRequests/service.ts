@@ -2,10 +2,13 @@ import http from "@/lib/http";
 import {
   CategoryManageType,
   CategoryUpdateType,
+  DeleteCategoryType,
+  DeleteServiceType,
   ServiceManageType,
   ServicesListResType,
   ServicesUpdateType,
 } from "@/schemaValidations/category.schema";
+import { NormalType } from "@/schemaValidations/pagination.schema";
 
 const serviceApiRequests = {
   storeOwner: (page: number, size: number) =>
@@ -43,7 +46,7 @@ const serviceApiRequests = {
     }),
 
   sUpdateCategory: (body: CategoryManageType, accessToken: string) =>
-    http.post<CategoryUpdateType>("storeowner/category/update", body, {
+    http.put<CategoryUpdateType>("storeowner/category/update", body, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -60,6 +63,12 @@ const serviceApiRequests = {
         Authorization: `Bearer ${accessToken}`,
       },
     }),
+
+  deleteCategory: (body: DeleteCategoryType) =>
+    http.delete<NormalType>(`storeowner/category/delete?id=${body}`),
+
+  deleteService: (body: DeleteServiceType) =>
+    http.delete<NormalType>(`storeowner/service/delete?id=${body}`),
 };
 
 export default serviceApiRequests;

@@ -24,12 +24,13 @@ import { Upload } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { OrderSchema, OrderType } from "@/schemaValidations/order.schema";
-import { CategoryType, ServiceType } from "@/schemaValidations/shop.schema";
+import { CategoryType, ServiceType } from "@/schemaValidations/store.schema";
 import { useShops } from "@/queries/useShop";
 import shopApiRequests from "@/apiRequests/shop";
 import { useOrderMutation } from "@/queries/useOrder";
 import { toast } from "react-toastify";
 import { handleErrorApi } from "@/lib/utils";
+import orderApiRequests from "@/apiRequests/order";
 
 export default function Order() {
   const { openOrder, setOpenOrder } = useAuthStore();
@@ -38,6 +39,9 @@ export default function Order() {
   const [shopId, setShopId] = useState<number>(0);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [previewAvatar, setPreviewAvatar] = useState("");
+
+  const [selectedPrice, setSelectedPrice] = useState<number>(0);
+  const [volume, setVolume] = useState<number>(0);
 
   const orderMutation = useOrderMutation();
 
@@ -89,11 +93,11 @@ export default function Order() {
   };
 
   const onSubmit = async (data: OrderType) => {
-    if (orderMutation.isPending) return;
     try {
-      const result = await orderMutation.mutateAsync(data);
+      const result = await orderApiRequests.customerOrder(data);
       setOpenOrder(false);
       reset();
+      setPreviewAvatar("");
       toast.success(result.payload.message, {
         position: "bottom-left",
         autoClose: 3000,
@@ -112,6 +116,7 @@ export default function Order() {
         onOpenChange={(open: boolean) => {
           if (!open) {
             reset(); // Reset form khi dialog đóng
+            setPreviewAvatar("");
           }
           setOpenOrder(open);
         }}
@@ -227,6 +232,15 @@ export default function Order() {
                         <Select
                           onValueChange={async (value: any) => {
                             field.onChange(parseInt(value)); // Fix: Call onChange with the value
+
+                            const selectedService = services.find(
+                              (service) => service.id === parseInt(value)
+                            );
+
+                            // Lưu giá dịch vụ vào state
+                            if (selectedService) {
+                              setSelectedPrice(selectedService.price);
+                            }
                           }}
                         >
                           <FormControl>
@@ -254,31 +268,48 @@ export default function Order() {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="orderVolume"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div>
-                        <label className="block text-sm/6 font-medium text-gray-900">
-                          Khối lượng (kg)
-                        </label>
-                        <div className="mt-2">
-                          <input
-                            type="number"
-                            className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(Number(e.target.value))
-                            }
-                            value={field.value}
-                          />
+                <div className="grid grid-cols-2 gap-10">
+                  <FormField
+                    control={form.control}
+                    name="orderVolume"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div>
+                          <label className="block text-sm/6 font-medium text-gray-900">
+                            Khối lượng (kg)
+                          </label>
+                          <div className="mt-2">
+                            <input
+                              type="number"
+                              className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
+                              {...field}
+                              onChange={(e) => {
+                                field.onChange(Number(e.target.value));
+                                setVolume(Number(e.target.value));
+                              }}
+                              value={field.value}
+                            />
+                          </div>
+                          <FormMessage />
                         </div>
-                        <FormMessage />
-                      </div>
-                    </FormItem>
-                  )}
-                />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div>
+                    <label className="block text-sm/6 font-medium text-gray-900">
+                      Tổng tiền (VND)
+                    </label>
+                    <div className="mt-2">
+                      <input
+                        type="number"
+                        disabled
+                        value={selectedPrice * volume}
+                        className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
+                      />
+                    </div>
+                  </div>
+                </div>
 
                 <FormField
                   control={form.control}
@@ -305,9 +336,9 @@ export default function Order() {
                 <FormField
                   control={form.control}
                   name="imgProduct"
-                  render={({ field }) => (
+                  render={() => (
                     <FormItem>
-                      <Label htmlFor="name">Avatar</Label>
+                      <Label htmlFor="name">Hình ảnh đơn hàng</Label>
                       <div className="flex gap-2 items-start justify-start">
                         <Avatar className="aspect-square w-[100px] h-[100px] rounded-md object-cover">
                           <AvatarImage src={previewAvatar} />

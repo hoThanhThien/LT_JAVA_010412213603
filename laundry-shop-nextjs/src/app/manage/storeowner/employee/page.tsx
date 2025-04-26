@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmployeeListType } from "@/schemaValidations/employee.schema";
 import employeeApiRequests from "@/apiRequests/employee";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EditEmployeeByStoreOwner } from "./edit";
 import { Button } from "antd";
 import { CreateEmployeeByStoreOwner } from "./create";
@@ -102,21 +101,21 @@ export default function StoreOwnerManageEmployee() {
       title: "Địa chỉ",
       dataIndex: "address",
     },
-    {
-      title: "Ảnh đại diện",
-      dataIndex: "avtUser",
-      align: "center",
-      render: (text, record) => {
-        return (
-          <Avatar className="mx-auto">
-            <AvatarImage src={record.avtUser} alt="avatar" />
-            <AvatarFallback>
-              {record.username.slice(0, 2).toUpperCase() || "NA"}
-            </AvatarFallback>
-          </Avatar>
-        );
-      },
-    },
+    // {
+    //   title: "Ảnh đại diện",
+    //   dataIndex: "avtUser",
+    //   align: "center",
+    //   render: (_, record) => {
+    //     return (
+    //       <Avatar className="mx-auto">
+    //         <AvatarImage src={record.avtUser} alt="avatar" />
+    //         <AvatarFallback>
+    //           {record.username.slice(0, 2).toUpperCase() || "NA"}
+    //         </AvatarFallback>
+    //       </Avatar>
+    //     );
+    //   },
+    // },
     // {
     //   title: "Dịch vụ",
     //   dataIndex: "serviceCategoryName",
@@ -128,7 +127,7 @@ export default function StoreOwnerManageEmployee() {
     {
       hideInSearch: true,
       align: "center",
-      render(dom, entity, index, action, schema) {
+      render(_, entity) {
         return (
           <>
             <DropdownMenu modal={false}>
@@ -159,12 +158,7 @@ export default function StoreOwnerManageEmployee() {
         columns={columns}
         actionRef={actionRef}
         cardBordered
-        search={{
-          searchText: "Tìm kiếm",
-          resetText: "Làm mới",
-          collapseRender: (collapsed) =>
-            collapsed ? "Mở rộng +" : "Thu gọn -",
-        }}
+        search={false}
         request={async () => {
           return await fetchData(currentPage, pageSize);
         }}

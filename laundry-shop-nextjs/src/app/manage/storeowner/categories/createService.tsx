@@ -55,32 +55,31 @@ export const CreateService = (props: {
 
   const onFinish: FormProps<ServiceManageType>["onFinish"] = async (values) => {
     setIsSubmit(true);
-    console.log(categoryId);
-
-    // try {
-    //   const result = await serviceApiRequests.createService({
-    //     ...values,
-    //     categoryId,
-    //   });
-    //   toast.success(result.payload.message, {
-    //     position: "bottom-left",
-    //     autoClose: 3000,
-    //     hideProgressBar: false,
-    //     closeOnClick: false,
-    //   });
-    //   setIsSubmit(false);
-    //   form.resetFields();
-    //   setOpenModalCreate(false);
-    //   refreshAndClose();
-    // } catch (error: any) {
-    //   setIsSubmit(false);
-    //   toast.error(error, {
-    //     position: "bottom-left",
-    //     autoClose: 3000,
-    //     hideProgressBar: false,
-    //     closeOnClick: false,
-    //   });
-    // }
+    try {
+      const result = await serviceApiRequests.createService({
+        ...values,
+        categoryId: categoryId,
+        imageDesc: previewAvatar,
+      });
+      toast.success(result.payload.message, {
+        position: "bottom-left",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: false,
+      });
+      setIsSubmit(false);
+      form.resetFields();
+      setOpenModalCreate(false);
+      refreshAndClose();
+    } catch (error: any) {
+      setIsSubmit(false);
+      toast.error(error, {
+        position: "bottom-left",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: false,
+      });
+    }
   };
 
   return (
@@ -91,6 +90,7 @@ export const CreateService = (props: {
         onCancel={() => {
           setOpenModalCreate(false);
           form.resetFields();
+          setIsSubmit(false);
         }}
         confirmLoading={isSubmit}
         destroyOnClose={true}
@@ -100,6 +100,7 @@ export const CreateService = (props: {
             onClick={() => {
               setOpenModalCreate(false);
               form.resetFields();
+              setIsSubmit(false);
             }}
           >
             Hủy

@@ -14,6 +14,9 @@ const employeeApiRequests = {
       `storeowner/employees?page=${page}&size=${size}`
     ),
 
+  admin: (page: number, size: number) =>
+    http.get<EmployeeListResType>(`/admin/employees?page=${page}&size=${size}`),
+
   sUpdateByStoreOwner: (body: UpdateEmployeeType, accessToken: string) =>
     http.put<UpdateEmployeeResType>("storeowner/employee/update", body, {
       headers: {
