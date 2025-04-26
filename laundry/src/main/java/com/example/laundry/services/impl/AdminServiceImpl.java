@@ -334,6 +334,7 @@ public class AdminServiceImpl implements AdminService {
 
         List<CustomerDTO> customerDTOs = customerPage.getContent().stream()
                 .map(customer -> new CustomerDTO(
+                        customer.getId(),
                         customer.getUsername(),
                         null,
                         customer.getEmail(),

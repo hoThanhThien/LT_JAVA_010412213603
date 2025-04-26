@@ -61,8 +61,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://127.0.0.1:3000"));
-        configuration.setAllowedOrigins(List.of("https://oauth.casso.vn"));
+        configuration.setAllowedOrigins(List.of(
+                "http://127.0.0.1:3000",
+                "https://oauth.casso.vn"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
