@@ -1,11 +1,14 @@
 package com.example.laundry.controllers;
 
 import com.example.laundry.dto.*;
+import com.example.laundry.models.shop.LaundryShop;
 import com.example.laundry.models.shop.Service;
 import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.StoreOwner;
+import com.example.laundry.repository.LaundryShopRepository;
 import com.example.laundry.repository.StoreOwnerRepository;
 import com.example.laundry.services.EmployeeService;
+import com.example.laundry.services.LaundryShopService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
 
@@ -28,8 +31,12 @@ public class StoreOwnerController {
     private StoreOwnerRepository storeOwnerRepository;
   @Autowired
   private EmployeeService employeeService;
+  @Autowired
+  private LaundryShopService laundryShopService;
+  @Autowired
+  private LaundryShopRepository laundryShopRepository;
 
-    // Lấy store owner hiện tại
+  // Lấy store owner hiện tại
     private StoreOwner getCurrentStoreOwner() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
@@ -311,5 +318,13 @@ public class StoreOwnerController {
         return ResponseEntity.badRequest()
                 .body(new PagedResponse<>("Lấy danh sách đơn hàng thất bại: " + e.getMessage(), null));
       }
+    }
+
+    @GetMapping("/shop")
+    @PreAuthorize("hasRole('STOREOWNER')")
+    public ResponseEntity<ApiResponse<LaundryShopDTO>> getMyLaundryShop() {
+        StoreOwner storeOwner = getCurrentStoreOwner();
+        ApiResponse<LaundryShopDTO> responseDTO = storeOwnerService.getLaundryShopByStoreOwner(storeOwner);
+        return ResponseEntity.ok(responseDTO);
     }
 }

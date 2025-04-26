@@ -252,8 +252,21 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
     }
 
     @Override
-    public LaundryShop getLaundryShopByStoreOwner(StoreOwner storeOwner) {
-        return laundryShopRepository.findByStoreOwner(storeOwner);
+    public ApiResponse<LaundryShopDTO> getLaundryShopByStoreOwner(StoreOwner storeOwner) {
+      LaundryShop laundryShop = laundryShopRepository.findByStoreOwner(storeOwner);
+      if(laundryShop == null) {
+        return new ApiResponse<>("Bạn chưa có cửa hàng!!!!");
+      }
+
+      LaundryShopDTO responseDTO = convertToLaundryDTO(laundryShop);
+      responseDTO.setId(laundryShop.getId());
+      responseDTO.setName(laundryShop.getName());
+      responseDTO.setAddress(laundryShop.getAddress());
+      responseDTO.setOpeningHours(laundryShop.getOpeningHours());
+      responseDTO.setDescription(laundryShop.getDescription());
+      responseDTO.setAverageRating(laundryShop.getAverageRating());
+
+      return new ApiResponse<>("Lây ra cửa hàng của bạn thành công!!!", responseDTO);
     }
 
     @Override

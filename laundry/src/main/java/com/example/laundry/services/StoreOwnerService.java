@@ -16,7 +16,7 @@ public interface StoreOwnerService extends UserService {
     ApiResponse<String> deleteEmployee(StoreOwner storeOwner, EmployeeDTO employeeDTO);
     ApiResponse<EmployeeDTO> updateEmployee(StoreOwner storeOwner, EmployeeDTO employeeDTO);
     ApiResponse<LaundryShopDTO> createShop(StoreOwner storeOwner, LaundryShopDTO laundryShopDTO);
-    LaundryShop getLaundryShopByStoreOwner(StoreOwner storeOwner);
+    ApiResponse<LaundryShopDTO> getLaundryShopByStoreOwner(StoreOwner storeOwner);
     ApiResponse<LaundryShopDTO> updateLaundryShop(StoreOwner storeOwner, LaundryShopDTO laundryShopDTO);
     ApiResponse<String> deleteLaundryShop(StoreOwner storeOwner, LaundryShopDTO laundryShopDTO);
     ApiResponse<ServiceCategoryDTO> createServiceCategory(StoreOwner storeOwner, ServiceCategoryDTO serviceCategoryDTO);
