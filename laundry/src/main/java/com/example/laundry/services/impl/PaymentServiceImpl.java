@@ -12,6 +12,7 @@ import com.example.laundry.repository.PaymentRepository;
 import com.example.laundry.services.PaymentService;
 import com.example.laundry.utils.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -33,6 +34,12 @@ public class PaymentServiceImpl implements PaymentService {
         this.cassoClient = cassoClient;
     }
 
+    @Value("${account-holder}")
+    private String accountHolder;
+
+    @Value("${account-number}")
+    private String accountNumber;
+
     @Override
     public PaymentResponse getPaymentInfo(PaymentRequest paymentRequest) {
         Order order = orderRepository.findById(paymentRequest.getOrderId().intValue())
@@ -44,9 +51,9 @@ public class PaymentServiceImpl implements PaymentService {
         return PaymentResponse.builder()
                 .orderId(Long.valueOf(order.getId().toString()))
                 .totalAmount(order.getTotalAmount())
-                .accountHolder("Pham Minh Chi")
+                .accountHolder(accountHolder)
                 .bankName("MB Bank")
-                .accountNumber("0943869063")
+                .accountNumber(accountNumber)
                 .transferContent(transferContent)
                 .paymentStatus(order.getPaymentStatus().toString())
                 .build();

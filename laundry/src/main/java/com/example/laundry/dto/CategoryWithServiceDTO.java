@@ -12,5 +12,7 @@ import lombok.NoArgsConstructor;
 public class CategoryWithServiceDTO {
   private Long id;
   private String name;
+  private String image_desc;
+  private String description;
   private List<ServiceDTO> services;
 }

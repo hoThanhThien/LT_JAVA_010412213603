@@ -50,10 +50,10 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
 
     @Autowired
     private ServiceRepository serviceRepository;
-  @Autowired
-  private OrderRepository orderRepository;
-  @Autowired
-  private OrderService orderService;
+    @Autowired
+    private OrderRepository orderRepository;
+    @Autowired
+    private OrderService orderService;
 
     // Lấy store owner hiện tại
     private StoreOwner getCurrentStoreOwner() {
@@ -530,13 +530,18 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
                             .map(service -> new ServiceDTO(
                                     service.getId(),
                                     service.getName(),
+                                    service.getDescription(),
                                     service.getEstimatedTime(),
-                                    service.getPrice()
+                                    service.getImageDesc(),
+                                    service.getPrice(),
+                                    service.getCategory().getId()
                             )).toList();
 
                     return new CategoryWithServiceDTO(
                             category.getId(),
                             category.getName(),
+                            category.getImageDesc(),
+                            category.getDescription(),
                             services
                     );
                 }).toList();
