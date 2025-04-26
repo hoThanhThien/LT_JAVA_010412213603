@@ -38,7 +38,7 @@ public class Service {
     private String estimatedTime;
 
     @Lob
-    @Column(name = "image_desc", columnDefinition = "MEDIUMBLOB")
+    @Column(name = "image_desc", columnDefinition = "LONGTEXT")
     private String imageDesc;
 
     @ManyToOne

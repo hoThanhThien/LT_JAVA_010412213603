@@ -34,7 +34,7 @@ public class Order {
     private OrderStatus orderStatus;
 
     @Lob
-    @Column(name = "img_product", columnDefinition = "MEDIUMBLOB")
+    @Column(name = "img_product", columnDefinition = "LONGTEXT")
     private  String imgProduct;
 
     @ManyToOne

@@ -55,7 +55,7 @@ public abstract class User implements Serializable {
     private Date updatedAt;
 
     @Lob
-    @Column(name = "avt_user", columnDefinition = "MEDIUMBLOB")
+    @Column(name = "avt_user", columnDefinition = "LONGTEXT")
     private String avtUser;
 
     // Constructor, getters, and setters

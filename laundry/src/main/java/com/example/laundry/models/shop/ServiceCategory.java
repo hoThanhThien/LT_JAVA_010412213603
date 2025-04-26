@@ -23,7 +23,7 @@ public class ServiceCategory {
   private String description;
 
   @Lob
-  @Column(name = "image_desc", columnDefinition = "MEDIUMBLOB")
+  @Column(name = "image_desc", columnDefinition = "LONGTEXT")
   private String imageDesc;
 
   @ManyToOne

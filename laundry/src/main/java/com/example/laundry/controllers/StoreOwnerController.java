@@ -131,7 +131,7 @@ public class StoreOwnerController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/shop/update")
+    @PutMapping("/shop/update")
     @PreAuthorize("hasRole('STOREOWNER')")
     public ResponseEntity<ApiResponse<LaundryShopDTO>> updateShop(@RequestBody LaundryShopDTO laundryShopDTO) {
         //Kiểm tra thông tin storeowner
@@ -150,7 +150,7 @@ public class StoreOwnerController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/shop/delete")
+    @DeleteMapping("/shop/delete")
     @PreAuthorize("hasRole('STOREOWNER')")
     public ResponseEntity<ApiResponse<String>> deleteShop(
             @RequestBody LaundryShopDTO laundryShopDTO,
@@ -188,7 +188,7 @@ public class StoreOwnerController {
         return  ResponseEntity.ok(response);
     }
 
-    @PostMapping("/category/update")
+    @PutMapping("/category/update")
     @PreAuthorize("hasRole('STOREOWNER')")
     public ResponseEntity<ApiResponse<ServiceCategoryDTO>> updateServiceCategory(@RequestBody ServiceCategoryDTO serviceCategoryDTO) {
         //Kiểm tra thông tin storeowner
@@ -207,7 +207,7 @@ public class StoreOwnerController {
         return  ResponseEntity.ok(response);
     }
 
-    @PostMapping("/category/delete")
+    @DeleteMapping("/category/delete")
     @PreAuthorize("hasRole('STOREOWNER')")
     public ResponseEntity<ApiResponse<Integer>> deleteServiceCategory(
             @RequestBody ServiceCategoryDTO serviceCategoryDTO,
@@ -245,7 +245,7 @@ public class StoreOwnerController {
         return  ResponseEntity.ok(response);
     }
 
-    @PostMapping("/service/update")
+    @PutMapping("/service/update")
     @PreAuthorize("hasRole('STOREOWNER')")
     public ResponseEntity<ApiResponse<ServiceDTO>> updateService(@RequestBody ServiceDTO serviceDTO) {
         //Kiểm tra thông tin storeowner
@@ -264,7 +264,7 @@ public class StoreOwnerController {
         return  ResponseEntity.ok(response);
     }
 
-    @PostMapping("/service/delete")
+    @DeleteMapping("/service/delete")
     @PreAuthorize("hasRole('STOREOWNER')")
     public ResponseEntity<ApiResponse<Integer>> deleteService(
             @RequestBody ServiceDTO serviceDTO,
