@@ -302,15 +302,15 @@ public class AdminServiceImpl implements AdminService {
     return storeOwner;
   }
 
-    @Override
-    public PagedResponse<OrderResponse> getOrdersByCustomer(UUID customerId, int page, int size) {
+  @Override
+  public PagedResponse<OrderResponse> getOrdersByCustomer(UUID customerId, int page, int size) {
     Customer customer = customerRepository.findById(customerId)
             .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng với ID: " + customerId));
 
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-    Page<Order> customerOrders = orderRepository.findByCustomerId(customer.getId(), pageable);
+    Page<Order> customerOrders = orderRepository.findByCustomer_Id(customer.getId(), pageable);
 
-    if (customerOrders.isEmpty()) {
+    if (customerOrders.getContent().isEmpty()) {
       return new PagedResponse<>("Khách hàng chưa có đơn hàng nào", null);
     }
 

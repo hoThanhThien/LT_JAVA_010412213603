@@ -24,7 +24,7 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "username") //  lưu thêm username
+    @Column(name = "username")
     private String username;
     @Column
     private Double totalAmount;
@@ -38,8 +38,11 @@ public class Order {
     private  String imgProduct;
 
     @ManyToOne
+    @JoinColumn(name = "customer_user_id")
     private Customer customer;
+
     private String address;
+
     @ManyToOne
     private LaundryShop laundryShop;
 

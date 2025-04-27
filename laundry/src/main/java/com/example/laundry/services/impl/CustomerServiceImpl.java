@@ -229,7 +229,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public PagedResponse<OrderResponse> historyOrder(Customer customer, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Order> orderPage = orderRepository.findByCustomerId(customer.getId(), pageable);
+        Page<Order> orderPage = orderRepository.findByCustomer_Id(customer.getId(), pageable);
 
         List<OrderResponse> orderResponses = orderPage.getContent().stream()
                 .map(order -> {

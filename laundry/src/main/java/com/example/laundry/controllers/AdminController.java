@@ -1,6 +1,7 @@
 package com.example.laundry.controllers;
 
 import com.example.laundry.dto.*;
+import com.example.laundry.models.user.Customer;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.StoreOwnerRepository;
 import com.example.laundry.services.AdminService;

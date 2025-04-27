@@ -20,8 +20,8 @@ import java.util.UUID;
 @Repository
 public interface OrderRepository extends JpaRepository<Order,Integer> {
     Page<Order> findByOrderStatus(OrderStatus status, Pageable pageable);
-    @Query("SELECT o FROM Order o ORDER BY o.createdAt DESC")
-    Page<Order> findByCustomerId(UUID id, Pageable pageable);
+    @Query("SELECT o FROM Order o WHERE o.customer.id = :customerId ORDER BY o.createdAt DESC")
+    Page<Order> findByCustomer_Id(UUID customerId, Pageable pageable);
     Page<Order> findOrdersByLaundryShop(LaundryShop laundryShop, Pageable pageable);
     Page<Order> findOrderByOrderStatus(OrderStatus orderStatus, Pageable pageable);
     List<Order> findByPaymentStatus(PaymentStatus paymentStatus);
