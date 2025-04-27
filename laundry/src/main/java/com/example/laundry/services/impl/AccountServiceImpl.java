@@ -36,9 +36,10 @@ public class AccountServiceImpl implements AccountService {
       GetInfoResponse.AccountInfo accountInfo = new GetInfoResponse.AccountInfo(
               user.getId(),
               user.getUsername(),
+              user.getPhone(),
               user.getEmail(),
-              user.getRoles().name(),
-              user.getPhone()
+              user.getAddress(),
+              user.getRoles().name()
       );
       GetInfoResponse.DataInfo dataInfo = new GetInfoResponse.DataInfo(accountInfo);
       return new GetInfoResponse(dataInfo, "Lấy thông tin thành công!!!");

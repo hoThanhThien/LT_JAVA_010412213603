@@ -28,16 +28,18 @@ public class GetInfoResponse {
   public static class AccountInfo {
     private final UUID id;
     private final String username;
-    private final String email;
-    private final String role;
     private final String phone;
+    private final String email;
+    private final String address;
+    private final String role;
 
-    public AccountInfo(UUID id, String username, String email, String role, String phone) {
+    public AccountInfo(UUID id, String username, String phone, String email, String address, String role) {
       this.id = id;
       this.username = username;
-      this.email = email;
-      this.role = role;
       this.phone = phone;
+      this.email = email;
+      this.address = address;
+      this.role = role;
     }
   }
 }

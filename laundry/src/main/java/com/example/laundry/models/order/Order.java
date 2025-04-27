@@ -60,7 +60,7 @@ public class Order {
 
     @Column(name = "payment_status")
     @Enumerated(EnumType.STRING)
-    private PaymentStatus paymentStatus;
+    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
 
     public Order(OrderStatus orderStatus, String imgProduct, LaundryShop laundryShop, Customer customer, ServiceCategory serviceCategory, Service service, Double orderVolume, String instructions) {
         this.orderStatus = orderStatus;

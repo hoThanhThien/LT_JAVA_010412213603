@@ -1,16 +1,15 @@
 package com.example.laundry.services.impl;
 
 import com.example.laundry.client.CassoClient;
-import com.example.laundry.dto.PaymentConfirmRequest;
 import com.example.laundry.dto.PaymentRequest;
 import com.example.laundry.dto.PaymentResponse;
 import com.example.laundry.models.order.Order;
-import com.example.laundry.models.order.Payment;
 import com.example.laundry.models.order.PaymentStatus;
 import com.example.laundry.repository.OrderRepository;
 import com.example.laundry.repository.PaymentRepository;
 import com.example.laundry.services.PaymentService;
 import com.example.laundry.utils.ApiResponse;
+import com.example.laundry.utils.VietQRCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,11 +27,14 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final OrderRepository orderRepository;
     private final CassoClient cassoClient;
+    @Autowired
+    private VietQRCode vietQRCode;
 
-    public PaymentServiceImpl(OrderRepository orderRepository, CassoClient cassoClient) {
-        this.orderRepository = orderRepository;
-        this.cassoClient = cassoClient;
-    }
+    public PaymentServiceImpl(OrderRepository orderRepository, CassoClient cassoClient, VietQRCode vietQRCode) {
+            this.orderRepository = orderRepository;
+            this.cassoClient = cassoClient;
+            this.vietQRCode = vietQRCode;
+      }
 
     @Value("${account-holder}")
     private String accountHolder;
@@ -45,8 +47,12 @@ public class PaymentServiceImpl implements PaymentService {
         Order order = orderRepository.findById(paymentRequest.getOrderId().intValue())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng!!!"));
 
-        //Tạo nội dung chuyển khoản
+
+        //Tạo mã qr
         String transferContent = "LAUNDRY" + order.getId();
+        String bankCode = "MB";
+        String totalAmount = order.getTotalAmount().toString();
+        String qrCode = vietQRCode.generateQRCode(bankCode, accountNumber, totalAmount, transferContent);
 
         return PaymentResponse.builder()
                 .orderId(Long.valueOf(order.getId().toString()))
@@ -56,52 +62,12 @@ public class PaymentServiceImpl implements PaymentService {
                 .accountNumber(accountNumber)
                 .transferContent(transferContent)
                 .paymentStatus(order.getPaymentStatus().toString())
+                .qrCode(qrCode)
                 .build();
     }
 
     @Override
-    public ApiResponse<Object> confirmPayment(PaymentConfirmRequest request) {
-        //Tìm đơn hàng theo id
-        Optional<Order> orderOptional = orderRepository.findById(request.getOrderId().intValue());
-
-        if (orderOptional.isEmpty()) {
-            return new ApiResponse<>("Không tìm thấy đơn hàng với id: " + request.getOrderId());
-        }
-
-        Order order = orderOptional.get();
-
-        //Kiểm tra nếu đơn hàng được thanh toán rồi
-        if(PaymentStatus.PAID.equals(order.getPaymentStatus())) {
-            return new ApiResponse<>("Đơn hàng đã được thanh toán",
-                    createPaymentStatusResponse(order));
-        }
-
-        order.setPaymentStatus(PaymentStatus.PAID);
-        orderRepository.save(order);
-
-        return new ApiResponse<>("Xác nhận thanh toán thành công", createPaymentStatusResponse(order));
-    }
-
-    @Override
     public ApiResponse<Object> checkPaymentStatus(Long orderId) {
-        Optional<Order> orderOptional = orderRepository.findById(orderId.intValue());
-
-        if(orderOptional.isEmpty()) {
-            return new ApiResponse<>("Không tìm thấy đơn hàng với id: "  + orderId);
-        }
-
-        Order order = orderOptional.get();
-
-        if (PaymentStatus.PENDING.equals(order.getPaymentStatus())) {
-            verifyPaymentFromBank(orderId);
-            order = orderRepository.findById(orderId.intValue()).get();
-        }
-
-        return new ApiResponse<>("Lấy trạng thái thanh toán thành công", createPaymentStatusResponse(order));
-    }
-
-    @Override
-    public ApiResponse<Object> verifyPaymentFromBank(Long orderId) {
         Optional<Order> orderOptional = orderRepository.findById(orderId.intValue());
 
         if (orderOptional.isEmpty()) {
@@ -110,23 +76,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         Order order = orderOptional.get();
 
-        if (PaymentStatus.PAID.equals(order.getPaymentStatus())) {
-            return new ApiResponse<>("Đơn hàng đã được thanh toán", createPaymentStatusResponse(order));
-        }
-
-        String transferContent = "LAUNDRY" + order.getId();
-        Double requiredAmount = order.getTotalAmount();
-
-        boolean paymentFound = findMatchingTransaction(transferContent, requiredAmount);
-
-        if (paymentFound) {
-            order.setPaymentStatus(PaymentStatus.PAID);
-            orderRepository.save(order);
-            System.out.printf("Đã tìm thấy giao dịch cho đơn hàng: {}", orderId);
-            return new ApiResponse<>("Thanh toán thành công", createPaymentStatusResponse(order));
-        }
-
-        return new ApiResponse<>("Chưa tìm thấy giao dịch phù hợp", createPaymentStatusResponse(order));
+        return new ApiResponse<>("Lấy trạng thái thanh toán thành công", createPaymentStatusResponse(order));
     }
 
     @Override
@@ -167,26 +117,6 @@ public class PaymentServiceImpl implements PaymentService {
                 System.out.printf("No matching transaction found for order: {}", order.getId());
             }
         }
-    }
-
-    private boolean findMatchingTransaction(String transferContent, Double requiredAmount) {
-        CassoClient.CassoTransactionResponse response = cassoClient.getTransactions(1, 20);
-
-        if (response == null || response.getData() == null || response.getData().getRecords() == null) {
-            System.out.println("Failed to get transactions from Casso API");
-            return false;
-        }
-
-        List<CassoClient.CassoTransaction> transactions = response.getData().getRecords();
-
-        // Look for a transaction that matches our criteria
-        for (CassoClient.CassoTransaction transaction : transactions) {
-            if (isMatchingTransaction(transaction, transferContent, requiredAmount)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private boolean isMatchingTransaction(CassoClient.CassoTransaction transaction, String transferContent, Double requiredAmount) {

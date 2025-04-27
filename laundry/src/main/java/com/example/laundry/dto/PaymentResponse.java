@@ -15,4 +15,5 @@ public class PaymentResponse {
   private String accountNumber;
   private String transferContent;
   private String paymentStatus;
+  private String qrCode;
 }

@@ -1,6 +1,5 @@
 package com.example.laundry.controllers;
 
-import com.example.laundry.dto.PaymentConfirmRequest;
 import com.example.laundry.dto.PaymentRequest;
 import com.example.laundry.dto.PaymentResponse;
 import com.example.laundry.services.PaymentService;
@@ -21,18 +20,13 @@ public class PaymentController {
         return ResponseEntity.ok(paymentService.getPaymentInfo(paymentRequest));
     }
 
-    @PostMapping("/confirm")
-    public ResponseEntity<ApiResponse<Object>> confirmPayment(@RequestBody PaymentConfirmRequest request) {
-        return ResponseEntity.ok(paymentService.confirmPayment(request));
-    }
-
     @GetMapping("/status/{orderId}")
     public ResponseEntity<ApiResponse<Object>> checkPaymentStatus(@PathVariable Long orderId) {
         return ResponseEntity.ok(paymentService.checkPaymentStatus(orderId));
     }
 
-    @GetMapping("/verify/{orderId}")
-    public ResponseEntity<ApiResponse<Object>> verifyPayment(@PathVariable Long orderId) {
-        return ResponseEntity.ok(paymentService.verifyPaymentFromBank(orderId));
-    }
+//    @GetMapping("/verify/{orderId}")
+//    public ResponseEntity<ApiResponse<Object>> verifyPayment(@PathVariable Long orderId) {
+//        return ResponseEntity.ok(paymentService.verifyPaymentFromBank(orderId));
+//    }
 }
