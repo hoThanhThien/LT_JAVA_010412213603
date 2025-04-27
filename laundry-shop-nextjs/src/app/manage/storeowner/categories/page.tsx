@@ -112,7 +112,9 @@ export default function StoreOwnerManageService() {
     {
       title: "Ảnh",
       align: "center",
-      render: (_, entity) => <Image width={100} src={entity.imageDesc} />,
+      render: (_, entity) => (
+        <Image width={100} src={entity.imageDesc} alt="image" />
+      ),
     },
 
     {

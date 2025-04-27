@@ -40,7 +40,7 @@ export const EditStoreOwnerByAdmin = (props: {
         address: dataUpdate.address,
       });
     }
-  }, [dataUpdate]);
+  }, [dataUpdate, form]);
 
   const onFinish: FormProps<StoreOwnerType>["onFinish"] = async (values) => {
     setIsSubmit(true);

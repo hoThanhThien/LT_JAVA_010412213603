@@ -43,7 +43,7 @@ function LogoutHandler() {
     } else {
       router.push("/");
     }
-  }, [mutateAsync, router]);
+  }, [mutateAsync, router, accessTokenFromUrl, refreshTokenFromUrl, setIsAuth]);
   return <Loading />;
 }
 

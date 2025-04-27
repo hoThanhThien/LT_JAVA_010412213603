@@ -63,7 +63,9 @@ export const Detail = (props: {
     {
       title: "Ảnh",
       align: "center",
-      render: (_, entity) => <Image width={100} src={entity.imageDesc} />,
+      render: (_, entity) => (
+        <Image width={100} src={entity.imageDesc} alt="Image" />
+      ),
     },
     {
       title: "Mô tả",

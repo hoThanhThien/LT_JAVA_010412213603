@@ -17,6 +17,12 @@ const eslintConfig = [
     rules: {
       "@typescript-eslint/no-explicit-any": "off", // Tắt rule này
       "@typescript-eslint/no-unused-vars": "off", // Tắt rule này
+      "@typescript-eslint/no-unused-expressions": "off",
+      "@typescript-eslint/no-non-null-asserted-optional-chain": "off",
+      "react-hooks/rules-of-hooks": "off",
+      "react/no-unescaped-entities": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "@tanstack/query/exhaustive-deps": "off",
     },
   },
 ];

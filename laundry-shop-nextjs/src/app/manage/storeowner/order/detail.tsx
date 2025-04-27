@@ -75,7 +75,7 @@ export const Detail = (props: {
           </Descriptions.Item>
           <Descriptions.Item label="Hình ảnh">
             {formattedImage !== "" ? (
-              <Image width={200} src={formattedImage} />
+              <Image width={200} src={formattedImage} alt="image" />
             ) : (
               <span>Không có hình ảnh</span>
             )}

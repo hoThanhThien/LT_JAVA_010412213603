@@ -39,7 +39,7 @@ export const EditEmployeeByStoreOwner = (props: {
         address: dataUpdate.address,
       });
     }
-  }, [dataUpdate]);
+  }, [dataUpdate, form]);
 
   const onFinish: FormProps<EmployeeListType>["onFinish"] = async (values) => {
     setIsSubmit(true);

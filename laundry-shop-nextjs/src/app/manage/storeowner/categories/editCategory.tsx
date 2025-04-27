@@ -72,7 +72,7 @@ export const EditCategory = (props: {
       });
       setPreviewAvatar(dataUpdate.imageDesc);
     }
-  }, [dataUpdate]);
+  }, [dataUpdate, form]);
 
   const onFinish: FormProps<CategoryManageType>["onFinish"] = async (
     values

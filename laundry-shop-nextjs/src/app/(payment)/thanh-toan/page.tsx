@@ -6,9 +6,9 @@ import { Button, Result, Spin } from "antd";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
-export default function Page() {
+function ThanhToan() {
   const [paymentData, setPaymentData] = useState<PaymentType | null>(null);
   const [loading, setLoading] = useState(true);
   const params = useSearchParams();
@@ -154,5 +154,13 @@ export default function Page() {
         />
       )}
     </>
+  );
+}
+
+export default function page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ThanhToan />
+    </Suspense>
   );
 }

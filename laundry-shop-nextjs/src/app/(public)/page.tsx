@@ -7,14 +7,13 @@ import Communication from "@/components/communication";
 import Services from "@/components/services";
 import DownloadApp from "@/components/dowload-app";
 import { useAuthStore } from "@/lib/zustand";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import ButtonOrder from "@/components/ui/buttonOrder";
 
-export default function Home() {
+function Home() {
   const { setOpenAuth } = useAuthStore();
   const searchParams = useSearchParams();
-  const { setOpenOrder } = useAuthStore();
   const reqLogin = searchParams.get("login");
   useEffect(() => {
     if (reqLogin) {
@@ -192,5 +191,13 @@ export default function Home() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Home />
+    </Suspense>
   );
 }

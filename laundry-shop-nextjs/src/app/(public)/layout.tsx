@@ -21,7 +21,7 @@ export default function Layout({
 
   useEffect(() => {
     setIsAuth(Boolean(getAccessTokenFromLocalStorage()));
-  }, []);
+  }, [setIsAuth]);
 
   return (
     <div className="flex min-h-screen w-full flex-col relative">

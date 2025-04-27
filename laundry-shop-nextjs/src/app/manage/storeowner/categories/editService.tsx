@@ -70,7 +70,7 @@ export const EditService = (props: {
       });
       setPreviewAvatar(dataUpdate.imageDesc);
     }
-  }, [dataUpdate]);
+  }, [dataUpdate, form]);
 
   const onFinish: FormProps<ServiceManageType>["onFinish"] = async (values) => {
     setIsSubmit(true);
