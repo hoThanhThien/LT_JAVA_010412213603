@@ -1,6 +1,7 @@
 package com.example.laundry.dto;
 
 import com.example.laundry.models.order.OrderStatus;
+import com.example.laundry.models.order.PaymentStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,6 +30,7 @@ public class OrderResponse {
     private Date createdAt;
     private String instructions;
     private OrderStatus status;
+    private PaymentStatus paymentStatus;
 
     public OrderResponse(Long id, String username, OrderStatus orderStatus, Double totalAmount) {
         this.id = id;

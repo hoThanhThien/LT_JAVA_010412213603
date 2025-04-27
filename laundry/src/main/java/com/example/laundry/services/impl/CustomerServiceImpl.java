@@ -243,6 +243,10 @@ public class CustomerServiceImpl implements CustomerService {
                     orderResponse.setServicePrice(order.getService().getPrice());
                     orderResponse.setOrderVolume(order.getOrderVolume());
                     orderResponse.setCreatedAt(order.getCreatedAt());
+                    orderResponse.setInstructions(order.getInstructions());
+                    orderResponse.setImgProduct(order.getImgProduct());
+                    orderResponse.setStatus(order.getOrderStatus());
+                    orderResponse.setPaymentStatus(order.getPaymentStatus());
                     return orderResponse;
 
                 })
