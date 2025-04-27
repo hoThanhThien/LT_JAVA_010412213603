@@ -12,9 +12,10 @@ import { Upload } from "lucide-react";
 
 import { UpdateMeBody, UpdateMeType } from "@/schemaValidations/account.schema";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useUpdateMeMutation } from "@/queries/useAccount";
+import { useAccountMe, useUpdateMeMutation } from "@/queries/useAccount";
 import { toast } from "react-toastify";
 import { handleErrorApi } from "@/lib/utils";
+import CustomerListOrder from "./customerOrder";
 
 export default function Setting() {
   const { openSetting, setOpenSetting } = useAuthStore();
@@ -22,13 +23,15 @@ export default function Setting() {
   const [previewAvatar, setPreviewAvatar] = useState("");
   const updateMeMutation = useUpdateMeMutation();
 
+  const { data } = useAccountMe();
+  const account = data?.payload?.data?.account;
+
   const form = useForm<UpdateMeType>({
     resolver: zodResolver(UpdateMeBody),
     defaultValues: {
-      username: "",
+      username: account?.username,
       address: "",
-      email: "",
-      avtUser: "",
+      email: account?.email,
     },
   });
 
@@ -58,40 +61,42 @@ export default function Setting() {
       }
     }
   };
-  const name = form.watch("username");
 
   // const previewAvatar = file ? URL.createObjectURL(file) : avatar;
 
   const reset = () => {
     form.reset();
+    setPreviewAvatar("");
   };
 
   const onSubmit = async (values: UpdateMeType) => {
-    console.log(values);
-
-    // if (updateMeMutation.isPending) return;
-    // try {
-    //   let body = values;
-    //   const result = await updateMeMutation.mutateAsync(body);
-    //   toast.success(result.payload.message, {
-    //     position: "bottom-left",
-    //     autoClose: 3000,
-    //     hideProgressBar: false,
-    //     closeOnClick: false,
-    //   });
-    // } catch (error) {
-    //   handleErrorApi({
-    //     error,
-    //     setError: form.setError,
-    //   });
-    // }
+    if (updateMeMutation.isPending) return;
+    try {
+      const result = await updateMeMutation.mutateAsync(values);
+      toast.success(result.payload.message, {
+        position: "bottom-left",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: false,
+      });
+    } catch (error) {
+      handleErrorApi({
+        error,
+        setError: form.setError,
+      });
+    }
   };
 
   return (
     <>
       <Dialog
         open={openSetting}
-        onOpenChange={(open: boolean) => setOpenSetting(open)}
+        onOpenChange={(open: boolean) => {
+          setOpenSetting(open);
+          if (!open) {
+            reset();
+          }
+        }}
       >
         <DialogContent
           className="border-none w-full max-w-lg sm:max-w-xl md:max-w-2xl"
@@ -196,7 +201,7 @@ export default function Setting() {
                             <Avatar className="aspect-square w-[100px] h-[100px] rounded-md object-cover">
                               <AvatarImage src={previewAvatar} />
                               <AvatarFallback className="rounded-none">
-                                {name}
+                                Avatar
                               </AvatarFallback>
                             </Avatar>
                             <input
@@ -230,7 +235,9 @@ export default function Setting() {
                   </form>
                 </Form>
               </TabsContent>
-              <TabsContent value="order">bb</TabsContent>
+              <TabsContent value="order">
+                <CustomerListOrder />
+              </TabsContent>
             </Tabs>
           </div>
         </DialogContent>

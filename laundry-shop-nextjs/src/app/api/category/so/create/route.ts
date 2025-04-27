@@ -9,8 +9,6 @@ export async function POST(request: Request) {
   const body = (await request.json()) as CategoryManageType;
 
   try {
-    console.log(body);
-
     const { payload } = await serviceApiRequests.sCreateCategory(
       body,
       accessToken!

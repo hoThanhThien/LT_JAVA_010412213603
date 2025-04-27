@@ -7,6 +7,9 @@ import {
 import { NormalType } from "@/schemaValidations/pagination.schema";
 
 const orderApiRequests = {
+  customerListOrder: () =>
+    http.get<OrderListResType>(`customer/orders/history`),
+
   sCustomerOrder: (body: OrderType, accessToken: string) =>
     http.post<OrderResType>("customer/orders/create", body, {
       headers: {

@@ -74,36 +74,29 @@ export default function DropdownAvatar() {
           </div>
         </DropdownMenuItem>
         <DropdownMenuItem>
-          <Link
-            href="https://www.messenger.com/t/331186783932984/"
-            target="_blank"
-          >
+          <Link href="https://www.messenger.com/t/331186783932984/">
             Hỗ trợ
           </Link>
         </DropdownMenuItem>
         {decodedAccessToken && decodedAccessToken.role === "Admin" && (
           <DropdownMenuItem>
-            <Link href="/manage/admin" target="_blank">
-              Quản lý
-            </Link>
+            <Link href="/manage/admin">Quản lý</Link>
           </DropdownMenuItem>
         )}
         {decodedAccessToken && decodedAccessToken.role === "StoreOwner" && (
           <DropdownMenuItem>
-            <Link href="/manage/storeowner" target="_blank">
-              Quản lý
-            </Link>
+            <Link href="/manage/storeowner">Quản lý</Link>
           </DropdownMenuItem>
         )}
         {decodedAccessToken && decodedAccessToken.role === "Employee" && (
           <DropdownMenuItem>
-            <Link href="/manage/employee" target="_blank">
-              Quản lý
-            </Link>
+            <Link href="/manage/employee">Quản lý</Link>
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={logout}>Đăng xuất</DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer" onClick={logout}>
+          Đăng xuất
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -4,7 +4,7 @@ import shopApiRequests from "@/apiRequests/shop";
 import { ShopType } from "@/schemaValidations/store.schema";
 import React, { useEffect, useState } from "react";
 
-import { Descriptions } from "antd";
+import { Button, Descriptions } from "antd";
 import type { DescriptionsProps } from "antd";
 
 export default function page() {
@@ -47,6 +47,9 @@ export default function page() {
   return (
     <div className="bg-white p-5 rounded-3xl">
       <Descriptions title="Cửa hàng" items={items} />
+      <Button type="primary" className="mt-5">
+        Cập nhập thông tin
+      </Button>
     </div>
   );
 }

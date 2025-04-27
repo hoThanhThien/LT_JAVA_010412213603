@@ -1,22 +1,30 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Button, Divider, Form, Input, Modal } from "antd";
+import { useEffect, useRef, useState } from "react";
+import { Button, Divider, Form, Input, Modal, Space } from "antd";
 import type { FormProps } from "antd";
-import { toast } from "react-toastify";
-import { CategoryManageType } from "@/schemaValidations/category.schema";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Upload } from "lucide-react";
+import { toast } from "react-toastify";
 import serviceApiRequests from "@/apiRequests/service";
+import { ShopType } from "@/schemaValidations/store.schema";
 
-export const CreateCategory = (props: {
-  openModalCreate: boolean;
-  setOpenModalCreate: (v: boolean) => void;
+export const EditStore = (props: {
+  openModalUpdate: boolean;
+  setOpenModalUpdate: (v: boolean) => void;
   refreshTable: () => void;
+  setDataUpdate: (v: ShopType | null) => void;
+  dataUpdate: ShopType | null;
 }) => {
-  const { openModalCreate, setOpenModalCreate, refreshTable } = props;
-
+  const {
+    openModalUpdate,
+    setOpenModalUpdate,
+    refreshTable,
+    setDataUpdate,
+    dataUpdate,
+  } = props;
   const [isSubmit, setIsSubmit] = useState<boolean>(false);
+  const [isDelete, setIsDelete] = useState<boolean>(false);
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [previewAvatar, setPreviewAvatar] = useState("");
@@ -51,16 +59,21 @@ export const CreateCategory = (props: {
     }
   };
 
-  const onFinish: FormProps<CategoryManageType>["onFinish"] = async (
-    values
-  ) => {
+  useEffect(() => {
+    if (dataUpdate) {
+      form.setFieldsValue({
+        name: dataUpdate.name,
+        description: dataUpdate.description,
+        id: dataUpdate.id,
+      });
+    }
+  }, [dataUpdate]);
+
+  const onFinish: FormProps<ShopType>["onFinish"] = async (values) => {
     setIsSubmit(true);
 
     try {
-      const result = await serviceApiRequests.createCategory({
-        ...values,
-        imageDesc: previewAvatar,
-      });
+      const result = await serviceApiRequests.updateCategory(values);
       toast.success(result.payload.message, {
         position: "bottom-left",
         autoClose: 3000,
@@ -69,29 +82,25 @@ export const CreateCategory = (props: {
       });
       setIsSubmit(false);
       form.resetFields();
-      setOpenModalCreate(false);
+      setOpenModalUpdate(false);
+      setDataUpdate(null);
       refreshTable();
-      setPreviewAvatar("");
-    } catch (error: any) {
+    } catch (error) {
       setIsSubmit(false);
-      toast.error(error, {
-        position: "bottom-left",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: false,
-      });
+      console.log(error);
     }
   };
 
   return (
     <>
       <Modal
-        title="Tạo mới"
-        open={openModalCreate}
+        title="Chỉnh sửa"
+        open={openModalUpdate}
         onCancel={() => {
-          setOpenModalCreate(false);
-          form.resetFields();
+          setOpenModalUpdate(false);
+          setDataUpdate(null);
           setPreviewAvatar("");
+          form.resetFields();
         }}
         confirmLoading={isSubmit}
         destroyOnClose={true}
@@ -99,9 +108,10 @@ export const CreateCategory = (props: {
           <Button
             key="cancel"
             onClick={() => {
-              setOpenModalCreate(false);
-              form.resetFields();
+              setOpenModalUpdate(false);
+              setDataUpdate(null);
               setPreviewAvatar("");
+              form.resetFields();
             }}
           >
             Hủy
@@ -112,7 +122,35 @@ export const CreateCategory = (props: {
             loading={isSubmit}
             onClick={() => form.submit()}
           >
-            Tạo
+            Cập nhật
+          </Button>,
+          <Button
+            key="delete"
+            loading={isDelete}
+            type="primary"
+            danger
+            onClick={async () => {
+              try {
+                setIsDelete(true);
+                const deleteResult = await serviceApiRequests.deleteCategory(
+                  dataUpdate?.id!
+                );
+                setOpenModalUpdate(true);
+                refreshTable();
+                toast.success(deleteResult.payload.message, {
+                  position: "bottom-left",
+                  autoClose: 3000,
+                  hideProgressBar: false,
+                  closeOnClick: false,
+                });
+                setIsDelete(false);
+              } catch (error) {
+                setOpenModalUpdate(false);
+                console.log(error);
+              }
+            }}
+          >
+            Xoá dữ liệu
           </Button>,
         ]}
       >
@@ -125,7 +163,16 @@ export const CreateCategory = (props: {
           onFinish={onFinish}
           autoComplete="off"
         >
-          <Form.Item<CategoryManageType>
+          <Form.Item<ShopType>
+            labelCol={{ span: 24 }}
+            label="ID"
+            name="id"
+            hidden
+          >
+            <Input disabled />
+          </Form.Item>
+
+          <Form.Item<ShopType>
             labelCol={{ span: 24 }}
             label="Tên"
             name="name"
@@ -134,7 +181,7 @@ export const CreateCategory = (props: {
             <Input />
           </Form.Item>
 
-          <Form.Item<CategoryManageType>
+          <Form.Item<ShopType>
             labelCol={{ span: 24 }}
             label="Mô tả"
             name="description"
@@ -143,11 +190,7 @@ export const CreateCategory = (props: {
             <Input />
           </Form.Item>
 
-          <Form.Item<CategoryManageType>
-            labelCol={{ span: 24 }}
-            label="Avatar"
-            name="imageDesc"
-          >
+          <Form.Item<ShopType> labelCol={{ span: 24 }} label="Avatar">
             <div className="flex gap-2 items-start justify-start">
               <Avatar className="aspect-square w-[100px] h-[100px] rounded-md object-cover">
                 <AvatarImage src={previewAvatar} />

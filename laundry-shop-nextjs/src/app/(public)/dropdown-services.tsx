@@ -41,6 +41,11 @@ export default function DropdownService() {
             Vệ sinh sofa, nệm, rèm, thảm
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem>
+          <Link href="/dich-vu/ve-sinh-may-lanh" className="hover:text-main">
+            Vệ sinh máy lạnh
+          </Link>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
