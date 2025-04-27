@@ -167,7 +167,6 @@ export default function StoreOwnerManageEmployee() {
           current: currentPage,
           pageSize: pageSize,
           total: meta.totalElements,
-          showSizeChanger: true,
           onChange: (page, size) => {
             setCurrentPage(page);
             setPageSize(size);

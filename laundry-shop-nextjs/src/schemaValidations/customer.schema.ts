@@ -3,6 +3,7 @@ import z from "zod";
 import { MetaSchema } from "./pagination.schema";
 
 const CustomerBody = z.object({
+  id: z.string(),
   username: z.string(),
   password: z.string().nullable(),
   email: z.string().email().optional(),

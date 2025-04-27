@@ -37,11 +37,6 @@ export const SiderAdmin: MenuItem[] = [
     label: <Link href="/manage/admin/order">Đơn hàng</Link>,
     icon: <Package />,
   },
-  {
-    key: "packageDone",
-    label: <Link href="/manage/admin/order_done">Hoàn thành</Link>,
-    icon: <Package />,
-  },
 ];
 
 export const SiderStoreOwner: MenuItem[] = [

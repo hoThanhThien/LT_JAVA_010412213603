@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Services() {
+  const router = useRouter();
   return (
     <div className="max-w-7xl mx-auto px-4 pb-20">
       <div className="text-4xl text-center font-bold">
@@ -13,7 +15,12 @@ export default function Services() {
         Giao nhận tận nơi, theo dõi đơn hàng & món đồ mọi lúc.
       </div>
       <div className="flex flex-wrap justify-center gap-5 mx-auto">
-        <div className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer">
+        <div
+          onClick={() => {
+            router.push("dich-vu/giat-hap-giat-kho");
+          }}
+          className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer"
+        >
           <div className="w-full max-w-[320px]">
             <Image
               src="/service-1.png"
@@ -36,7 +43,12 @@ export default function Services() {
             </button>
           </div>
         </div>
-        <div className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer">
+        <div
+          onClick={() => {
+            router.push("dich-vu/giat-say");
+          }}
+          className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer"
+        >
           <div className="w-full max-w-[320px]">
             <Image
               src="/service-2.png"
@@ -57,7 +69,12 @@ export default function Services() {
             </button>
           </div>
         </div>
-        <div className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer">
+        <div
+          onClick={() => {
+            router.push("dich-vu/ve-sinh-giay");
+          }}
+          className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer"
+        >
           <div className="w-full max-w-[320px]">
             <Image
               src="/service-3.png"
@@ -104,7 +121,12 @@ export default function Services() {
             </button>
           </div>
         </div>
-        <div className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer">
+        <div
+          onClick={() => {
+            router.push("dich-vu/ve-sinh-giat-sofa-nem-rem-tham");
+          }}
+          className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer"
+        >
           <div className="w-full max-w-[320px]">
             <Image
               src="/service-5.jpg"
@@ -127,7 +149,12 @@ export default function Services() {
             </button>
           </div>
         </div>
-        <div className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer">
+        <div
+          onClick={() => {
+            router.push("dich-vu/ve-sinh-may-lanh");
+          }}
+          className="w-[30%] rounded-[32px] border-transparent border hover:border-gray-200 py-5 flex justify-center items-center cursor-pointer"
+        >
           <div className="w-full max-w-[320px]">
             <Image
               src="/service-6.png"

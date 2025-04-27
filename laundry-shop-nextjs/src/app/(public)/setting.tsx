@@ -1,7 +1,7 @@
 "use client";
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuthStore } from "@/lib/zustand";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
@@ -15,7 +15,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAccountMe, useUpdateMeMutation } from "@/queries/useAccount";
 import { toast } from "react-toastify";
 import { handleErrorApi } from "@/lib/utils";
-import CustomerListOrder from "./customerOrder";
 
 export default function Setting() {
   const { openSetting, setOpenSetting } = useAuthStore();
@@ -23,17 +22,31 @@ export default function Setting() {
   const [previewAvatar, setPreviewAvatar] = useState("");
   const updateMeMutation = useUpdateMeMutation();
 
-  const { data } = useAccountMe();
-  const account = data?.payload?.data?.account;
-
   const form = useForm<UpdateMeType>({
     resolver: zodResolver(UpdateMeBody),
     defaultValues: {
-      username: account?.username,
+      username: "",
       address: "",
-      email: account?.email,
+      email: "",
     },
   });
+
+  useEffect(() => {
+    try {
+      const { data } = useAccountMe();
+      const account = data?.payload?.data?.account;
+      if (account) {
+        form.reset({
+          username: account.username,
+          address: account.address || "", // Assuming address exists in your account data
+          email: account.email,
+        });
+        // setPreviewAvatar(account.avtUser!);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }, [form]);
 
   const convertToBase64 = (file: File) => {
     return new Promise((resolve, reject) => {
@@ -55,14 +68,12 @@ export default function Setting() {
       try {
         const base64: any = await convertToBase64(file);
         setPreviewAvatar(base64); // Lưu base64 vào state để hiển thị preview
-        form.setValue("avtUser", base64); // Cập nhật giá trị trong form
+        form.setValue("avt_user", base64); // Cập nhật giá trị trong form
       } catch (error) {
         console.error("Error converting image to base64:", error);
       }
     }
   };
-
-  // const previewAvatar = file ? URL.createObjectURL(file) : avatar;
 
   const reset = () => {
     form.reset();
@@ -79,6 +90,7 @@ export default function Setting() {
         hideProgressBar: false,
         closeOnClick: false,
       });
+      setOpenSetting(false);
     } catch (error) {
       handleErrorApi({
         error,
@@ -114,7 +126,7 @@ export default function Setting() {
             <Tabs defaultValue="account" className="mx-auto w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="account">Tài khoản</TabsTrigger>
-                <TabsTrigger value="order">Đơn hàng</TabsTrigger>
+                <TabsTrigger value="pasword">Mật khẩu</TabsTrigger>
               </TabsList>
               <TabsContent value="account">
                 <Form {...form}>
@@ -193,7 +205,7 @@ export default function Setting() {
 
                     <FormField
                       control={form.control}
-                      name="avtUser"
+                      name="avt_user"
                       render={({ field }) => (
                         <FormItem>
                           <Label htmlFor="name">Avatar</Label>
@@ -226,7 +238,7 @@ export default function Setting() {
 
                     <div>
                       <button
-                        //disabled={loginMutation.isPending}
+                        disabled={updateMeMutation.isPending}
                         className="cursor-pointer flex w-full justify-center rounded-md bg-main px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-main disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Cập nhập thông tin
@@ -235,9 +247,7 @@ export default function Setting() {
                   </form>
                 </Form>
               </TabsContent>
-              <TabsContent value="order">
-                <CustomerListOrder />
-              </TabsContent>
+              <TabsContent value="pasword">ahihi</TabsContent>
             </Tabs>
           </div>
         </DialogContent>

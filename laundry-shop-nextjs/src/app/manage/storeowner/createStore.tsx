@@ -1,42 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button, Divider, Form, Input, Modal } from "antd";
 import type { FormProps } from "antd";
 import { ShopType } from "@/schemaValidations/store.schema";
 import shopApiRequests from "@/apiRequests/shop";
 import { toast } from "react-toastify";
 
-export const EditStore = (props: {
-  openModalUpdate: boolean;
-  setOpenModalUpdate: (v: boolean) => void;
-  setDataUpdate: (v: ShopType | null) => void;
-  dataUpdate: ShopType | null;
+export const CreateStore = (props: {
+  openModalCreate: boolean;
+  setOpenModalCreate: (v: boolean) => void;
   reloadData?: () => void;
 }) => {
-  const {
-    openModalUpdate,
-    setOpenModalUpdate,
-    setDataUpdate,
-    dataUpdate,
-    reloadData,
-  } = props;
+  const { openModalCreate, setOpenModalCreate, reloadData } = props;
   const [isSubmit, setIsSubmit] = useState<boolean>(false);
 
   // https://ant.design/components/form#components-form-demo-control-hooks
   const [form] = Form.useForm();
-
-  useEffect(() => {
-    if (dataUpdate) {
-      form.setFieldsValue({
-        name: dataUpdate.name,
-        openingHours: dataUpdate.openingHours,
-        address: dataUpdate.address,
-        description: dataUpdate.description,
-        id: dataUpdate.id,
-      });
-    }
-  }, [dataUpdate, form]);
 
   const onFinish: FormProps<ShopType>["onFinish"] = async (values) => {
     console.log(values);
@@ -44,7 +24,7 @@ export const EditStore = (props: {
     setIsSubmit(true);
 
     try {
-      const result = await shopApiRequests.update(values);
+      const result = await shopApiRequests.create(values);
       toast.success(result.payload.message, {
         position: "bottom-left",
         autoClose: 3000,
@@ -52,9 +32,8 @@ export const EditStore = (props: {
         closeOnClick: false,
       });
       setIsSubmit(false);
-      setOpenModalUpdate(false);
+      setOpenModalCreate(false);
       form.resetFields();
-      setDataUpdate(null);
       if (reloadData) {
         reloadData();
       }
@@ -67,11 +46,10 @@ export const EditStore = (props: {
   return (
     <>
       <Modal
-        title="Chỉnh sửa"
-        open={openModalUpdate}
+        title="Tạo cửa hàng mới"
+        open={openModalCreate}
         onCancel={() => {
-          setOpenModalUpdate(false);
-          setDataUpdate(null);
+          setOpenModalCreate(false);
           form.resetFields();
         }}
         confirmLoading={isSubmit}
@@ -80,8 +58,7 @@ export const EditStore = (props: {
           <Button
             key="cancel"
             onClick={() => {
-              setOpenModalUpdate(false);
-              setDataUpdate(null);
+              setOpenModalCreate(false);
               form.resetFields();
             }}
           >
@@ -93,7 +70,7 @@ export const EditStore = (props: {
             loading={isSubmit}
             onClick={() => form.submit()}
           >
-            Cập nhật
+            Tạo
           </Button>,
         ]}
       >

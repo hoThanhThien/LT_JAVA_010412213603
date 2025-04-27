@@ -89,18 +89,22 @@ export default function EmployeeOrder() {
     {
       title: "Họ tên",
       dataIndex: "username",
+      align: "center",
     },
     {
       title: "Số điện thoại",
       dataIndex: "phone",
+      align: "center",
     },
     {
       title: "Email",
       dataIndex: "email",
+      align: "center",
     },
     {
       title: "Địa chỉ",
       dataIndex: "address",
+      align: "center",
     },
     {
       title: "Tạo",
@@ -160,7 +164,6 @@ export default function EmployeeOrder() {
           current: currentPage,
           pageSize: pageSize,
           total: meta.totalElements,
-          showSizeChanger: true,
           onChange: (page, size) => {
             setCurrentPage(page);
             setPageSize(size);

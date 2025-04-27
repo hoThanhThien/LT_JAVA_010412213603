@@ -11,7 +11,7 @@ const fontSans = FontSans({
   variable: "--font-sans",
 });
 export const metadata: Metadata = {
-  title: "Title",
+  title: "HERAMO",
   description: "Description",
 };
 

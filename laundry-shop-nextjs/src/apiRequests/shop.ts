@@ -5,6 +5,7 @@ import {
   ShopListResType,
   ShopResType,
   ShopType,
+  ShopUpdateType,
 } from "@/schemaValidations/store.schema";
 
 const shopApiRequests = {
@@ -21,6 +22,11 @@ const shopApiRequests = {
 
   services: (idShop: number, idCategory: number) =>
     http.get<ServiceResType>(`/shop/${idShop}/category/${idCategory}/services`),
+
+  update: (body: ShopType) =>
+    http.put<ShopUpdateType>("storeowner/shop/update", body),
+  create: (body: ShopType) =>
+    http.post<ShopUpdateType>("storeowner/shop/create", body),
 };
 
 export default shopApiRequests;

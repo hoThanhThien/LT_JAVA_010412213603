@@ -70,7 +70,7 @@ export const EditCategory = (props: {
         description: dataUpdate.description,
         id: dataUpdate.id,
       });
-      setPreviewAvatar(dataUpdate.image_desc);
+      setPreviewAvatar(dataUpdate.imageDesc);
     }
   }, [dataUpdate]);
 
@@ -78,7 +78,7 @@ export const EditCategory = (props: {
     values
   ) => {
     setIsSubmit(true);
-    values.image_desc = previewAvatar;
+    values.imageDesc = previewAvatar;
 
     try {
       const result = await serviceApiRequests.updateCategory(values);
@@ -152,6 +152,7 @@ export const EditCategory = (props: {
                   closeOnClick: false,
                 });
                 setIsDelete(false);
+                setOpenModalUpdate(false);
               } catch (error) {
                 setOpenModalUpdate(false);
                 console.log(error);
@@ -201,7 +202,7 @@ export const EditCategory = (props: {
           <Form.Item<CategoryManageType>
             labelCol={{ span: 24 }}
             label="Avatar"
-            name="image_desc"
+            name="imageDesc"
           >
             <div className="flex gap-2 items-start justify-start">
               <Avatar className="aspect-square w-[100px] h-[100px] rounded-md object-cover">

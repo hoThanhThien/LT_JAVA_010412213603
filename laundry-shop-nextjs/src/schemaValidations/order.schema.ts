@@ -19,6 +19,7 @@ export const OrderListSchema = z.object({
   orderVolume: z.number().positive(),
   createdAt: z.string().datetime(),
   instructions: z.string(),
+  paymentStatus: z.string(),
 });
 
 export type OrderListType = z.TypeOf<typeof OrderListSchema>;

@@ -39,7 +39,7 @@ export const Detail = (props: {
   return (
     <>
       <Drawer
-        title="Chức năng xem chi tiết"
+        title="Xem chi tiết"
         width={"50vw"}
         onClose={() => {
           setOpenViewDetail(false);
@@ -48,7 +48,7 @@ export const Detail = (props: {
         open={openViewDetail}
         destroyOnClose={true}
       >
-        <Descriptions title="Thông tin lịch khám" bordered column={1}>
+        <Descriptions title="Xem chi tiết" bordered column={1}>
           <Descriptions.Item label="Tài khoản">
             {dataViewDetail?.phone}
           </Descriptions.Item>

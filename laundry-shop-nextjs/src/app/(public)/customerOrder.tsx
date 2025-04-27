@@ -5,9 +5,15 @@ import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { ProTable } from "@ant-design/pro-components";
 import { OrderListType } from "@/schemaValidations/order.schema";
 import orderApiRequests from "@/apiRequests/order";
-import { Tag } from "antd";
+import { Button, Tag } from "antd";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useAuthStore } from "@/lib/zustand";
+import { useRouter } from "next/navigation";
 
 export default function CustomerListOrder() {
+  const { openPay, setOpenPay } = useAuthStore();
+  const router = useRouter();
+
   const [mounted, setMounted] = useState(false);
   const actionRef = useRef<ActionType>(null);
   const [meta, setMeta] = useState({
@@ -16,8 +22,6 @@ export default function CustomerListOrder() {
     totalElements: 0,
     totalPages: 0,
   });
-  const [currentPage, setCurrentPage] = useState(1); // Bắt đầu từ 1 cho UI
-  const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -95,24 +99,63 @@ export default function CustomerListOrder() {
       title: "Tổng tiền",
       dataIndex: "totalAmount",
       hideInSearch: true,
+      align: "center",
+    },
+    {
+      title: "Thanh toán",
+      render: (_, entity) =>
+        entity.paymentStatus == "PAID" ? (
+          <Tag color="green">Đã thanh toán</Tag>
+        ) : (
+          <Button
+            onClick={() => {
+              router.push(`/thanh-toan?orderId=${entity.id}`);
+            }}
+            color="cyan"
+            variant="solid"
+          >
+            Thanh toán
+          </Button>
+        ),
     },
   ];
 
   return (
     <>
-      <ProTable<OrderListType>
-        columns={columns}
-        actionRef={actionRef}
-        cardBordered
-        search={false}
-        request={async () => {
-          return await fetchData();
+      <Dialog
+        open={openPay}
+        onOpenChange={(open: boolean) => {
+          setOpenPay(open);
         }}
-        rowKey="id"
-        pagination={false}
-        headerTitle="Lịch sử"
-        loading={loading}
-      />
+      >
+        <DialogContent
+          className="sm:max-w-[600px] md:max-w-[700px] lg:max-w-[1000px] w-[90vw] max-h-[90vh] overflow-y-auto"
+          aria-describedby={undefined}
+          onInteractOutside={(e) => {
+            e.preventDefault();
+          }}
+        >
+          <div className=" flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+            <DialogTitle className="z-500 sm:mx-auto sm:w-full sm:max-w-sm">
+              <div className="mb-5 text-center text-2xl/9 font-bold tracking-tight text-gray-900">
+                Thanh toán
+              </div>
+            </DialogTitle>
+            <ProTable<OrderListType>
+              columns={columns}
+              actionRef={actionRef}
+              cardBordered
+              search={false}
+              request={async () => {
+                return await fetchData();
+              }}
+              rowKey="id"
+              pagination={false}
+              loading={loading}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -70,18 +70,22 @@ export default function page() {
     {
       title: "Tên",
       dataIndex: "name",
+      align: "center",
     },
     {
       title: "Giờ mở cửa",
       dataIndex: "openingHours",
+      align: "center",
     },
     {
       title: "Địa chỉ",
       dataIndex: "address",
+      align: "center",
     },
     {
       title: "Đánh giá",
       dataIndex: "averageRating",
+      align: "center",
     },
     {
       title: "Cửa hàng trưởng",
@@ -114,7 +118,6 @@ export default function page() {
           current: currentPage,
           pageSize: pageSize,
           total: meta.totalElements,
-          showSizeChanger: true,
           onChange: (page, size) => {
             setCurrentPage(page);
             setPageSize(size);

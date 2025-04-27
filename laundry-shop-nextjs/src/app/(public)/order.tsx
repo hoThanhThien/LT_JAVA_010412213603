@@ -27,23 +27,24 @@ import { OrderSchema, OrderType } from "@/schemaValidations/order.schema";
 import { CategoryType, ServiceType } from "@/schemaValidations/store.schema";
 import { useShops } from "@/queries/useShop";
 import shopApiRequests from "@/apiRequests/shop";
-import { useOrderMutation } from "@/queries/useOrder";
 import { toast } from "react-toastify";
 import { handleErrorApi } from "@/lib/utils";
 import orderApiRequests from "@/apiRequests/order";
+import { useRouter } from "next/navigation";
 
 export default function Order() {
   const { openOrder, setOpenOrder } = useAuthStore();
   const [categories, setCategories] = useState<CategoryType[]>([]);
   const [services, setServices] = useState<ServiceType[]>([]);
   const [shopId, setShopId] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [previewAvatar, setPreviewAvatar] = useState("");
 
   const [selectedPrice, setSelectedPrice] = useState<number>(0);
   const [volume, setVolume] = useState<number>(0);
 
-  const orderMutation = useOrderMutation();
+  const router = useRouter();
 
   const { data } = useShops();
   const allShops = data?.payload.data;
@@ -94,16 +95,19 @@ export default function Order() {
 
   const onSubmit = async (data: OrderType) => {
     try {
+      setLoading(true);
       const result = await orderApiRequests.customerOrder(data);
       setOpenOrder(false);
       reset();
       setPreviewAvatar("");
+      setLoading(false);
       toast.success(result.payload.message, {
         position: "bottom-left",
         autoClose: 3000,
         hideProgressBar: false,
         closeOnClick: false,
       });
+      router.push(`/thanh-toan?orderId=${result.payload.data.id}`);
     } catch (error) {
       handleErrorApi({ error, setError: form.setError });
     }
@@ -368,7 +372,7 @@ export default function Order() {
 
                 <div>
                   <button
-                    //disabled={loginMutation.isPending}
+                    disabled={loading}
                     className="cursor-pointer flex w-full justify-center rounded-md bg-main px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-main disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Đăng ký dịch vụ

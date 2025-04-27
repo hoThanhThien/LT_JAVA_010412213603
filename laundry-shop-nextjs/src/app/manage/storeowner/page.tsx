@@ -4,52 +4,83 @@ import shopApiRequests from "@/apiRequests/shop";
 import { ShopType } from "@/schemaValidations/store.schema";
 import React, { useEffect, useState } from "react";
 
-import { Button, Descriptions } from "antd";
+import { Button, Card, Descriptions } from "antd";
 import type { DescriptionsProps } from "antd";
+import { EditStore } from "./editStore";
+import { CreateStore } from "./createStore";
 
 export default function page() {
-  const [shop, setShop] = useState<{ data: ShopType; message: string } | null>(
-    null
-  );
+  const [shop, setShop] = useState<ShopType | null>(null);
+  const [openModalUpdate, setOpenModalUpdate] = useState<boolean>(false);
+
+  const [openModalCreate, setOpenModalCreate] = useState<boolean>(false);
+
   const getShop = async () => {
     const result = await shopApiRequests.storeOwner();
-    setShop(result.payload);
+    setShop(result.payload.data);
   };
 
   useEffect(() => {
     getShop();
-    console.log(shop);
   }, []);
 
   const items: DescriptionsProps["items"] = [
     {
-      key: "1",
-      label: "Tên cửa hàng",
-      children: `${shop?.data.name}`,
-    },
-    {
       key: "2",
       label: "Giờ mở cửa",
-      children: `${shop?.data.openingHours}`,
+      children: `${shop?.openingHours}`,
     },
     {
       key: "3",
       label: "Địa chỉ",
-      children: `${shop?.data.address}`,
+      children: `${shop?.address}`,
     },
     {
       key: "4",
       label: "Mô tả",
-      children: `${shop?.data.description}`,
+      children: `${shop?.description}`,
     },
   ];
 
   return (
-    <div className="bg-white p-5 rounded-3xl">
-      <Descriptions title="Cửa hàng" items={items} />
-      <Button type="primary" className="mt-5">
-        Cập nhập thông tin
-      </Button>
-    </div>
+    <Card title="Cửa hàng">
+      {shop ? (
+        <div>
+          <Descriptions title={"Tên cửa hàng: " + shop.name} items={items} />
+          <Button
+            type="primary"
+            className="mt-5"
+            onClick={() => {
+              setOpenModalUpdate(true);
+            }}
+          >
+            Cập nhập thông tin
+          </Button>
+          <EditStore
+            openModalUpdate={openModalUpdate}
+            setOpenModalUpdate={setOpenModalUpdate}
+            dataUpdate={shop}
+            setDataUpdate={setShop}
+            reloadData={getShop}
+          />
+        </div>
+      ) : (
+        <div>
+          <Button
+            type="primary"
+            onClick={() => {
+              setOpenModalCreate(true);
+            }}
+          >
+            Tạo cửa hàng
+          </Button>
+          <CreateStore
+            openModalCreate={openModalCreate}
+            setOpenModalCreate={setOpenModalCreate}
+            reloadData={getShop}
+          />
+        </div>
+      )}
+    </Card>
   );
 }

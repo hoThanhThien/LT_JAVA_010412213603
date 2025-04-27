@@ -3,18 +3,19 @@
 import { useRef, useState, useEffect } from "react";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { ProTable } from "@ant-design/pro-components";
-import { EllipsisIcon } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { OrderListType } from "@/schemaValidations/order.schema";
 import orderApiRequests from "@/apiRequests/order";
-import { Tag } from "antd";
+import { Button, Divider, Tag } from "antd";
+import { Modal } from "antd/lib";
 
-export default function AdminOrder() {
+export default function CustomerAllOrder(props: {
+  idCustomer: string;
+  openOrder: boolean;
+  setOpenOrder: (v: boolean) => void;
+  setIdCustomer: (v: string) => void;
+}) {
+  const { idCustomer, openOrder, setOpenOrder, setIdCustomer } = props;
+
   const [mounted, setMounted] = useState(false);
   const actionRef = useRef<ActionType>(null);
   const [meta, setMeta] = useState({
@@ -31,13 +32,23 @@ export default function AdminOrder() {
     setMounted(true);
   }, []);
 
+  const refreshTable = () => {
+    actionRef.current?.reload();
+  };
+
   // Hàm fetch data riêng để có thể gọi lại khi cần
-  const fetchData = async (page: number, size: number) => {
+  const fetchData = async (page: number, size: number, id: string) => {
     setLoading(true);
     try {
       // API thường yêu cầu page bắt đầu từ 0
+      console.log(id);
+
       const apiPage = page - 1;
-      const query = await orderApiRequests.adminOrder(apiPage, size);
+      const query = await orderApiRequests.adminOrderCustomer(
+        apiPage,
+        size,
+        id
+      );
       const res = query.payload;
 
       if (res.data) {
@@ -67,47 +78,21 @@ export default function AdminOrder() {
   if (!mounted) {
     return null;
   }
-
   const columns: ProColumns<OrderListType>[] = [
-    {
-      dataIndex: "index",
-      valueType: "indexBorder",
-      width: 48,
-    },
     {
       title: "Mã đơn",
       dataIndex: "id",
       copyable: true,
       hideInSearch: true,
-      align: "center",
-    },
-    {
-      title: "Họ tên",
-      dataIndex: "username",
-      align: "center",
-      hideInSearch: true,
-    },
-    {
-      title: "Số điện thoại",
-      dataIndex: "phone",
-      hideInSearch: true,
-      align: "center",
     },
     {
       title: "Dịch vụ",
       hideInSearch: true,
-      align: "center",
       render: (_, entity) => (
         <div>
           {entity.serviceCategoryName} - {entity.serviceName}
         </div>
       ),
-    },
-    {
-      title: "Cửa hàng",
-      dataIndex: "laundryShopName",
-      hideInSearch: true,
-      align: "center",
     },
     {
       title: "Trạng thái",
@@ -120,41 +105,62 @@ export default function AdminOrder() {
       ),
     },
     {
-      title: "Tổng tiền (VND)",
+      title: "Khối lượng",
+      dataIndex: "orderVolume",
+      hideInSearch: true,
+    },
+    {
+      title: "Tổng tiền",
       dataIndex: "totalAmount",
       hideInSearch: true,
-      align: "center",
     },
   ];
 
   return (
     <>
-      <ProTable<OrderListType>
-        columns={columns}
-        actionRef={actionRef}
-        cardBordered
-        search={false}
-        request={async () => {
-          return await fetchData(currentPage, pageSize);
+      <Modal
+        title="Lịch sử đơn hàng"
+        open={openOrder}
+        width={1000}
+        onCancel={() => {
+          setOpenOrder(false);
+          setIdCustomer("");
         }}
-        rowKey="id"
-        pagination={{
-          current: currentPage,
-          pageSize: pageSize,
-          total: meta.totalElements,
-          onChange: (page, size) => {
-            setCurrentPage(page);
-            setPageSize(size);
-          },
-          showTotal: (total, range) => (
-            <div>
-              {range[0]}-{range[1]} trên {total} rows
-            </div>
-          ),
-        }}
-        headerTitle="Quản lý đơn hàng"
-        loading={loading}
-      />
+        destroyOnClose={true}
+        footer={[
+          <Button key="add" type="primary">
+            Thêm mới
+          </Button>,
+        ]}
+      >
+        <Divider />
+        <ProTable<OrderListType>
+          columns={columns}
+          actionRef={actionRef}
+          cardBordered
+          search={false}
+          request={async () => {
+            return await fetchData(currentPage, pageSize, idCustomer);
+          }}
+          rowKey="username"
+          pagination={{
+            current: currentPage,
+            pageSize: pageSize,
+            total: meta.totalElements,
+            onChange: (page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            },
+
+            showTotal: (total, range) => (
+              <div>
+                {range[0]}-{range[1]} trên {total} rows
+              </div>
+            ),
+          }}
+          loading={loading}
+        />
+      </Modal>
     </>
   );
 }

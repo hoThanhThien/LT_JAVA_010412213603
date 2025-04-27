@@ -32,7 +32,7 @@ export const UpdateMeBody = z
     username: z.string().optional(),
     password: z.string().optional(),
     email: z.string().email().optional(),
-    avtUser: z.string().optional(),
+    avt_user: z.string().optional(),
     address: z.string().optional(),
   })
   .strict();

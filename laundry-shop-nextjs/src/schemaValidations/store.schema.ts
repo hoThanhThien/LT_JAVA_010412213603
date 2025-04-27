@@ -68,3 +68,12 @@ export const ServiceResSchema = z.object({
 });
 
 export type ServiceResType = z.infer<typeof ServiceResSchema>;
+
+export const ShopUpdateBody = z
+  .object({
+    data: ShopSchema,
+    message: z.string(),
+  })
+  .strict();
+
+export type ShopUpdateType = z.TypeOf<typeof ShopUpdateBody>;

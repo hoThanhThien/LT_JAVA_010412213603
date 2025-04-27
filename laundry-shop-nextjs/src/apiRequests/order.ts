@@ -24,6 +24,11 @@ const orderApiRequests = {
   adminOrder: (page: number, size: number) =>
     http.get<OrderListResType>(`admin/orders?page=${page}&size=${size}`),
 
+  adminOrderCustomer: (page: number, size: number, id: string) =>
+    http.get<OrderListResType>(
+      `admin/orders/customer/${id}?page=${page}&size=${size}`
+    ),
+
   adminOrderDone: (page: number, size: number) =>
     http.get<OrderListResType>(
       `admin/orders/status/DONE?page=${page}&size=${size}`

@@ -10,10 +10,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from "react-toastify";
 import { formatDate } from "@/lib/utils";
 import customerApiRequests from "@/apiRequests/customer";
 import { CustomerType } from "@/schemaValidations/customer.schema";
+import CustomerAllOrder from "./order";
 
 export default function page() {
   const [mounted, setMounted] = useState(false);
@@ -25,8 +25,11 @@ export default function page() {
     totalPages: 0,
   });
   const [currentPage, setCurrentPage] = useState(1); // Bắt đầu từ 1 cho UI
-  const [pageSize, setPageSize] = useState(2);
+  const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
+
+  const [idCustomer, setIdCustomer] = useState("");
+  const [openOrder, setOpenOrder] = useState<boolean>(false);
 
   useEffect(() => {
     setMounted(true);
@@ -82,27 +85,33 @@ export default function page() {
     {
       title: "Họ tên",
       dataIndex: "username",
+      align: "center",
     },
     {
       title: "Số điện thoại",
       dataIndex: "phone",
+      align: "center",
     },
     {
       title: "Email",
       dataIndex: "email",
+      align: "center",
     },
     {
       title: "Địa chỉ",
       dataIndex: "address",
+      align: "center",
     },
     {
       title: "Tạo",
+      align: "center",
       render(_, entity) {
         return <div>{formatDate(entity.createdAt)}</div>;
       },
     },
     {
       title: "Cập nhập",
+      align: "center",
       render(_, entity) {
         return <div>{formatDate(entity.updatedAt)}</div>;
       },
@@ -119,8 +128,14 @@ export default function page() {
                 <EllipsisIcon className="cursor-pointer" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem className="cursor-pointer">
-                  Hoàn thành
+                <DropdownMenuItem
+                  onClick={() => {
+                    setIdCustomer(entity.id);
+                    setOpenOrder(true);
+                  }}
+                  className="cursor-pointer"
+                >
+                  Xem các đơn hàng
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -145,7 +160,6 @@ export default function page() {
           current: currentPage,
           pageSize: pageSize,
           total: meta.totalElements,
-          showSizeChanger: true,
           onChange: (page, size) => {
             setCurrentPage(page);
             setPageSize(size);
@@ -159,6 +173,12 @@ export default function page() {
         }}
         headerTitle="Quản lý khách hàng"
         loading={loading}
+      />
+      <CustomerAllOrder
+        idCustomer={idCustomer}
+        setIdCustomer={setIdCustomer}
+        openOrder={openOrder}
+        setOpenOrder={setOpenOrder}
       />
     </>
   );

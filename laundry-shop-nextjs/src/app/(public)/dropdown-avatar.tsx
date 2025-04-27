@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useAccountMe } from "@/queries/useAccount";
 import { useAuthStore } from "@/lib/zustand";
 import jwt from "jsonwebtoken";
+import { AvatarImage } from "@radix-ui/react-avatar";
 
 export default function DropdownAvatar() {
   const logoutMutation = useLogoutMutation();
@@ -24,7 +25,7 @@ export default function DropdownAvatar() {
   const { data } = useAccountMe();
   const account = data?.payload?.data?.account;
 
-  const { setIsAuth, setOpenSetting } = useAuthStore();
+  const { setIsAuth, setOpenSetting, setOpenPay } = useAuthStore();
 
   const decodedAccessToken = jwt.decode(getAccessTokenFromLocalStorage()!) as {
     role: string;
@@ -50,9 +51,10 @@ export default function DropdownAvatar() {
           <Button
             variant="outline"
             size="icon"
-            className="overflow-hidden rounded-full"
+            className="overflow-hidden rounded-full cursor-pointer"
           >
             <Avatar>
+              <AvatarImage src={account?.avtUser ?? undefined} alt="avatar" />
               <AvatarFallback>
                 {account?.username?.slice(0, 1).toUpperCase()}
               </AvatarFallback>
@@ -63,16 +65,33 @@ export default function DropdownAvatar() {
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{account?.username}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <div
-            className="cursor-pointer"
-            onClick={() => {
-              setOpenSetting(true);
-            }}
-          >
-            Cài đặt
-          </div>
-        </DropdownMenuItem>
+
+        {decodedAccessToken && decodedAccessToken.role === "Customer" && (
+          <DropdownMenuItem asChild>
+            <div
+              className="cursor-pointer"
+              onClick={() => {
+                setOpenSetting(true);
+              }}
+            >
+              Cài đặt tài khoản
+            </div>
+          </DropdownMenuItem>
+        )}
+
+        {decodedAccessToken && decodedAccessToken.role !== "Admin" && (
+          <DropdownMenuItem>
+            <div
+              className="cursor-pointer"
+              onClick={() => {
+                setOpenPay(true);
+              }}
+            >
+              Thanh toán
+            </div>
+          </DropdownMenuItem>
+        )}
+
         <DropdownMenuItem>
           <Link href="https://www.messenger.com/t/331186783932984/">
             Hỗ trợ

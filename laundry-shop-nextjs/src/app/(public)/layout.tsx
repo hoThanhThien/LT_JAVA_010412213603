@@ -10,6 +10,7 @@ import { useAuthStore } from "@/lib/zustand";
 import Setting from "./setting";
 import Order from "./order";
 import DropdownService from "./dropdown-services";
+import CustomerListOrder from "./customerOrder";
 
 export default function Layout({
   children,
@@ -74,6 +75,7 @@ export default function Layout({
         </div>
         <Auth />
         <Setting />
+        <CustomerListOrder />
         <Order />
       </header>
       <main className="flex flex-1 flex-col mt-24 gap-4 md:gap-8">

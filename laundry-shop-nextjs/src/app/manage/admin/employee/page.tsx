@@ -74,21 +74,27 @@ export default function EmployeeOrder() {
     {
       title: "Họ tên",
       dataIndex: "username",
+      align: "center",
     },
     {
       title: "Số điện thoại",
       dataIndex: "phone",
+      align: "center",
     },
     {
       title: "Email",
       dataIndex: "email",
+      align: "center",
     },
     {
       title: "Địa chỉ",
       dataIndex: "address",
+      align: "center",
     },
     {
       title: "Tên cửa hàng",
+      align: "center",
+      dataIndex: "shopName",
     },
     {
       title: "Tạo",
@@ -104,33 +110,6 @@ export default function EmployeeOrder() {
         return <div>{formatDate(entity.updatedAt)}</div>;
       },
     },
-
-    // {
-    //   hideInSearch: true,
-    //   align: "center",
-    //   render(_, entity) {
-    //     return (
-    //       <>
-    //         <DropdownMenu modal={false}>
-    //           <DropdownMenuTrigger asChild>
-    //             <EllipsisIcon className="cursor-pointer" />
-    //           </DropdownMenuTrigger>
-    //           <DropdownMenuContent align="end">
-    //             <DropdownMenuItem
-    //               onClick={() => {
-    //                 setDataUpdate(entity);
-    //                 setOpenModalUpdate(true);
-    //               }}
-    //               className="cursor-pointer"
-    //             >
-    //               Chỉnh sửa
-    //             </DropdownMenuItem>
-    //           </DropdownMenuContent>
-    //         </DropdownMenu>
-    //       </>
-    //     );
-    //   },
-    // },
   ];
 
   return (
@@ -148,7 +127,6 @@ export default function EmployeeOrder() {
           current: currentPage,
           pageSize: pageSize,
           total: meta.totalElements,
-          showSizeChanger: true,
           onChange: (page, size) => {
             setCurrentPage(page);
             setPageSize(size);

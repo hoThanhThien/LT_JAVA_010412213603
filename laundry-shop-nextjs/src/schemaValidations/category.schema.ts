@@ -25,7 +25,7 @@ export type ServicesUpdateType = z.TypeOf<typeof ServicesUpdateBody>;
 export const CategoryBody = z.object({
   id: z.number().int().positive().optional(),
   name: z.string(),
-  image_desc: z.string(),
+  imageDesc: z.string(),
   description: z.string(),
   services: z.array(ServiceBody),
 });

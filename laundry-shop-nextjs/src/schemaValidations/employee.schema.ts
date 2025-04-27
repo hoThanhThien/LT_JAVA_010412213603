@@ -13,6 +13,7 @@ const EmployeeListSchema = z.object({
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   usernameStoreOwner: z.string().nullable(),
+  shopName: z.string(),
 });
 
 export type EmployeeListType = z.TypeOf<typeof EmployeeListSchema>;
