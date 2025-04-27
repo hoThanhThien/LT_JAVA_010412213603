@@ -6,6 +6,28 @@ Tên đề tài : Phần mềm quản lý giặt ủi online chủ đề số 10
 Danh sách thành viên: Thành Thiện, Minh Quang, Minh Chí, Triều Dương, Cao Phi. 
 
 
+Đăng kí:
+vào trang chủ -> mở tab đăng nhập-> chọn đk-> xác thực OTP-> xác nhận đúng thi oke ái thì xn lại.
+
+
+Đăng nhập:
+
+
+mở tab đăng nhập nhập thông tin đăng nhập
+
+
+
+ADMIN:
+
+dựa vào role ở acess token
+
+sửa tạo, quản lí tất cả
+
+
+
+
+
+
 Google sheet: [https://docs.google.com/spreadsheets/d/1P1mIud3xEYwwFXpx0a3xlIqZ4jDERAXeDkaCSHtErfM/edit?usp=sharing](https://docs.google.com/spreadsheets/d/1P1mIud3xEYwwFXpx0a3xlIqZ4jDERAXeDkaCSHtErfM/edit?usp=sharing)
 
 gg meet:[ https://meet.google.com/wxq-kpaa-hps?authuser=2](https://meet.google.com/wxq-kpaa-hps?authuser=2)
