@@ -12,15 +12,20 @@ public class VietQRCode {
   @Value("${viet-qr-url}")
   private String vietQRUrl;
 
-  public String generateQRCode(String bankCode, String accountNumber, String totalAmount, String transferContent) {
+  @Value("${account-holder}")
+  private String accountHolder;
+
+  public String generateQRCode(String bankCode, String accountNumber, String totalAmount, String transferContent, String accountHolder) {
     try {
       String encodedContent = URLEncoder.encode(transferContent, StandardCharsets.UTF_8);
+      String encodedAccountHolder = URLEncoder.encode(accountHolder, StandardCharsets.UTF_8);
+      String cleanAmount = totalAmount.replace(".0", "");
 
-      return String.format("%s/%s/%s/%s?amount=%s&addInfo=%s&accountName=Pham%%20Minh%%20Chi",
-              vietQRUrl, bankCode, accountNumber, "compact", totalAmount, encodedContent);
-    }
-    catch (Exception e) {
-      throw new RuntimeException("Error encoding QR content", e);
+      return String.format("%s/%s-%s-compact.png?amount=%s&addInfo=%s&accountName=%s",
+              vietQRUrl, bankCode, accountNumber, cleanAmount, encodedContent, encodedAccountHolder);
+    } catch (Exception e) {
+      throw new RuntimeException("Error generating QR code", e);
     }
   }
 }
+

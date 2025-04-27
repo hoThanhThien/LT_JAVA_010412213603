@@ -39,6 +39,7 @@ public class AccountServiceImpl implements AccountService {
               user.getPhone(),
               user.getEmail(),
               user.getAddress(),
+              user.getAvtUser(),
               user.getRoles().name()
       );
       GetInfoResponse.DataInfo dataInfo = new GetInfoResponse.DataInfo(accountInfo);

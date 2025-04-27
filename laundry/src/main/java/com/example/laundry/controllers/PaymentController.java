@@ -15,8 +15,11 @@ import org.springframework.web.bind.annotation.*;
 public class PaymentController {
     private final PaymentService paymentService;
 
-    @PostMapping("/info")
-    public ResponseEntity<PaymentResponse> getPaymentInfo(@RequestBody PaymentRequest paymentRequest) {
+    @GetMapping("/info/{orderId}")
+    public ResponseEntity<PaymentResponse> getPaymentInfo(@PathVariable Long orderId) {
+        PaymentRequest paymentRequest = new PaymentRequest();
+        paymentRequest.setOrderId(orderId);
+
         return ResponseEntity.ok(paymentService.getPaymentInfo(paymentRequest));
     }
 

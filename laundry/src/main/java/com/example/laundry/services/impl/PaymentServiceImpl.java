@@ -49,10 +49,10 @@ public class PaymentServiceImpl implements PaymentService {
 
 
         //Tạo mã qr
-        String transferContent = "LAUNDRY" + order.getId();
+        String transferContent = "LAUNDRY" + order.getId() + accountHolder + accountHolder;
         String bankCode = "MB";
         String totalAmount = order.getTotalAmount().toString();
-        String qrCode = vietQRCode.generateQRCode(bankCode, accountNumber, totalAmount, transferContent);
+        String qrCode = vietQRCode.generateQRCode(bankCode, accountNumber, totalAmount, transferContent, accountHolder);
 
         return PaymentResponse.builder()
                 .orderId(Long.valueOf(order.getId().toString()))
@@ -120,18 +120,18 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private boolean isMatchingTransaction(CassoClient.CassoTransaction transaction, String transferContent, Double requiredAmount) {
-        // Check if transaction description contains our transfer content
+        // Kiểm tra xem nội dung chuyển khoản của cus có thuộc nội dung chuyển khoản yêu cầu không
         String description = transaction.getDescription();
         if (description == null || !description.toLowerCase().contains(transferContent.toLowerCase().trim())) {
             return false;
         }
 
-        // Check if amount matches or exceeds required amount
+        // Kiểm tra số tiền
         if (transaction.getAmount() < requiredAmount) {
             return false;
         }
 
-        // Check if transaction is recent (within last 24 hours)
+        // Kiểm tra transaction gần đây (dưới 24 hours)
         if (transaction.getTransactionTime() == null ||
                 transaction.getTransactionTime().isBefore(LocalDateTime.now().minusHours(24))) {
             System.out.println("Checking transaction: " + transaction.getDescription());

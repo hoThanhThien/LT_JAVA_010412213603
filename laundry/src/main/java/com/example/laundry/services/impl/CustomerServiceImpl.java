@@ -188,7 +188,7 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         Order order = new Order();
-        order.setCustomer(customer);
+        order.setCustomer(customerId);
         order.setUsername(customer.getUsername());
         order.setLaundryShop(laundryShop);
         order.setServiceCategory(serviceCategory);
