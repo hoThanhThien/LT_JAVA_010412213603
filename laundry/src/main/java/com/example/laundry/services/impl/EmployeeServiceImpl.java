@@ -165,6 +165,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     dto.setAvtUser(employee.getAvtUser());
     dto.setCreatedAt(employee.getCreatedAt());
     dto.setUpdatedAt(employee.getUpdatedAt());
+    dto.setShopName(employee.getShop().getName());
 
     return dto;
   }

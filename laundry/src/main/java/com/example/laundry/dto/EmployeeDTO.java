@@ -24,6 +24,7 @@ public class EmployeeDTO implements Serializable {
     private String address;
     private Roles role;
     private String avtUser;
+    private String shopName;
     private Date createdAt;
     private Date updatedAt;
     private String usernameStoreOwner;
@@ -50,7 +51,19 @@ public class EmployeeDTO implements Serializable {
           this.usernameStoreOwner = employee.getStoreOwner().getUsername();
     }
 
-    public EmployeeDTO(String username, String phone, String email, String address, String avtUser, Roles roles, LaundryShop shop, Date createdAt, Date updatedAt) {
+    public EmployeeDTO(String username, String phone, String email, String address, String avtUser, Roles roles, String shopName, Date createdAt, Date updatedAt) {
+      this.username = username;
+      this.phone = phone;
+      this.email = email;
+      this.address = address;
+      this.role = roles;
+      this.avtUser = avtUser;
+      this.shopName = shopName;
+      this.createdAt = createdAt;
+      this.updatedAt = updatedAt;
+    }
+
+    public EmployeeDTO(String username, String phone, String email, String address, String avtUser, Roles roles, Date createdAt, Date updatedAt) {
       this.username = username;
       this.phone = phone;
       this.email = email;

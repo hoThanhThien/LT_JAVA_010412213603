@@ -346,8 +346,8 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         ServiceCategoryDTO responseDTO = new ServiceCategoryDTO(
                 savedCategory.getId(),
                 savedCategory.getName(),
-                savedCategory.getImageDesc(),
-                savedCategory.getDescription()
+                savedCategory.getDescription(),
+                savedCategory.getImageDesc()
         );
 
         return new ApiResponse<>("Thêm mục dịch vụ thành công!!!", responseDTO);

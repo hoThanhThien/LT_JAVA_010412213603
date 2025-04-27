@@ -216,7 +216,6 @@ public class AdminServiceImpl implements AdminService {
                                 employee.getAddress(),
                                 employee.getAvtUser(),
                                 employee.getRoles(),
-                                employee.getShop(),
                                 employee.getCreatedAt(),
                                 employee.getUpdatedAt()
                         )).toList();
