@@ -26,7 +26,7 @@ public class CassoClient {
     headers.set("Authorization", "Apikey " + cassoProperties.getApiKey());
     headers.setContentType(MediaType.APPLICATION_JSON);
 
-    String url = cassoProperties.getBaseUrl() + "?page=" + page + "&size=" + size;
+    String url = cassoProperties.getBaseUrl() + "?page=" + page + "&pageSize=" + size + "&sort=desc";
 
     HttpEntity<Void> request = new HttpEntity<>(headers);
 

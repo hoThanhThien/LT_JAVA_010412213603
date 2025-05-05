@@ -110,6 +110,10 @@ public class AdminServiceImpl implements AdminService {
         storeOwner.setUsername(storeOwnerDTO.getUsername());
       }
 
+      if (storeOwnerDTO.getEmail() != null && !storeOwnerDTO.getEmail().isEmpty()) {
+        storeOwner.setEmail(storeOwnerDTO.getEmail());
+      }
+
       if (storeOwnerDTO.getAddress() != null) {
         storeOwner.setAddress(storeOwnerDTO.getAddress());
       }
