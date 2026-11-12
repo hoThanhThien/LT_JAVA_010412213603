@@ -17,6 +17,7 @@ import java.util.UUID;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EmployeeDTO implements Serializable {
+    private UUID id;
     private String username;
     private String password;
     private String email;
@@ -30,12 +31,14 @@ public class EmployeeDTO implements Serializable {
     private String usernameStoreOwner;
 
     public EmployeeDTO(Employee employee) {
+        this.id = employee.getId();
         this.username = employee.getUsername();
-        this.password = employee.getPassword();
         this.email = employee.getEmail();
         this.phone = employee.getPhone();
         this.address = employee.getAddress();
-        this.usernameStoreOwner = employee.getStoreOwner().getUsername();
+        if (employee.getStoreOwner() != null) {
+            this.usernameStoreOwner = employee.getStoreOwner().getUsername();
+        }
     }
 
     public EmployeeDTO(String username, String password, String email, String phone, String address, Roles roles, String avtUser, Date createdAt, Date updatedAt, Employee employee) {

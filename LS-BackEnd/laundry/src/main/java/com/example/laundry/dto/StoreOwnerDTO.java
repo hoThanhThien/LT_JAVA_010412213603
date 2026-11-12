@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,6 +17,7 @@ import java.util.Date;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StoreOwnerDTO implements Serializable {
+    private UUID id;
     private String username;
     private String password;
     private String email;
@@ -25,6 +27,18 @@ public class StoreOwnerDTO implements Serializable {
     private String avtUser;
     private Date createdAt;
     private Date updatedAt;
+
+    public StoreOwnerDTO(String username, String password, String email, String phone, String address, Roles role, String avtUser, Date createdAt, Date updatedAt) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.phone = phone;
+        this.address = address;
+        this.role = role;
+        this.avtUser = avtUser;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
 }
 
 

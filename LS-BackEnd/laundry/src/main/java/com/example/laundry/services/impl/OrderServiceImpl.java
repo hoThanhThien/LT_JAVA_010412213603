@@ -18,7 +18,7 @@ public class OrderServiceImpl implements OrderService {
     private OrderRepository orderRepository;
 
     @Override
-    public Order findById(Integer id) {
+    public Order findById(Long id) {
 
         return orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
@@ -30,7 +30,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void updateOrderStatus(Integer orderId, OrderStatus status) {
+    public void updateOrderStatus(Long orderId, OrderStatus status) {
         Order order = findById(orderId);
         order.setOrderStatus(status);
         orderRepository.save(order);

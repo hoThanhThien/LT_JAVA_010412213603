@@ -8,8 +8,8 @@ import com.example.laundry.models.user.Customer;
 import java.util.List;
 
 public interface OrderService {
-    Order findById(Integer id);
+    Order findById(Long id);
     Order save(Order order);
-    void updateOrderStatus(Integer orderId, OrderStatus status);
+    void updateOrderStatus(Long orderId, OrderStatus status);
     void notifyCustomers(Long CustomerId, String message);
 }

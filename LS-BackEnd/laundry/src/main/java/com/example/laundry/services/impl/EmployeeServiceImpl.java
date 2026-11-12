@@ -47,59 +47,47 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public ApiResponse<Order> updateOrderStatus(Integer orderId, OrderStatus status, Employee employee) {
+    public ApiResponse<OrderResponse> updateOrderStatus(Long orderId, OrderStatus status, Employee employee) {
+    if (employee.getShop() == null) {
+      return new ApiResponse<>("Nhân viên chưa được phân công vào cửa hàng!", null);
+    }
+
     // Kiểm tra đơn hàng tồn tại
     Optional<Order> orderOptional = orderRepository.findById(orderId);
     if (orderOptional.isEmpty()) {
-      return new ApiResponse<>("Không tìm thấy đơn hàng với ID: " + orderId);
+      return new ApiResponse<>("Không tìm thấy đơn hàng với ID: " + orderId, null);
     }
 
     Order order = orderOptional.get();
 
-    if(!order.getLaundryShop().getId().equals(employee.getShop().getId())) {
-      return new ApiResponse<>("Nhân viên này không có quyền!!!");
+    if (order.getLaundryShop() == null || !order.getLaundryShop().getId().equals(employee.getShop().getId())) {
+      return new ApiResponse<>("Nhân viên này không có quyền!!!", null);
     }
 
     // Cập nhật trạng thái
     order.setOrderStatus(status);
     order.setUpdatedAt(new Date());
 
-    orderRepository.save(order);
+    Order savedOrder = orderRepository.save(order);
 
     String message = "Đơn hàng #" + orderId + " đã được cập nhật thành " + status.name();
 
-    return new ApiResponse<>(message);
+    return new ApiResponse<>(message, OrderResponse.from(savedOrder));
   }
 
     @Override
     public PagedResponse<OrderResponse> getOrders(Employee employee, int page, int size) {
       LaundryShop laundryShop = employee.getShop();
+      if (laundryShop == null) {
+        return new PagedResponse<>("Nhân viên chưa được phân công vào cửa hàng", null);
+      }
 
       Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
 
       Page<Order> orderPage = orderRepository.findOrdersByLaundryShop(laundryShop, pageable);
 
       List<OrderResponse> orderResponses = orderPage.getContent().stream()
-              .map(order -> {
-                OrderResponse response = new OrderResponse();
-                response.setId(order.getId());
-                response.setUsername(order.getCustomer().getUsername());
-                response.setPhone(order.getCustomer().getPhone());
-                response.setEmail(order.getCustomer().getEmail());
-                response.setAddress(order.getCustomer().getAddress());
-                response.setTotalAmount(order.getTotalAmount());
-                response.setOrderStatus(order.getOrderStatus());
-                response.setImgProduct(order.getImgProduct());
-                response.setLaundryShopName(order.getLaundryShop().getName());
-                response.setServiceCategoryName(order.getServiceCategory().getName());
-                response.setServiceName(order.getService().getName());
-                response.setServicePrice(order.getService().getPrice());
-                response.setOrderVolume(order.getOrderVolume());
-                response.setCreatedAt(order.getCreatedAt());
-                response.setInstructions(order.getInstructions());
-
-                return response;
-              })
+              .map(OrderResponse::from)
               .toList();
 
       Meta meta = new Meta(
@@ -110,9 +98,7 @@ public class EmployeeServiceImpl implements EmployeeService {
       );
 
       PagedData<OrderResponse> pagedData = new PagedData<>(meta, orderResponses);
-      PagedResponse<OrderResponse> response = new PagedResponse<>("Lấy danh sách thành công", pagedData);
-
-      return ResponseEntity.ok(response).getBody();
+      return new PagedResponse<>("Lấy danh sách thành công", pagedData);
     }
 
     @Override
@@ -157,6 +143,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private EmployeeDTO convertToDTO(Employee employee) {
     EmployeeDTO dto = new EmployeeDTO();
+    dto.setId(employee.getId());
     dto.setUsername(employee.getUsername());
     dto.setEmail(employee.getEmail());
     dto.setPhone(employee.getPhone());
@@ -165,7 +152,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     dto.setAvtUser(employee.getAvtUser());
     dto.setCreatedAt(employee.getCreatedAt());
     dto.setUpdatedAt(employee.getUpdatedAt());
-    dto.setShopName(employee.getShop().getName());
+    if (employee.getShop() != null) {
+      dto.setShopName(employee.getShop().getName());
+    }
 
     return dto;
   }

@@ -5,14 +5,25 @@ import com.example.laundry.dto.PaymentRequest;
 import com.example.laundry.dto.PaymentResponse;
 import com.example.laundry.models.order.Order;
 import com.example.laundry.models.order.PaymentStatus;
+import com.example.laundry.models.user.Employee;
+import com.example.laundry.models.user.Roles;
+import com.example.laundry.models.user.User;
+import com.example.laundry.repository.EmployeeRepository;
 import com.example.laundry.repository.OrderRepository;
 import com.example.laundry.repository.PaymentRepository;
+import com.example.laundry.repository.UserRepository;
+import com.example.laundry.security.SecurityUtils;
 import com.example.laundry.services.PaymentService;
 import com.example.laundry.utils.ApiResponse;
 import com.example.laundry.utils.VietQRCode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -20,10 +31,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class PaymentServiceImpl implements PaymentService {
     @Autowired
     private PaymentRepository paymentRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
 
     private final OrderRepository orderRepository;
     private final CassoClient cassoClient;
@@ -42,20 +60,68 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${account-number}")
     private String accountNumber;
 
+    private void verifyOrderAccess(Order order) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Yêu cầu đăng nhập");
+        }
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        if (isAdmin) {
+            return;
+        }
+
+        User currentUser = SecurityUtils.resolveCurrentUser(authentication, userRepository::findById, userRepository::findByUsername);
+        if (currentUser == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Không tìm thấy thông tin người dùng");
+        }
+
+        if (currentUser.getRoles() == Roles.Customer) {
+            if (order.getCustomer() == null || !order.getCustomer().getId().equals(currentUser.getId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền truy cập thanh toán của đơn hàng này");
+            }
+            return;
+        }
+
+        if (currentUser.getRoles() == Roles.StoreOwner) {
+            if (order.getLaundryShop() == null || order.getLaundryShop().getStoreOwner() == null
+                    || !order.getLaundryShop().getStoreOwner().getId().equals(currentUser.getId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền truy cập thanh toán của cửa hàng khác");
+            }
+            return;
+        }
+
+        if (currentUser.getRoles() == Roles.Employee) {
+            Employee employee = employeeRepository.findById(currentUser.getId()).orElse(null);
+            if (employee == null || employee.getShop() == null || order.getLaundryShop() == null
+                    || !employee.getShop().getId().equals(order.getLaundryShop().getId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền truy cập thanh toán của cửa hàng khác");
+            }
+            return;
+        }
+
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Không có quyền truy cập");
+    }
+
     @Override
     public PaymentResponse getPaymentInfo(PaymentRequest paymentRequest) {
-        Order order = orderRepository.findById(paymentRequest.getOrderId().intValue())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng!!!"));
+        if (paymentRequest.getOrderId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thiếu orderId");
+        }
+        Order order = orderRepository.findById(paymentRequest.getOrderId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy đơn hàng!!!"));
 
+        verifyOrderAccess(order);
 
         //Tạo mã qr
-        String transferContent = "LAUNDRY" + order.getId() + accountHolder + accountHolder;
+        String transferContent = "LAUNDRY" + order.getId();
         String bankCode = "MB";
         String totalAmount = order.getTotalAmount().toString();
         String qrCode = vietQRCode.generateQRCode(bankCode, accountNumber, totalAmount, transferContent, accountHolder);
 
         return PaymentResponse.builder()
-                .orderId(Long.valueOf(order.getId().toString()))
+                .orderId(order.getId())
                 .totalAmount(order.getTotalAmount())
                 .accountHolder(accountHolder)
                 .bankName("MB Bank")
@@ -68,13 +134,14 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public ApiResponse<Object> checkPaymentStatus(Long orderId) {
-        Optional<Order> orderOptional = orderRepository.findById(orderId.intValue());
+        Optional<Order> orderOptional = orderRepository.findById(orderId);
 
         if (orderOptional.isEmpty()) {
             return new ApiResponse<>("Không tìm thấy đơn hàng với id: " + orderId);
         }
 
         Order order = orderOptional.get();
+        verifyOrderAccess(order);
 
         return new ApiResponse<>("Lấy trạng thái thanh toán thành công", createPaymentStatusResponse(order));
     }
@@ -85,19 +152,19 @@ public class PaymentServiceImpl implements PaymentService {
         List<Order> pendingOrders = orderRepository.findByPaymentStatus(PaymentStatus.PENDING);
 
         if (pendingOrders.isEmpty()) {
-            System.out.println("No pending orders to check");
+            log.debug("No pending orders to check");
             return;
         }
 
         CassoClient.CassoTransactionResponse response = cassoClient.getTransactions(1, 20);
 
         if (response == null || response.getData() == null || response.getData().getRecords() == null) {
-            System.out.println("Failed to get transactions from Casso API");
+            log.warn("Failed to get transactions from Casso API");
             return;
         }
 
         List<CassoClient.CassoTransaction> transactions = response.getData().getRecords();
-        System.out.printf("Fetched {} transactions from Casso API", transactions.size());
+        log.info("Fetched {} transactions from Casso API", transactions.size());
 
         for (Order order : pendingOrders) {
             String transferContent = "LAUNDRY" + order.getId();
@@ -114,7 +181,7 @@ public class PaymentServiceImpl implements PaymentService {
             }
 
             if (!found) {
-                System.out.printf("No matching transaction found for order: {}", order.getId());
+                log.debug("No matching transaction found for order: {}", order.getId());
             }
         }
     }
