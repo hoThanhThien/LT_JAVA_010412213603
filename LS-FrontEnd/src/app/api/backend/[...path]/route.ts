@@ -47,15 +47,31 @@ async function handler(
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
 
   const hasBody = request.method !== "GET" && request.method !== "HEAD";
+  const bodyBuffer = hasBody ? await request.arrayBuffer() : undefined;
+
+  const callUpstream = (token?: string) => {
+    const reqHeaders = new Headers(headers);
+    if (token) reqHeaders.set("Authorization", `Bearer ${token}`);
+    return fetch(target, {
+      method: request.method,
+      headers: reqHeaders,
+      body: bodyBuffer,
+      cache: "no-store",
+    });
+  };
 
   let upstream: Response;
   try {
-    upstream = await fetch(target, {
-      method: request.method,
-      headers,
-      body: hasBody ? await request.arrayBuffer() : undefined,
-      cache: "no-store",
-    });
+    upstream = await callUpstream(accessToken);
+    // Nếu access token bị từ chối (401) và vẫn còn refreshToken hợp lệ -> tự làm mới và thử lại 1 lần
+    if (upstream.status === 401 && refreshToken) {
+      try {
+        const freshToken = await refreshAuthCookies(refreshToken);
+        upstream = await callUpstream(freshToken);
+      } catch {
+        // Giữ nguyên response 401 từ upstream nếu refresh thất bại
+      }
+    }
   } catch {
     return Response.json(
       { message: "Không kết nối được tới server backend" },

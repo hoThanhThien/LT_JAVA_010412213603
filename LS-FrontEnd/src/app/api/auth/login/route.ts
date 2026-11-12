@@ -7,6 +7,12 @@ export async function POST(request: Request) {
   const body = (await request.json()) as LoginBodyType;
   try {
     const { payload } = await authApiRequests.sLogin(body);
+    if (!payload?.data) {
+      return Response.json(
+        { message: payload?.message || "Đăng nhập thất bại" },
+        { status: 401 }
+      );
+    }
     const { accessToken, refreshToken, account } = payload.data;
 
     // Token chỉ nằm trong cookie HttpOnly, không trả về cho trình duyệt

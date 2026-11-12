@@ -22,7 +22,7 @@ const serviceApiRequests = {
     }),
 
   sUpdateService: (body: ServiceManageType, accessToken: string) =>
-    http.post<ServicesUpdateType>("storeowner/service/update", body, {
+    http.put<ServicesUpdateType>("storeowner/service/update", body, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
