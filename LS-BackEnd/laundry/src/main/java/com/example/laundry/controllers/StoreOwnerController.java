@@ -7,6 +7,7 @@ import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.LaundryShopRepository;
 import com.example.laundry.repository.StoreOwnerRepository;
+import com.example.laundry.security.SecurityUtils;
 import com.example.laundry.services.EmployeeService;
 import com.example.laundry.services.LaundryShopService;
 import com.example.laundry.services.StoreOwnerService;
@@ -20,7 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "http://127.0.0.1:3000", allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"}, allowCredentials = "true")
 @RestController
 @RequestMapping("/storeowner")
 public class StoreOwnerController {
@@ -39,8 +40,7 @@ public class StoreOwnerController {
   // Lấy store owner hiện tại
     private StoreOwner getCurrentStoreOwner() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUsername = authentication.getName();
-        return storeOwnerRepository.findByUsername(currentUsername);
+        return SecurityUtils.resolveCurrentUser(authentication, storeOwnerRepository::findById, storeOwnerRepository::findByUsername);
     }
 
     @PostMapping("/employee/create")
@@ -49,7 +49,7 @@ public class StoreOwnerController {
         // Lấy thông tin StoreOwner hiện tại
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse<>("Không tìm thấy thông tin StoreOwner", null));
         }
 
@@ -71,7 +71,7 @@ public class StoreOwnerController {
 
       StoreOwner storeOwner = getCurrentStoreOwner();
       if (storeOwner == null) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ApiResponse<>("Không tìm thấy thông tin StoreOwner", null));
       }
 
@@ -82,6 +82,9 @@ public class StoreOwnerController {
       employeeDTO.setUsername(username);
 
       ApiResponse<String> response = storeOwnerService.deleteEmployee(storeOwner, employeeDTO);
+      if (response.getData() == null) {
+        return ResponseEntity.badRequest().body(response);
+      }
 
       return ResponseEntity.ok(response);
     }
@@ -91,7 +94,7 @@ public class StoreOwnerController {
     public ResponseEntity<ApiResponse<EmployeeDTO>> updateEmployee(@RequestBody EmployeeDTO employeeDTO) {
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse<>("Không tìm thấy thông tin StoreOwner", null));
         }
 
@@ -101,7 +104,7 @@ public class StoreOwnerController {
             return ResponseEntity.badRequest().body(new ApiResponse<>(responseDTO.getMessage(), null));
         }
 
-        return ResponseEntity.ok(new ApiResponse<>("Cập nhật thông tin nhân viên thành công", responseDTO).getData());
+        return ResponseEntity.ok(responseDTO);
     }
 
     @GetMapping("/employees")
@@ -111,6 +114,10 @@ public class StoreOwnerController {
             @RequestParam(defaultValue = "10") int size) {
         try {
             StoreOwner storeOwner = getCurrentStoreOwner();
+            if (storeOwner == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new PagedResponse<>("Không tìm thấy thông tin StoreOwner", null));
+            }
             PagedResponse<EmployeeDTO> response = employeeService.getAllEmployeesByStoreOwner(storeOwner, page, size);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -125,14 +132,14 @@ public class StoreOwnerController {
         //Lấy thông tin storeowner hiện tại
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse<>("Không tìm thấy thông tin storeowner", null));
         }
 
         ApiResponse<LaundryShopDTO> response = storeOwnerService.createShop(storeOwner, laundryShopDTO);
 
         if (response.getData() == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            return ResponseEntity.badRequest().body(response);
         }
 
         return ResponseEntity.ok(response);
@@ -144,14 +151,14 @@ public class StoreOwnerController {
         //Kiểm tra thông tin storeowner
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse<>("Không tìm thấy thông tin storeowner"));
         }
 
         ApiResponse<LaundryShopDTO> response = storeOwnerService.updateLaundryShop(storeOwner, laundryShopDTO);
 
-        if(response.getData() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        if (response.getData() == null) {
+            return ResponseEntity.badRequest().body(response);
         }
 
         return ResponseEntity.ok(response);
@@ -160,18 +167,24 @@ public class StoreOwnerController {
     @DeleteMapping("/shop/delete")
     @PreAuthorize("hasRole('STOREOWNER')")
     public ResponseEntity<ApiResponse<String>> deleteShop(
-            @RequestBody LaundryShopDTO laundryShopDTO,
+            @RequestBody(required = false) LaundryShopDTO laundryShopDTO,
             @RequestParam(required = false) Long id) {
         //Kiểm tra thông tin storeowner
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse<>("Không tìm thấy thông tin storeowner"));
         }
 
-        laundryShopDTO.setId(id);
+        LaundryShopDTO payload = laundryShopDTO != null ? laundryShopDTO : new LaundryShopDTO();
+        if (id != null) {
+            payload.setId(id);
+        }
 
-        ApiResponse<String> response = storeOwnerService.deleteLaundryShop(storeOwner, laundryShopDTO);
+        ApiResponse<String> response = storeOwnerService.deleteLaundryShop(storeOwner, payload);
+        if (response.getData() == null) {
+            return ResponseEntity.badRequest().body(response);
+        }
 
         return ResponseEntity.ok(response);
     }
@@ -182,17 +195,17 @@ public class StoreOwnerController {
         //Kiểm tra thông tin storeowner
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse<>("Không tìm thấy thông tin storeowner"));
         }
 
         ApiResponse<ServiceCategoryDTO> response = storeOwnerService.createServiceCategory(storeOwner, serviceCategoryDTO);
 
-        if(response.getData() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        if (response.getData() == null) {
+            return ResponseEntity.badRequest().body(response);
         }
 
-        return  ResponseEntity.ok(response);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/category/update")
@@ -201,17 +214,17 @@ public class StoreOwnerController {
         //Kiểm tra thông tin storeowner
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse<>("Không tìm thấy thông tin storeowner"));
         }
 
         ApiResponse<ServiceCategoryDTO> response = storeOwnerService.updateServiceCategory(storeOwner, serviceCategoryDTO);
 
-        if(response.getData() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        if (response.getData() == null) {
+            return ResponseEntity.badRequest().body(response);
         }
 
-        return  ResponseEntity.ok(response);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/category/delete")
@@ -221,7 +234,7 @@ public class StoreOwnerController {
         //Kiểm tra thông tin storeowner
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse<>("Không tìm thấy thông tin storeowner"));
         }
 
@@ -229,8 +242,11 @@ public class StoreOwnerController {
         serviceCategoryDTO.setId(id);
 
         ApiResponse<Integer> response = storeOwnerService.deleteServiceCategory(storeOwner, serviceCategoryDTO);
+        if (response.getData() == null) {
+            return ResponseEntity.badRequest().body(response);
+        }
 
-        return  ResponseEntity.ok(response);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/service/add")
@@ -239,17 +255,17 @@ public class StoreOwnerController {
         //Kiểm tra thông tin storeowner
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse<>("Không tìm thấy thông tin storeowner"));
         }
 
         ApiResponse<ServiceDTO> response = storeOwnerService.createService(storeOwner, serviceDTO);
 
-        if(response.getData() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        if (response.getData() == null) {
+            return ResponseEntity.badRequest().body(response);
         }
 
-        return  ResponseEntity.ok(response);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/service/update")
@@ -258,17 +274,17 @@ public class StoreOwnerController {
         //Kiểm tra thông tin storeowner
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse<>("Không tìm thấy thông tin storeowner"));
         }
 
         ApiResponse<ServiceDTO> response = storeOwnerService.updateService(storeOwner, serviceDTO);
 
-        if(response.getData() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        if (response.getData() == null) {
+            return ResponseEntity.badRequest().body(response);
         }
 
-        return  ResponseEntity.ok(response);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/service/delete")
@@ -278,7 +294,7 @@ public class StoreOwnerController {
         //Kiểm tra thông tin storeowner
         StoreOwner storeOwner = getCurrentStoreOwner();
         if (storeOwner == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse<>("Không tìm thấy thông tin storeowner"));
         }
 
@@ -286,8 +302,11 @@ public class StoreOwnerController {
         serviceDTO.setId(id);
 
         ApiResponse<Integer> response = storeOwnerService.deleteService(storeOwner, serviceDTO);
+        if (response.getData() == null) {
+            return ResponseEntity.badRequest().body(response);
+        }
 
-        return  ResponseEntity.ok(response);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/manager/service")
@@ -297,21 +316,29 @@ public class StoreOwnerController {
             @RequestParam(defaultValue = "10") int size) {
       try {
         StoreOwner storeOwner = getCurrentStoreOwner();
+        if (storeOwner == null) {
+          return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                  .body(new PagedResponse<>("Không tìm thấy thông tin storeowner", null));
+        }
         PagedResponse<CategoryWithServiceDTO> response = storeOwnerService.getAllCategoriesWithServicesByStore(storeOwner, page, size);
         return ResponseEntity.ok(response);
       } catch (Exception e) {
         return ResponseEntity.badRequest()
-                .body(new PagedResponse<>("Lấy danh sách nhân viên thất bại: " + e.getMessage(), null));
+                .body(new PagedResponse<>("Lấy danh sách dịch vụ thất bại: " + e.getMessage(), null));
       }
     }
 
     @GetMapping("/manager/order")
     @PreAuthorize("hasRole('STOREOWNER')")
-    public  ResponseEntity<PagedResponse<OrderResponse>> getAllOrdersByStoreOwner(
+    public ResponseEntity<PagedResponse<OrderResponse>> getAllOrdersByStoreOwner(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
       try {
         StoreOwner storeOwner = getCurrentStoreOwner();
+        if (storeOwner == null) {
+          return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                  .body(new PagedResponse<>("Không tìm thấy thông tin storeowner", null));
+        }
         PagedResponse<OrderResponse> response = storeOwnerService.getAllOrdersByStoreOwner(storeOwner, page, size);
         return ResponseEntity.ok(response);
       } catch (Exception e) {
@@ -324,6 +351,10 @@ public class StoreOwnerController {
     @PreAuthorize("hasRole('STOREOWNER')")
     public ResponseEntity<ApiResponse<LaundryShopDTO>> getMyLaundryShop() {
         StoreOwner storeOwner = getCurrentStoreOwner();
+        if (storeOwner == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>("Không tìm thấy thông tin storeowner", null));
+        }
         ApiResponse<LaundryShopDTO> responseDTO = storeOwnerService.getLaundryShopByStoreOwner(storeOwner);
         return ResponseEntity.ok(responseDTO);
     }

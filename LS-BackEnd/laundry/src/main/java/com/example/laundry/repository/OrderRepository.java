@@ -18,11 +18,13 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface OrderRepository extends JpaRepository<Order,Integer> {
+public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findByOrderStatus(OrderStatus status, Pageable pageable);
     @Query("SELECT o FROM Order o WHERE o.customer.id = :customerId ORDER BY o.createdAt DESC")
     Page<Order> findByCustomer_Id(UUID customerId, Pageable pageable);
     Page<Order> findOrdersByLaundryShop(LaundryShop laundryShop, Pageable pageable);
+    boolean existsByLaundryShop(LaundryShop laundryShop);
+    boolean existsByService(com.example.laundry.models.shop.Service service);
     Page<Order> findOrderByOrderStatus(OrderStatus orderStatus, Pageable pageable);
     List<Order> findByPaymentStatus(PaymentStatus paymentStatus);
 }

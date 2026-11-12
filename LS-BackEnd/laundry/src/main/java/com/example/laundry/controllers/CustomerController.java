@@ -4,6 +4,7 @@ import com.example.laundry.dto.*;
 import com.example.laundry.models.user.Customer;
 import com.example.laundry.repository.CustomerRepository;
 import com.example.laundry.security.JwtUtil;
+import com.example.laundry.security.SecurityUtils;
 import com.example.laundry.services.CustomerService;
 import com.example.laundry.services.RefreshTokenService;
 import com.example.laundry.utils.ApiResponse;
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-@CrossOrigin(origins = "http://127.0.0.1:3000", allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"}, allowCredentials = "true")
 @RestController
 @RequestMapping("/customer")
 public class CustomerController {
@@ -40,14 +41,15 @@ public class CustomerController {
 
     private Customer getCurrentCustomer() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUsername = authentication.getName();
-        return customerRepository.findByUsername(currentUsername);
+        return SecurityUtils.resolveCurrentUser(authentication, customerRepository::findById, customerRepository::findByUsername);
     }
 
     @PostMapping("/register")
-    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<CustomerResponseDTO> register(@RequestBody RegisterRequest registerRequest) {
         CustomerResponseDTO response = customerService.register(registerRequest);
+        if (response.getData() == null) {
+            return ResponseEntity.badRequest().body(response);
+        }
         return ResponseEntity.ok(response);
     }
 
@@ -57,11 +59,14 @@ public class CustomerController {
         try {
             Customer customer = getCurrentCustomer();
             if (customer == null) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(new ApiResponse<>("Không tìm thấy thông tin customer"));
             }
 
             ApiResponse<CustomerDTO> response = customerService.updateCustomer(customer, customerDTO);
+            if (response.getData() == null) {
+                return ResponseEntity.badRequest().body(response);
+            }
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -99,11 +104,14 @@ public class CustomerController {
         try {
             Customer customer = getCurrentCustomer();
             if (customer == null) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(new ApiResponse<>("Không tìm thấy thông tin customer"));
             }
 
             ApiResponse<OrderResponse> response = customerService.bookService(customer, orderDTO);
+            if (response.getData() == null) {
+                return ResponseEntity.badRequest().body(response);
+            }
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest()

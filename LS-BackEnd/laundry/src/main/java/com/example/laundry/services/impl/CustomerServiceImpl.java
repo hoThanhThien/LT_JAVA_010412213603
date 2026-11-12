@@ -117,8 +117,8 @@ public class CustomerServiceImpl implements CustomerService {
             customer.setRoles(Roles.Customer);
 
             Customer savedCustomer = customerRepository.save(customer);
-            //Tạo access token
-            String accessToken = jwtUtil.generateAccessToken(savedCustomer.getUsername(), savedCustomer.getRoles());
+            //Tạo access token (gắn userId bất biến)
+            String accessToken = jwtUtil.generateAccessToken(savedCustomer.getId(), savedCustomer.getUsername(), savedCustomer.getRoles());
 
             //Tạo refresh token
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedCustomer);
@@ -185,6 +185,14 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         // Kiem tra du lieu
+        if (serviceCategory.getShop() == null || !serviceCategory.getShop().getId().equals(laundryShop.getId())) {
+            return new ApiResponse<>("Loại dịch vụ không thuộc cửa hàng đã chọn!");
+        }
+
+        if (service.getCategory() == null || !service.getCategory().getId().equals(serviceCategory.getId())) {
+            return new ApiResponse<>("Dịch vụ không thuộc loại dịch vụ đã chọn!");
+        }
+
         Double orderVolume = orderDTO.getOrderVolume();
         if (orderVolume == null || orderDTO.getOrderVolume() <= 0) {
             return new ApiResponse<>("Khối lượng đồ không được để trống và phải lớn hơn 0");
@@ -198,7 +206,7 @@ public class CustomerServiceImpl implements CustomerService {
         order.setService(service);
         order.setOrderVolume(orderDTO.getOrderVolume());
         order.setOrderStatus(OrderStatus.IN_PROGRESS);
-        order.setCreatedAt(orderDTO.getCreatedAt());
+        order.setPaymentStatus(com.example.laundry.models.order.PaymentStatus.PENDING);
         order.setInstructions(orderDTO.getInstructions());
         order.setImgProduct(orderDTO.getImgProduct());
         order.setAddress(orderDTO.getAddress());
@@ -206,25 +214,7 @@ public class CustomerServiceImpl implements CustomerService {
         order.setTotalAmount(totalAmount);
 
         Order savedOrder = orderService.save(order);
-
-        OrderResponse responseDTO = new OrderResponse();
-        responseDTO.setId(savedOrder.getId());
-        responseDTO.setUsername(customer.getUsername());
-        responseDTO.setPhone(customer.getPhone());
-        responseDTO.setEmail(customer.getEmail());
-        responseDTO.setAddress(savedOrder.getAddress());
-        responseDTO.setTotalAmount(savedOrder.getTotalAmount());
-        responseDTO.setOrderStatus(savedOrder.getOrderStatus());
-        responseDTO.setImgProduct(savedOrder.getImgProduct());
-        responseDTO.setLaundryShopName(laundryShop.getName());
-        responseDTO.setServiceCategoryName(serviceCategory.getName());
-        responseDTO.setServiceName(service.getName());
-        responseDTO.setServicePrice(service.getPrice());
-        responseDTO.setOrderVolume(savedOrder.getOrderVolume());
-        responseDTO.setCreatedAt(savedOrder.getCreatedAt());
-        responseDTO.setInstructions(savedOrder.getInstructions());
-        responseDTO.setStatus(savedOrder.getOrderStatus());
-
+        OrderResponse responseDTO = OrderResponse.from(savedOrder);
 
         return new ApiResponse<>("Bạn đã tạo đơn giặt hàng thành công. Vui lòng chú ý thông báo của chúng tôi!", responseDTO);
     }
@@ -235,24 +225,7 @@ public class CustomerServiceImpl implements CustomerService {
         Page<Order> orderPage = orderRepository.findByCustomer_Id(customer.getId(), pageable);
 
         List<OrderResponse> orderResponses = orderPage.getContent().stream()
-                .map(order -> {
-                    OrderResponse orderResponse = new OrderResponse();
-                    orderResponse.setId(order.getId());
-                    orderResponse.setTotalAmount(order.getTotalAmount());
-                    orderResponse.setOrderStatus(order.getOrderStatus());
-                    orderResponse.setLaundryShopName(order.getLaundryShop().getName());
-                    orderResponse.setServiceCategoryName(order.getServiceCategory().getName());
-                    orderResponse.setServiceName(order.getService().getName());
-                    orderResponse.setServicePrice(order.getService().getPrice());
-                    orderResponse.setOrderVolume(order.getOrderVolume());
-                    orderResponse.setCreatedAt(order.getCreatedAt());
-                    orderResponse.setInstructions(order.getInstructions());
-                    orderResponse.setImgProduct(order.getImgProduct());
-                    orderResponse.setStatus(order.getOrderStatus());
-                    orderResponse.setPaymentStatus(order.getPaymentStatus());
-                    return orderResponse;
-
-                })
+                .map(OrderResponse::from)
                 .collect(Collectors.toList());
 
         Meta meta = new Meta(
@@ -313,17 +286,17 @@ public class CustomerServiceImpl implements CustomerService {
                 customer.setPassword(passwordEncoder.encode(customerDTO.getPassword()));
             }
 
-            if (customerDTO.getAvtUser() != null && customerDTO.getAvtUser().isEmpty()) {
+            if (customerDTO.getAvtUser() != null && !customerDTO.getAvtUser().isEmpty()) {
                 customer.setAvtUser(customerDTO.getAvtUser());
             }
 
             // Save the updated customer
             Customer updatedCustomer = customerRepository.save(customer);
 
-            // Build response
+            // Build response (không trả hash mật khẩu ra ngoài)
             CustomerDTO responseDTO = new CustomerDTO();
+            responseDTO.setId(updatedCustomer.getId());
             responseDTO.setUsername(updatedCustomer.getUsername());
-            responseDTO.setPassword(updatedCustomer.getPassword());
             responseDTO.setEmail(updatedCustomer.getEmail());
             responseDTO.setPhone(updatedCustomer.getPhone());
             responseDTO.setAddress(updatedCustomer.getAddress());

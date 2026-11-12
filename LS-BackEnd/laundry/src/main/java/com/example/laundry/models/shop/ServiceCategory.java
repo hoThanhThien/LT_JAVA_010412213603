@@ -10,13 +10,16 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "service_categories")
+@Table(
+        name = "service_categories",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"name", "shop_id"})
+)
 public class ServiceCategory {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false, unique = true)
+  @Column(nullable = false)
   private String name;
 
   @Column

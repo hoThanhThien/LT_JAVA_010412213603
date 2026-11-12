@@ -47,6 +47,9 @@ public class Employee extends User {
 
     public Employee(String username, String encodedPassword, String email, String phone, String address, Roles roles, String avtUser, Date createdAt, Date updatedAt, StoreOwner storeOwner) {
         super(username, encodedPassword, email, phone, address, Roles.Employee);
+        this.setAvtUser(avtUser);
+        if (createdAt != null) this.setCreatedAt(createdAt);
+        if (updatedAt != null) this.setUpdatedAt(updatedAt);
         this.storeOwner = storeOwner;
     }
 

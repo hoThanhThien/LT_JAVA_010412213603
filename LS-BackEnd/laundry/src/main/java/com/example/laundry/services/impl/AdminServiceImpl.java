@@ -15,6 +15,7 @@ import com.example.laundry.services.OrderService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
 import com.example.laundry.utils.UserValidator;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -111,7 +112,25 @@ public class AdminServiceImpl implements AdminService {
       }
 
       if (storeOwnerDTO.getEmail() != null && !storeOwnerDTO.getEmail().isEmpty()) {
+        if (!UserValidator.isValidEmail(storeOwnerDTO.getEmail())) {
+          return new ApiResponse<>("Email không hợp lệ!", null);
+        }
+        if (!storeOwnerDTO.getEmail().equals(storeOwner.getEmail()) &&
+                storeOwnerRepository.existsByEmail(storeOwnerDTO.getEmail())) {
+          return new ApiResponse<>("Email đã tồn tại!", null);
+        }
         storeOwner.setEmail(storeOwnerDTO.getEmail());
+      }
+
+      if (storeOwnerDTO.getPhone() != null && !storeOwnerDTO.getPhone().isEmpty()) {
+        if (!UserValidator.isValidPhone(storeOwnerDTO.getPhone())) {
+          return new ApiResponse<>("Phone phải có 10 chữ số!", null);
+        }
+        if (!storeOwnerDTO.getPhone().equals(storeOwner.getPhone()) &&
+                storeOwnerRepository.existsByPhone(storeOwnerDTO.getPhone())) {
+          return new ApiResponse<>("Phone đã tồn tại!", null);
+        }
+        storeOwner.setPhone(storeOwnerDTO.getPhone());
       }
 
       if (storeOwnerDTO.getAddress() != null) {
@@ -126,13 +145,14 @@ public class AdminServiceImpl implements AdminService {
         storeOwner.setPassword(passwordEncoder.encode(storeOwnerDTO.getPassword()));
       }
 
-      if (storeOwnerDTO.getAvtUser() != null && storeOwnerDTO.getAvtUser().isEmpty()) {
+      if (storeOwnerDTO.getAvtUser() != null && !storeOwnerDTO.getAvtUser().isEmpty()) {
         storeOwner.setAvtUser(storeOwnerDTO.getAvtUser());
       }
 
       StoreOwner updatedStoreOwner = storeOwnerRepository.save(storeOwner);
 
       StoreOwnerDTO responseDTO = new StoreOwnerDTO();
+      responseDTO.setId(updatedStoreOwner.getId());
       responseDTO.setUsername(updatedStoreOwner.getUsername());
       responseDTO.setEmail(updatedStoreOwner.getEmail());
       responseDTO.setPhone(updatedStoreOwner.getPhone());
@@ -142,12 +162,13 @@ public class AdminServiceImpl implements AdminService {
       responseDTO.setCreatedAt(updatedStoreOwner.getCreatedAt());
       responseDTO.setUpdatedAt(updatedStoreOwner.getUpdatedAt());
 
-      return new ApiResponse<>("Cập nhật nhân viên thành công!", responseDTO);
+      return new ApiResponse<>("Cập nhật chủ cửa hàng thành công!", responseDTO);
     }
 
     @Override
+    @Transactional
     public ApiResponse<String> removeStoreOwner(StoreOwnerDTO storeOwnerDTO) {
-        if (storeOwnerDTO.getEmail() == null && storeOwnerDTO.getPhone() == null && storeOwnerDTO.getUsername() == null) {
+        if (storeOwnerDTO.getId() == null && storeOwnerDTO.getEmail() == null && storeOwnerDTO.getPhone() == null && storeOwnerDTO.getUsername() == null) {
             return new ApiResponse<>("Không đủ thông tin để xóa!!!", null);
         }
 
@@ -161,9 +182,23 @@ public class AdminServiceImpl implements AdminService {
             return new ApiResponse<>("Store Owner không tồn tại hoặc đã bị xóa trước đó", null);
         }
 
+        LaundryShop shop = laundryShopRepository.findByStoreOwner(storeOwner);
+        if (shop != null) {
+            if (orderRepository.existsByLaundryShop(shop)) {
+                return new ApiResponse<>("Không thể xóa chủ cửa hàng vì cửa hàng vẫn còn đơn hàng!", null);
+            }
+            List<Employee> employees = employeeRepository.findByStoreOwner(storeOwner);
+            for (Employee emp : employees) {
+                emp.setShop(null);
+            }
+            employeeRepository.saveAll(employees);
+            laundryShopRepository.delete(shop);
+            laundryShopRepository.flush();
+        }
+
         storeOwnerService.deleteStoreOwner(storeOwner);
 
-        return new ApiResponse<>("Đã xóa Store Owner thành công", null);
+        return new ApiResponse<>("Đã xóa Store Owner thành công", "OK");
     }
 
     @Override
@@ -212,7 +247,7 @@ public class AdminServiceImpl implements AdminService {
                   shopId = optionalShop.get().getId();
                   shopName = optionalShop.get().getName();
                 }
-                List<EmployeeDTO> employees = employeeRepository.findByStoreOwner(owner, pageable).stream()
+                List<EmployeeDTO> employees = employeeRepository.findByStoreOwner(owner).stream()
                         .map(employee -> new EmployeeDTO(
                                 employee.getUsername(),
                                 employee.getPhone(),
@@ -239,9 +274,9 @@ public class AdminServiceImpl implements AdminService {
                 );
               }).toList();
 
-      Meta<StoreOwnerWithEmployeeDTO>  meta = new Meta<>(
-              page,
-              size,
+      Meta<StoreOwnerWithEmployeeDTO> meta = new Meta<>(
+              storeOwnerPage.getNumber() + 1,
+              storeOwnerPage.getSize(),
               storeOwnerPage.getTotalElements(),
               storeOwnerPage.getTotalPages()
       );
@@ -256,29 +291,7 @@ public class AdminServiceImpl implements AdminService {
           Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
           Page<Order> orderPage = orderRepository.findAll(pageable);
 
-          List<OrderResponse> responseList = orderPage.getContent().stream()
-                  .map(order -> {
-                      OrderResponse orderResponse = new OrderResponse();
-                      orderResponse.setId(order.getId());
-                      orderResponse.setTotalAmount(order.getTotalAmount());
-                      orderResponse.setOrderStatus(order.getOrderStatus());
-                      orderResponse.setImgProduct(order.getImgProduct());
-                      orderResponse.setLaundryShopName(order.getLaundryShop().getName());
-                      orderResponse.setServiceCategoryName(order.getServiceCategory().getName());
-                      orderResponse.setServiceName(order.getService().getName());
-                      orderResponse.setServicePrice(order.getService().getPrice());
-                      orderResponse.setOrderVolume(order.getOrderVolume());
-                      orderResponse.setCreatedAt(order.getCreatedAt());
-                      orderResponse.setInstructions(order.getInstructions());
-                      if (order.getCustomer() != null) {
-                          orderResponse.setUsername(order.getCustomer().getUsername());
-                          orderResponse.setPhone(order.getCustomer().getPhone());
-                          orderResponse.setEmail(order.getCustomer().getEmail());
-                          orderResponse.setAddress(order.getCustomer().getAddress());
-                      }
-                      return orderResponse;
-                  })
-                  .collect(Collectors.toList());
+          List<OrderResponse> responseList = mapOrdersToOrderResponses(orderPage.getContent());
 
           Meta meta = new Meta(
                   orderPage.getNumber() + 1,
@@ -293,13 +306,16 @@ public class AdminServiceImpl implements AdminService {
 
     private StoreOwner findStoreOwnerByInfo(StoreOwnerDTO storeOwnerDTO) {
     StoreOwner storeOwner = null;
-    if (storeOwnerDTO.getEmail() != null) {
-      storeOwner = storeOwnerRepository.findByEmail(storeOwnerDTO.getEmail());
+    if (storeOwnerDTO.getId() != null) {
+      storeOwner = storeOwnerRepository.findById(storeOwnerDTO.getId()).orElse(null);
     }
-    if (storeOwner == null && storeOwnerDTO.getPhone() != null) {
+    if (storeOwner == null && storeOwnerDTO.getPhone() != null && !storeOwnerDTO.getPhone().isEmpty()) {
       storeOwner = storeOwnerRepository.findByPhone(storeOwnerDTO.getPhone());
     }
-    if (storeOwner == null && storeOwnerDTO.getUsername() != null) {
+    if (storeOwner == null && storeOwnerDTO.getEmail() != null && !storeOwnerDTO.getEmail().isEmpty()) {
+      storeOwner = storeOwnerRepository.findByEmail(storeOwnerDTO.getEmail());
+    }
+    if (storeOwner == null && storeOwnerDTO.getUsername() != null && !storeOwnerDTO.getUsername().isEmpty()) {
       storeOwner = storeOwnerRepository.findByUsername(storeOwnerDTO.getUsername());
     }
     return storeOwner;
@@ -391,21 +407,7 @@ public class AdminServiceImpl implements AdminService {
 
     private List<OrderResponse> mapOrdersToOrderResponses(List<Order> orders) {
         return orders.stream()
-                .map(order -> {
-                    OrderResponse orderResponse = new OrderResponse();
-                    orderResponse.setId(order.getId());
-                    orderResponse.setTotalAmount(order.getTotalAmount());
-                    orderResponse.setOrderStatus(order.getOrderStatus());
-                    orderResponse.setImgProduct(order.getImgProduct());
-                    orderResponse.setLaundryShopName(order.getLaundryShop().getName());
-                    orderResponse.setServiceCategoryName(order.getServiceCategory().getName());
-                    orderResponse.setServiceName(order.getService().getName());
-                    orderResponse.setServicePrice(order.getService().getPrice());
-                    orderResponse.setOrderVolume(order.getOrderVolume());
-                    orderResponse.setCreatedAt(order.getCreatedAt());
-                    orderResponse.setInstructions(order.getInstructions());
-                    return orderResponse;
-                })
+                .map(OrderResponse::from)
                 .collect(Collectors.toList());
     }
 }

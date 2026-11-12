@@ -21,8 +21,8 @@ public class ServiceController {
 
   @GetMapping("/{categoryId}/services")
   public ResponseEntity<ApiResponse<List<ServiceDTO>>> getServicesByCategory(@PathVariable Integer categoryId, @PathVariable Integer shopId) {
-    ApiResponse<List<ServiceDTO>> serviceCategories = serviceService.getServicesByCategoryId(categoryId, shopId);
+    ApiResponse<List<ServiceDTO>> serviceCategories = serviceService.getServicesByCategoryId(shopId, categoryId);
 
-    return  ResponseEntity.ok(serviceCategories);
+    return ResponseEntity.ok(serviceCategories);
   }
 }

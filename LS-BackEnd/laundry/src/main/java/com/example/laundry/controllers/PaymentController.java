@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://127.0.0.1:3000, https://oauth.casso.vn", allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000", "https://oauth.casso.vn"}, allowCredentials = "true")
 @RestController
 public class PaymentController {
     private final PaymentService paymentService;

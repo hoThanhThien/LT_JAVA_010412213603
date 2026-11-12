@@ -36,7 +36,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     RefreshToken refreshToken = new RefreshToken();
     refreshToken.setUser(user);
 
-    String refreshTokenString = jwtUtil.generateRefreshToken(user.getUsername(), user.getRoles());
+    String refreshTokenString = jwtUtil.generateRefreshToken(user.getId(), user.getUsername(), user.getRoles());
     refreshToken.setToken(refreshTokenString);
 
     refreshToken.setExpiresAt(Instant.now().plusMillis(refreshTokenDuration));

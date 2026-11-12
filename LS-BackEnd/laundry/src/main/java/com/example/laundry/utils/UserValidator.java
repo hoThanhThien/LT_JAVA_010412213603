@@ -9,15 +9,17 @@ public class UserValidator {
     private static final String PHONE_PATTERN = "^\\d{10}$";
 
     public static boolean isValidPassword(String password) {
-        return password.length() >= MIN_PASSWORD_LENGTH && Pattern.matches(PASSWORD_PATTERN, password);
+        return password != null
+                && password.length() >= MIN_PASSWORD_LENGTH
+                && Pattern.matches(PASSWORD_PATTERN, password);
     }
 
     public static boolean isValidEmail(String email) {
-        return Pattern.matches(EMAIL_PATTERN, email);
+        return email != null && Pattern.matches(EMAIL_PATTERN, email);
     }
 
     public static boolean isValidPhone(String phone) {
-        return Pattern.matches(PHONE_PATTERN, phone);
+        return phone != null && Pattern.matches(PHONE_PATTERN, phone);
     }
 }
 

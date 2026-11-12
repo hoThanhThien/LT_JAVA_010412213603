@@ -16,7 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "http://127.0.0.1:3000", allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"}, allowCredentials = "true")
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -34,8 +34,12 @@ public class AuthController {
   @Autowired
   private CustomerService customerService;
   @PostMapping("/login")
-  public LoginResponse login(@RequestBody LoginRequest loginRequest) {
-    return authService.login(loginRequest);
+  public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
+    LoginResponse response = authService.login(loginRequest);
+    if (response.getData() == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+    return ResponseEntity.ok(response);
   }
 
   @PostMapping("/logout")
@@ -53,7 +57,7 @@ public class AuthController {
 
       //Tạo access token mới
       User user = refreshToken.getUser();
-      String newAccessToken = jwtUtil.generateAccessToken(user.getUsername(), user.getRoles());
+      String newAccessToken = jwtUtil.generateAccessToken(user.getId(), user.getUsername(), user.getRoles());
 
       return ResponseEntity.ok(new ApiResponse<>("", new RefreshTokenResponse(refreshToken.getToken(), newAccessToken)));
     }
@@ -62,9 +66,11 @@ public class AuthController {
     }
   }
   @PostMapping("/register")
-  @PreAuthorize("hasRole('CUSTOMER')")
   public ResponseEntity<CustomerResponseDTO> register(@RequestBody RegisterRequest registerRequest) {
     CustomerResponseDTO response = customerService.register(registerRequest);
+    if (response.getData() == null) {
+      return ResponseEntity.badRequest().body(response);
+    }
     return ResponseEntity.ok(response);
   }
 }

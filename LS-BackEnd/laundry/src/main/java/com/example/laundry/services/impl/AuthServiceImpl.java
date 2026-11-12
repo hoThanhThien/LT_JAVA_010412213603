@@ -60,8 +60,8 @@ public class AuthServiceImpl implements AuthService {
           updatePasswordWithEncryption(phone, loginRequest.getPassword());
         }
 
-        // Tạo accessToken
-        String accessToken = jwtUtil.generateAccessToken(phone.getUsername(), phone.getRoles());
+        // Tạo accessToken (gắn userId bất biến)
+        String accessToken = jwtUtil.generateAccessToken(phone.getId(), phone.getUsername(), phone.getRoles());
 
         //Tạo refreshToken
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(phone);

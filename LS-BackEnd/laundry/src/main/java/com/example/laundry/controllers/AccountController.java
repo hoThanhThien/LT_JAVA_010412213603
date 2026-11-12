@@ -5,6 +5,7 @@ import com.example.laundry.dto.GetInfoRequest;
 import com.example.laundry.dto.GetInfoResponse;
 import com.example.laundry.models.user.Customer;
 import com.example.laundry.repository.CustomerRepository;
+import com.example.laundry.security.SecurityUtils;
 import com.example.laundry.services.AccountService;
 import com.example.laundry.services.CustomerService;
 import com.example.laundry.utils.ApiResponse;
@@ -16,7 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "http://127.0.0.1:3000", allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"}, allowCredentials = "true")
 @RestController
 public class AccountController {
   @Autowired
@@ -28,8 +29,7 @@ public class AccountController {
   private AccountService accountService;
   private Customer getCurrentCustomer() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    String currentUsername = authentication.getName();
-    return customerRepository.findByUsername(currentUsername);
+    return SecurityUtils.resolveCurrentUser(authentication, customerRepository::findById, customerRepository::findByUsername);
   }
 
   @GetMapping("/accounts/me")

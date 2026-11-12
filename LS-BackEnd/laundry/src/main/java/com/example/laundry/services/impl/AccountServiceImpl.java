@@ -5,6 +5,7 @@ import com.example.laundry.dto.GetInfoResponse;
 import com.example.laundry.models.user.User;
 import com.example.laundry.repository.UserRepository;
 import com.example.laundry.security.JwtUtil;
+import com.example.laundry.security.SecurityUtils;
 import com.example.laundry.services.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,8 +28,10 @@ public class AccountServiceImpl implements AccountService {
         return new GetInfoResponse(null, "Access không được để trống!!!");
       }
 
-      String username = jwtUtil.validateTokenAndRetrieveSubject(accessToken);
-      User user = userRepository.findByUsername(username);
+      String principalId = jwtUtil.validateTokenAndRetrieveSubject(accessToken);
+      User user = SecurityUtils.parseUuid(principalId)
+              .flatMap(userRepository::findById)
+              .orElseGet(() -> userRepository.findByUsername(principalId));
       if (user == null) {
         return new GetInfoResponse(null, "Không tìm thấy thông tin người dùng!!!");
       }

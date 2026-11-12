@@ -17,7 +17,7 @@ public class ServiceServiceImpl implements ServiceService {
 
   @Override
   public ApiResponse<List<ServiceDTO>> getServicesByCategoryId(Integer shopId, Integer categoryId) {
-    List<Service> services = serviceRepository.findByCategoryIdAndCategoryShopId(shopId, categoryId);
+    List<Service> services = serviceRepository.findByCategoryIdAndCategoryShopId(categoryId, shopId);
 
     List<ServiceDTO> servicesDTOs = services.stream()
             .map(service -> new ServiceDTO(
