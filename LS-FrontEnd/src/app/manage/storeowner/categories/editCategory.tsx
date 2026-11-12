@@ -11,7 +11,6 @@ import { toast } from "react-toastify";
 import employeeApiRequests from "@/apiRequests/employee";
 import { CategoryManageType } from "@/schemaValidations/category.schema";
 import serviceApiRequests from "@/apiRequests/service";
-import { getAccessTokenFromLocalStorage } from "@/lib/utils";
 
 export const EditCategory = (props: {
   openModalUpdate: boolean;

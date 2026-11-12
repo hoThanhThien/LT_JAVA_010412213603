@@ -12,11 +12,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useLogoutMutation } from "@/queries/useAuth";
-import { getAccessTokenFromLocalStorage, handleErrorApi } from "@/lib/utils";
+import { handleErrorApi } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useAccountMe } from "@/queries/useAccount";
 import { useAuthStore } from "@/lib/zustand";
-import jwt from "jsonwebtoken";
 import { AvatarImage } from "@radix-ui/react-avatar";
 
 export default function DropdownAvatar() {
@@ -27,9 +26,8 @@ export default function DropdownAvatar() {
 
   const { setIsAuth, setOpenSetting, setOpenPay } = useAuthStore();
 
-  const decodedAccessToken = jwt.decode(getAccessTokenFromLocalStorage()!) as {
-    role: string;
-  };
+  // Role lấy từ thông tin tài khoản (token nằm trong cookie HttpOnly, JS không đọc được)
+  const decodedAccessToken = account ? { role: account.role } : null;
 
   const logout = async () => {
     if (logoutMutation.isPending) return;

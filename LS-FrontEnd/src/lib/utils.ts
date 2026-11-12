@@ -4,7 +4,7 @@ import { twMerge } from "tailwind-merge";
 import { EntityError } from "./http";
 import { toast } from "sonner";
 import authApiRequests from "@/apiRequests/auth";
-import jwt from "jsonwebtoken";
+import type { SessionResType } from "@/schemaValidations/auth.schema";
 import dayjs from "dayjs";
 
 export function cn(...inputs: ClassValue[]) {
@@ -41,73 +41,60 @@ export const handleErrorApi = ({
   }
 };
 
-const isBrowser = typeof window !== "undefined";
+// Token được lưu trong cookie HttpOnly nên JS không đọc được.
+// Ở client chỉ giữ cache "thông tin phiên" (hạn token, role) lấy từ /api/auth/session.
+let sessionCache: SessionResType | null = null;
+let sessionRequest: Promise<SessionResType> | null = null;
 
-export const getAccessTokenFromLocalStorage = () => {
-  return isBrowser ? localStorage.getItem("accessToken") : null;
+export const resetSessionCache = () => {
+  sessionCache = null;
 };
 
-export const getRefreshTokenFromLocalStorage = () => {
-  return isBrowser ? localStorage.getItem("refreshToken") : null;
-};
-
-export const setAccessTokenToLocalStorage = (token: string) => {
-  if (isBrowser) localStorage.setItem("accessToken", token);
-};
-
-export const setRefreshTokenToLocalStorage = (token: string) => {
-  if (isBrowser) localStorage.setItem("refreshToken", token);
-};
-
-export const removeTokenFromLocalStorage = () => {
-  isBrowser && localStorage.removeItem("accessToken");
-  isBrowser && localStorage.removeItem("refreshToken");
+export const getSession = async (): Promise<SessionResType> => {
+  if (sessionCache) return sessionCache;
+  if (!sessionRequest) {
+    sessionRequest = authApiRequests
+      .session()
+      .then((res) => res.payload)
+      .finally(() => {
+        sessionRequest = null;
+      });
+  }
+  sessionCache = await sessionRequest;
+  return sessionCache;
 };
 
 export const checkAndRefreshToken = async (param?: {
   onError?: () => void;
   onSuccess?: () => void;
 }) => {
-  //không nên đưa logic lấy access và refresh token ra khỏi func này
-  //Vì để mỗi lần mà checkandrefreshToken dc chạy thì chúng ta sẽ có 1 access token và refresh token mới
-  //Tránh bug lấy lần đầu , gọi cho các lần sau
-  const accessToken = getAccessTokenFromLocalStorage();
-  const refreshToken = getRefreshTokenFromLocalStorage();
+  const session = await getSession();
   //Chưa đăng nhập cx k cho chạy
-  if (!accessToken || !refreshToken) return;
-
-  const decodedAccessToken = jwt.decode(accessToken) as {
-    exp: number;
-    iat: number;
-  };
-  const decodedRefreshToken = jwt.decode(refreshToken) as {
-    exp: number;
-    iat: number;
-  };
+  if (!session.authenticated) return;
 
   const now = Math.round(new Date().getTime() / 1000); // current time in seconds
+  const accessExp = session.accessExp ?? 0;
+  const accessIat = session.accessIat ?? 0;
 
-  //trường hợp refresh token hết hạn thì không xử lý
-  if (decodedRefreshToken.exp < now) {
-    removeTokenFromLocalStorage();
+  //trường hợp refresh token hết hạn thì không xử lý (cookie cũng đã tự hết hạn)
+  if ((session.refreshExp ?? 0) < now) {
+    resetSessionCache();
     return param?.onError && param.onError();
   }
 
-  if (
-    decodedAccessToken.exp - now <
-    (decodedAccessToken.exp - decodedAccessToken.iat) / 3
-  ) {
+  // accessExp = 0 nghĩa là cookie access token đã hết hạn => cần refresh ngay
+  if (accessExp - now < (accessExp - accessIat) / 3) {
     try {
-      const res = await authApiRequests.refreshToken();
-      setAccessTokenToLocalStorage(res.payload.data.accessToken);
-      setRefreshTokenToLocalStorage(res.payload.data.refreshToken);
+      await authApiRequests.refreshToken();
+      resetSessionCache();
+      await getSession();
       param?.onSuccess && param.onSuccess();
     } catch (error) {
+      resetSessionCache();
       param?.onError && param.onError();
     }
   }
 };
-
 export const formatDate = (day: any) => {
   return dayjs(day).format("DD-MM-YYYY");
 };

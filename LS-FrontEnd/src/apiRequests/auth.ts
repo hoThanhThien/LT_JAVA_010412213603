@@ -2,6 +2,8 @@ import http from "@/lib/http";
 import {
   LoginBodyType,
   AuthResType,
+  ClientAuthResType,
+  SessionResType,
   RegisterBodyType,
   LogoutBodyType,
   RefreshTokenBodyType,
@@ -11,14 +13,14 @@ import {
 const authApiRequests = {
   sLogin: (body: LoginBodyType) => http.post<AuthResType>("/auth/login", body),
   login: (body: LoginBodyType) =>
-    http.post<AuthResType>("api/auth/login", body, {
+    http.post<ClientAuthResType>("api/auth/login", body, {
       baseUrl: "",
     }),
 
   sRegister: (body: RegisterBodyType) =>
     http.post<AuthResType>("/auth/register", body),
   register: (body: RegisterBodyType) =>
-    http.post<AuthResType>("api/auth/register", body, {
+    http.post<ClientAuthResType>("api/auth/register", body, {
       baseUrl: "",
     }),
 
@@ -37,16 +39,20 @@ const authApiRequests = {
       baseUrl: "",
     }),
 
+  session: () =>
+    http.get<SessionResType>("api/auth/session", {
+      baseUrl: "",
+      cache: "no-store",
+    }),
+
   refreshTokenRequest: null as Promise<{
     status: number;
-    payload: RefreshTokenResType;
+    payload: { message: string };
   }> | null,
 
   async refreshToken() {
-    console.log(this.refreshTokenRequest);
-
     if (this.refreshTokenRequest) return this.refreshTokenRequest;
-    this.refreshTokenRequest = http.post<RefreshTokenResType>(
+    this.refreshTokenRequest = http.post<{ message: string }>(
       "api/auth/refresh-token",
       null,
       {

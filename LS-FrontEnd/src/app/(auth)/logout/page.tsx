@@ -1,49 +1,31 @@
 "use client";
 
 import Loading from "@/components/loading";
-import {
-  getAccessTokenFromLocalStorage,
-  getRefreshTokenFromLocalStorage,
-} from "@/lib/utils";
+import { resetSessionCache } from "@/lib/utils";
 import { useAuthStore } from "@/lib/zustand";
 import { useLogoutMutation } from "@/queries/useAuth";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, Suspense } from "react";
 
 function LogoutHandler() {
   const { mutateAsync } = useLogoutMutation();
-  const { setIsAuth, setOpenAuth } = useAuthStore();
-  const searchParams = useSearchParams();
-  const refreshTokenFromUrl = searchParams.get("refreshToken");
-  const accessTokenFromUrl = searchParams.get("accessToken");
-
+  const { setIsAuth } = useAuthStore();
   const router = useRouter();
-  const ref = useRef<any>(null);
+  const started = useRef(false);
 
   useEffect(() => {
-    if (
-      ref.current ||
-      (refreshTokenFromUrl &&
-        refreshTokenFromUrl !== getRefreshTokenFromLocalStorage()) ||
-      (accessTokenFromUrl &&
-        accessTokenFromUrl !== getAccessTokenFromLocalStorage())
-    ) {
-      ref.current = mutateAsync;
+    if (started.current) return;
+    started.current = true;
 
-      mutateAsync().then((res) => {
-        setTimeout(() => {
-          ref.current = null;
-        }, 1000);
+    // Server Next đọc token từ cookie HttpOnly, gọi backend logout rồi xóa cookie
+    mutateAsync()
+      .catch(() => {})
+      .finally(() => {
+        resetSessionCache();
         setIsAuth(false);
         router.push("/");
-        // setTimeout(() => {
-        //   setOpenAuth(false);
-        // }, 1000);
       });
-    } else {
-      router.push("/");
-    }
-  }, [mutateAsync, router, accessTokenFromUrl, refreshTokenFromUrl, setIsAuth]);
+  }, [mutateAsync, router, setIsAuth]);
   return <Loading />;
 }
 

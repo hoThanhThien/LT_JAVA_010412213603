@@ -1,12 +1,16 @@
 import authApiRequests from "@/apiRequests/auth";
 import { cookies } from "next/headers";
+import {
+  ACCESS_COOKIE,
+  REFRESH_COOKIE,
+  clearAuthCookies,
+} from "@/lib/server-auth";
 
-export async function POST(request: Request) {
-  const cookieStore = cookies();
-  const accessToken = (await cookieStore).get("accessToken")?.value;
-  const refreshToken = (await cookieStore).get("refreshToken")?.value;
-  (await cookieStore).delete("accessToken");
-  (await cookieStore).delete("refreshToken");
+export async function POST() {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get(ACCESS_COOKIE)?.value;
+  const refreshToken = cookieStore.get(REFRESH_COOKIE)?.value;
+  await clearAuthCookies();
 
   if (!accessToken || !refreshToken) {
     return Response.json(

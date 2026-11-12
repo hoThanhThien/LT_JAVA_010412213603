@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect } from "react";
-import { getAccessTokenFromLocalStorage } from "@/lib/utils";
+import { getSession } from "@/lib/utils";
 import Auth from "./auth";
 import DropdownAvatar from "./dropdown-avatar";
 import { useAuthStore } from "@/lib/zustand";
@@ -20,7 +20,9 @@ export default function Layout({
   const { isAuth, setIsAuth, setOpenAuth } = useAuthStore();
 
   useEffect(() => {
-    setIsAuth(Boolean(getAccessTokenFromLocalStorage()));
+    getSession()
+      .then((session) => setIsAuth(session.authenticated))
+      .catch(() => setIsAuth(false));
   }, [setIsAuth]);
 
   return (

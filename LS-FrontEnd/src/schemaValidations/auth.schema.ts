@@ -28,6 +28,22 @@ export const AuthRes = z.object({
 
 export type AuthResType = z.TypeOf<typeof AuthRes>;
 
+// Phản hồi từ Next server cho trình duyệt: KHÔNG chứa token (token nằm trong cookie HttpOnly)
+export const ClientAuthRes = z.object({
+  data: z.object({ account: AuthRes.shape.data.shape.account }),
+  message: z.string(),
+});
+
+export type ClientAuthResType = z.TypeOf<typeof ClientAuthRes>;
+
+export type SessionResType = {
+  authenticated: boolean;
+  role?: string | null;
+  accessExp?: number;
+  accessIat?: number;
+  refreshExp?: number;
+};
+
 export const RegisterBody = z
   .object({
     username: z.string().min(3).max(100),
