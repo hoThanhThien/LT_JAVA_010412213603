@@ -17,9 +17,11 @@ import { toast } from "react-toastify";
 import { handleErrorApi } from "@/lib/utils";
 
 export default function Setting() {
-  const { openSetting, setOpenSetting } = useAuthStore();
+  const { openSetting, setOpenSetting, isAuth } = useAuthStore();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [previewAvatar, setPreviewAvatar] = useState("");
+  const { data } = useAccountMe(isAuth && openSetting);
+  const account = data?.payload?.data?.account;
   const updateMeMutation = useUpdateMeMutation();
 
   const form = useForm<UpdateMeType>({
@@ -28,25 +30,20 @@ export default function Setting() {
       username: "",
       address: "",
       email: "",
+      avtUser: "",
     },
   });
 
   useEffect(() => {
-    try {
-      const { data } = useAccountMe();
-      const account = data?.payload?.data?.account;
-      if (account) {
-        form.reset({
-          username: account.username,
-          address: account.address || "", // Assuming address exists in your account data
-          email: account.email,
-        });
-        // setPreviewAvatar(account.avtUser!);
-      }
-    } catch (error) {
-      console.log(error);
+    if (account && openSetting) {
+      form.reset({
+        username: account.username ?? "",
+        address: account.address ?? "",
+        email: account.email ?? "",
+        avtUser: account.avtUser ?? "",
+      });
     }
-  }, [form]);
+  }, [account, openSetting, form]);
 
   const convertToBase64 = (file: File) => {
     return new Promise((resolve, reject) => {
@@ -68,7 +65,7 @@ export default function Setting() {
       try {
         const base64: any = await convertToBase64(file);
         setPreviewAvatar(base64); // Lưu base64 vào state để hiển thị preview
-        form.setValue("avt_user", base64); // Cập nhật giá trị trong form
+        form.setValue("avtUser", base64); // Cập nhật giá trị trong form
       } catch (error) {
         console.error("Error converting image to base64:", error);
       }
@@ -205,13 +202,15 @@ export default function Setting() {
 
                     <FormField
                       control={form.control}
-                      name="avt_user"
-                      render={({ field }) => (
+                      name="avtUser"
+                      render={() => (
                         <FormItem>
                           <Label htmlFor="name">Avatar</Label>
                           <div className="flex gap-2 items-start justify-start">
                             <Avatar className="aspect-square w-[100px] h-[100px] rounded-md object-cover">
-                              <AvatarImage src={previewAvatar} />
+                              <AvatarImage
+                                src={previewAvatar || account?.avtUser || undefined}
+                              />
                               <AvatarFallback className="rounded-none">
                                 Avatar
                               </AvatarFallback>

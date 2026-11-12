@@ -3,7 +3,7 @@ import orderApiRequests from "@/apiRequests/order";
 
 export const useAdminOrder = (page: number, size: number) => {
   return useQuery({
-    queryKey: ["order-admin"],
+    queryKey: ["order-admin", page, size],
     queryFn: () => orderApiRequests.adminOrder(page, size),
   });
 };

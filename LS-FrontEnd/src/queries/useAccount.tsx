@@ -1,9 +1,10 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import accountApiRequests from "@/apiRequests/account";
-export const useAccountMe = () => {
+export const useAccountMe = (enabled = true) => {
   return useQuery({
     queryKey: ["account-me"],
     queryFn: accountApiRequests.me,
+    enabled,
   });
 };
 

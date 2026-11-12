@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { getSession } from "@/lib/utils";
 import Auth from "./auth";
 import DropdownAvatar from "./dropdown-avatar";
@@ -75,7 +75,9 @@ export default function Layout({
             </div>
           </nav>
         </div>
-        <Auth />
+        <Suspense fallback={null}>
+          <Auth />
+        </Suspense>
         <Setting />
         <CustomerListOrder />
         <Order />

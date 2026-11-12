@@ -2,15 +2,15 @@ import { RoleValues } from "@/constants/type";
 import z from "zod";
 
 export const AccountSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   username: z.string(),
   phone: z.string(),
   role: z.string(),
-  email: z.string().optional(),
-  address: z.string().optional(),
-  avtUser: z.string().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  email: z.string().nullable().optional(),
+  address: z.string().nullable().optional(),
+  avtUser: z.string().nullable().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 
 export type AccountType = z.TypeOf<typeof AccountSchema>;
@@ -31,8 +31,8 @@ export const UpdateMeBody = z
     phone: z.string().optional(),
     username: z.string().optional(),
     password: z.string().optional(),
-    email: z.string().email().optional(),
-    avt_user: z.string().optional(),
+    email: z.string().email().optional().or(z.literal("")),
+    avtUser: z.string().optional(),
     address: z.string().optional(),
   })
   .strict();
@@ -41,17 +41,20 @@ export type UpdateMeType = z.TypeOf<typeof UpdateMeBody>;
 
 export const UpdateMeResSchema = z
   .object({
-    data: z.object({
-      username: z.string(),
-      password: z.string(),
-      email: z.string().email().nullable(),
-      phone: z.string(),
-      address: z.string().nullable(),
-      role: z.string(),
-      avtUser: z.string().nullable(),
-      createdAt: z.string().datetime(),
-      updatedAt: z.string().datetime(),
-    }),
+    data: z
+      .object({
+        id: z.string().optional(),
+        username: z.string(),
+        password: z.string().nullable().optional(),
+        email: z.string().email().nullable().optional(),
+        phone: z.string(),
+        address: z.string().nullable().optional(),
+        role: z.string().optional(),
+        avtUser: z.string().nullable().optional(),
+        createdAt: z.string().optional(),
+        updatedAt: z.string().optional(),
+      })
+      .nullable(),
     message: z.string(),
   })
   .strict();

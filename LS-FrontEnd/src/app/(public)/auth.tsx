@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import Image from "next/image";
 import Login from "@/components/login";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Register from "@/components/register";
 import Otp from "@/components/otp";
 import { RegisterBodyType } from "@/schemaValidations/auth.schema";
@@ -17,17 +17,16 @@ export default function Auth() {
     {} as RegisterBodyType
   );
 
-  useEffect(() => {
-    if (openAuth) {
-      setActiveTab("login");
-    }
-  }, [openAuth]);
-
   return (
     <>
       <Dialog
         open={isAuth ? false : openAuth}
-        onOpenChange={(open: boolean) => setOpenAuth(open)}
+        onOpenChange={(open: boolean) => {
+          setOpenAuth(open);
+          if (!open) {
+            setActiveTab("login");
+          }
+        }}
       >
         <DialogContent
           className="border-none"

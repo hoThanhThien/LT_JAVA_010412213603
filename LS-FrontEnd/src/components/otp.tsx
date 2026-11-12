@@ -10,13 +10,14 @@ import {
   signInWithPhoneNumber,
 } from "firebase/auth";
 import { auth } from "../../firebase";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRegisterMutation } from "@/queries/useAuth";
 import { RegisterBodyType } from "@/schemaValidations/auth.schema";
 import { toast } from "react-toastify";
 
 // Hàm định dạng số điện thoại thành định dạng quốc tế
-const formatPhoneNumber = (phone: string): string => {
+const formatPhoneNumber = (phone?: string): string => {
+  if (!phone) return "";
   if (phone.startsWith("+")) return phone;
   if (phone.startsWith("0")) return `+84${phone.slice(1)}`;
   return `+${phone}`;
@@ -67,27 +68,8 @@ export default function Otp(props: {
     };
   }, []);
 
-  // Khởi tạo gửi OTP khi component được mount
-  useEffect(() => {
-    if (!props.dataRegister.phone) return;
-
-    // Kiểm tra số điện thoại hợp lệ
-    const phoneRegex = /^\+?[0-9]{10,15}$/;
-    if (!phoneRegex.test(props.dataRegister.phone.replace(/\s/g, ""))) {
-      setError("Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.");
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      handleSendOtp();
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [props.dataRegister.phone]);
-
   // Khởi tạo reCAPTCHA
-  // Sửa hàm initializeRecaptcha để thêm xử lý timeout tốt hơn
-  const initializeRecaptcha = () => {
+  const initializeRecaptcha = useCallback((): Promise<boolean> => {
     // Xóa instance cũ nếu có
     if (recaptchaVerifierRef.current) {
       try {
@@ -98,7 +80,7 @@ export default function Otp(props: {
       recaptchaVerifierRef.current = null;
     }
 
-    if (!recaptchaContainerRef.current) return false;
+    if (!recaptchaContainerRef.current) return Promise.resolve(false);
 
     // Xóa nội dung container cũ
     recaptchaContainerRef.current.innerHTML = "";
@@ -129,7 +111,7 @@ export default function Otp(props: {
             size: "invisible",
             callback: () => {
               console.log("reCAPTCHA đã xác minh");
-              clearTimeout(timeoutId); // Xóa timeout khi thành công
+              clearTimeout(timeoutId);
             },
             "expired-callback": () => {
               console.log("reCAPTCHA hết hạn");
@@ -142,26 +124,33 @@ export default function Otp(props: {
         recaptchaVerifierRef.current
           .render()
           .then(() => {
-            clearTimeout(timeoutId); // Xóa timeout khi thành công
+            clearTimeout(timeoutId);
             resolve(true);
           })
           .catch((error) => {
-            clearTimeout(timeoutId); // Xóa timeout dù có lỗi
+            clearTimeout(timeoutId);
             console.error("Lỗi khi render reCAPTCHA:", error);
             setError("Không thể khởi tạo xác thực. Vui lòng thử lại sau.");
             resolve(false);
           });
       } catch (error: any) {
-        clearTimeout(timeoutId); // Xóa timeout dù có lỗi
+        clearTimeout(timeoutId);
         console.error("Lỗi khởi tạo reCAPTCHA:", error);
         setError(error?.message || "Không thể khởi tạo reCAPTCHA");
         resolve(false);
       }
     });
-  };
+  }, []);
 
   // Xử lý gửi OTP
-  const handleSendOtp = async () => {
+  const handleSendOtp = useCallback(async () => {
+    const rawPhone = props.dataRegister.phone?.replace(/\s/g, "") ?? "";
+    const phoneRegex = /^\+?[0-9]{10,15}$/;
+    if (!phoneRegex.test(rawPhone)) {
+      setError("Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.");
+      return;
+    }
+
     setError("");
     setIsOtpSent(false);
 
@@ -177,7 +166,6 @@ export default function Otp(props: {
         }
 
         // Gửi OTP
-        console.log("Đang gửi OTP đến:", formattedPhone);
         const result = await signInWithPhoneNumber(
           auth,
           formattedPhone,
@@ -185,7 +173,6 @@ export default function Otp(props: {
         );
 
         confirmationResultRef.current = result;
-        console.log(result);
         setResendCountdown(60);
         setIsOtpSent(true);
         setError("");
@@ -202,11 +189,15 @@ export default function Otp(props: {
           case "auth/too-many-requests":
             setError("Đã vượt quá giới hạn yêu cầu. Vui lòng thử lại sau.");
             break;
+          case "auth/billing-not-enabled":
+            setError(
+              "Dự án Firebase chưa bật gói trả phí (Blaze) nên chưa thể gửi SMS OTP."
+            );
+            break;
           case "auth/captcha-check-failed":
             setError(
               "Xác minh reCAPTCHA thất bại. Vui lòng tải lại trang và thử lại."
             );
-            // Thử khởi tạo lại reCAPTCHA
             setTimeout(() => initializeRecaptcha(), 500);
             break;
           default:
@@ -217,7 +208,18 @@ export default function Otp(props: {
         }
       }
     });
-  };
+  }, [formattedPhone, initializeRecaptcha, props.dataRegister.phone]);
+
+  // Khởi tạo gửi OTP khi component được mount
+  useEffect(() => {
+    if (!props.dataRegister.phone) return;
+
+    const timer = setTimeout(() => {
+      handleSendOtp();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [props.dataRegister.phone, handleSendOtp]);
 
   // Xác minh OTP
   const verifyOtp = async () => {

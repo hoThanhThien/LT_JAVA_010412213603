@@ -9,12 +9,13 @@ import { Button, Tag } from "antd";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAuthStore } from "@/lib/zustand";
 import { useRouter } from "next/navigation";
+import { useHydrated } from "@/hooks/use-hydrated";
 
 export default function CustomerListOrder() {
   const { openPay, setOpenPay } = useAuthStore();
   const router = useRouter();
 
-  const [mounted, setMounted] = useState(false);
+  const mounted = useHydrated();
   const actionRef = useRef<ActionType>(null);
   const [meta, setMeta] = useState({
     page: 0,
@@ -23,10 +24,6 @@ export default function CustomerListOrder() {
     totalPages: 0,
   });
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Hàm fetch data riêng để có thể gọi lại khi cần
   const fetchData = async () => {
@@ -55,10 +52,10 @@ export default function CustomerListOrder() {
 
   // Khi component mount, trigger fetch dữ liệu ban đầu
   useEffect(() => {
-    if (mounted && actionRef.current) {
+    if (mounted && openPay && actionRef.current) {
       actionRef.current.reload();
     }
-  }, [mounted]);
+  }, [mounted, openPay]);
 
   if (!mounted) {
     return null;
