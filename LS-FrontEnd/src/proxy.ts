@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
+import { getJwtSecret } from "@/lib/server-env";
 
 const privatePaths = ["/manage"];
-
-// Phải trùng với jwt.secret của backend (đặt trong .env.local, chỉ dùng phía server)
-const JWT_SECRET = process.env.JWT_SECRET;
 
 /**
  * Xác thực chữ ký + hạn + issuer của access token (trước đây chỉ decode nên cookie giả vẫn qua được).
@@ -13,12 +11,12 @@ const JWT_SECRET = process.env.JWT_SECRET;
  */
 function verifyAccessToken(token: string | undefined): { role?: string } | null {
   if (!token) return null;
-  if (!JWT_SECRET) {
-    console.error("[proxy] Thiếu biến môi trường JWT_SECRET, từ chối mọi token");
+  const secret = getJwtSecret();
+  if (!secret) {
     return null;
   }
   try {
-    return jwt.verify(token, JWT_SECRET, {
+    return jwt.verify(token, secret, {
       algorithms: ["HS256"],
       issuer: "LAUNDRY",
     }) as { role?: string };

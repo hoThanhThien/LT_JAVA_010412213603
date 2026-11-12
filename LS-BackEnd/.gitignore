@@ -34,3 +34,8 @@ build/
 
 #Firebase
 laundry/src/main/resources/firebase-service-account.json
+
+# Env files
+.env
+.env.*
+!.env.example
