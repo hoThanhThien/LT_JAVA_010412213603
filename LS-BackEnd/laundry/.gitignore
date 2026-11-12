@@ -1,0 +1,4 @@
+target/
+.env
+*.bak
+firebase-service-account.json
