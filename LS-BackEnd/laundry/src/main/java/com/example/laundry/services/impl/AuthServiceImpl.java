@@ -36,7 +36,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Autowired
   private RefreshTokenService refreshTokenService;
-  @Autowired
+  @Autowired(required = false)
   private FirebaseAuth firebaseAuth;
 
   @Override

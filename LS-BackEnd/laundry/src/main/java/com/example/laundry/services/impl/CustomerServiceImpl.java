@@ -63,7 +63,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
+    @Autowired(required = false)
     private FirebaseAuth firebaseAuth;
 
     @Autowired
@@ -73,6 +73,9 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional
     public CustomerResponseDTO register(RegisterRequest registerRequest) {
+        if (firebaseAuth == null) {
+            return new CustomerResponseDTO("Chưa cấu hình Firebase Admin (thiếu firebase-service-account.json)", null);
+        }
         // Xác minh idToken từ firebase để lấy số điện thoại
         try {
             FirebaseToken decodedToken = firebaseAuth.verifyIdToken(registerRequest.getIdToken());
