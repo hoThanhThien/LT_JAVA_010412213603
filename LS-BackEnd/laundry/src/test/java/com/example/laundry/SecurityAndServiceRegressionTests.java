@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
@@ -35,11 +36,13 @@ import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(properties = "app.cors.allowed-origins=http://localhost:3000, http://127.0.0.1:3000, https://oauth.casso.vn")
 class SecurityAndServiceRegressionTests {
 
   @Autowired
@@ -312,5 +315,32 @@ class SecurityAndServiceRegressionTests {
     Customer reloaded = customerRepository.findById(saved.getId()).orElseThrow();
     assertEquals("data:image/png;base64,iVBORw0KGgo=", reloaded.getAvtUser());
     assertEquals("New Address", reloaded.getAddress());
+  }
+
+  @Test
+  void corsUsesCentralizedEnvConfigAndRejectsUntrustedOrigins() throws Exception {
+    MockMvc mockMvc = MockMvcBuilders.webAppContextSetup(context)
+        .addFilters(springSecurityFilterChain)
+        .build();
+
+    mockMvc.perform(options("/auth/login")
+            .header(HttpHeaders.ORIGIN, "http://localhost:3000")
+            .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST"))
+        .andExpect(status().isOk())
+        .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:3000"))
+        .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true"));
+
+    mockMvc.perform(options("/api/payments/info/1")
+            .header(HttpHeaders.ORIGIN, "https://oauth.casso.vn")
+            .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
+        .andExpect(status().isOk())
+        .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "https://oauth.casso.vn"))
+        .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true"));
+
+    mockMvc.perform(options("/auth/login")
+            .header(HttpHeaders.ORIGIN, "https://evil.example")
+            .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST"))
+        .andExpect(status().isForbidden())
+        .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
   }
 }
