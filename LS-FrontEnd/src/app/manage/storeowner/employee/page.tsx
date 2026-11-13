@@ -15,9 +15,10 @@ import employeeApiRequests from "@/apiRequests/employee";
 import { EditEmployeeByStoreOwner } from "./edit";
 import { Button } from "antd";
 import { CreateEmployeeByStoreOwner } from "./create";
+import { useHydrated } from "@/hooks/use-hydrated";
 
 export default function StoreOwnerManageEmployee() {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useHydrated();
   const actionRef = useRef<ActionType>(null);
   const [meta, setMeta] = useState({
     page: 0,
@@ -33,10 +34,6 @@ export default function StoreOwnerManageEmployee() {
   const [dataUpdate, setDataUpdate] = useState<EmployeeListType | null>(null);
 
   const [openModalCreate, setOpenModalCreate] = useState<boolean>(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const refreshTable = () => {
     actionRef.current?.reload();

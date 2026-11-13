@@ -6,9 +6,10 @@ import { ProTable } from "@ant-design/pro-components";
 import { formatDate } from "@/lib/utils";
 import employeeApiRequests from "@/apiRequests/employee";
 import { EmployeeListType } from "@/schemaValidations/employee.schema";
+import { useHydrated } from "@/hooks/use-hydrated";
 
 export default function EmployeeOrder() {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useHydrated();
   const actionRef = useRef<ActionType>(null);
   const [meta, setMeta] = useState({
     page: 0,
@@ -19,10 +20,6 @@ export default function EmployeeOrder() {
   const [currentPage, setCurrentPage] = useState(1); // Bắt đầu từ 1 cho UI
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const refreshTable = () => {
     actionRef.current?.reload();

@@ -14,28 +14,50 @@ function ThanhToan() {
   const params = useSearchParams();
 
   useEffect(() => {
-    const fetchData = async () => {
+    let isPaid = false;
+    let hasLoaded = false;
+
+    const fetchData = async (): Promise<boolean> => {
       const orderId = params.get("orderId");
-      if (orderId) {
-        try {
-          setLoading(true);
-          const result = await paymentApiRequests.get(parseInt(orderId));
-          setPaymentData(result.payload);
-        } catch (error) {
-          console.error("Error fetching payment data:", error);
-        } finally {
-          setLoading(false);
-        }
+      const parsedId = orderId ? Number(orderId) : NaN;
+      if (!Number.isInteger(parsedId) || parsedId <= 0) {
+        isPaid = true;
+        setLoading(false);
+        return true;
       }
+
+      try {
+        if (!hasLoaded) {
+          setLoading(true);
+        }
+        const result = await paymentApiRequests.get(parsedId);
+        setPaymentData(result.payload);
+        hasLoaded = true;
+        if (result.payload.paymentStatus === "PAID") {
+          isPaid = true;
+          return true;
+        }
+      } catch (error) {
+        console.error("Error fetching payment data:", error);
+      } finally {
+        setLoading(false);
+      }
+      return false;
     };
 
     fetchData();
 
     // Thiết lập interval để kiểm tra trạng thái mỗi 5 giây
     const intervalId = setInterval(() => {
-      console.log("check");
-
-      fetchData();
+      if (isPaid) {
+        clearInterval(intervalId);
+        return;
+      }
+      void fetchData().then((paid) => {
+        if (paid) {
+          clearInterval(intervalId);
+        }
+      });
     }, 5000);
 
     // Xóa interval khi component unmount

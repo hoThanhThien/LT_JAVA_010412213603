@@ -9,7 +9,7 @@ export default function DownloadApp() {
           alt="home-screen"
           width="565"
           height="976"
-          // className="w-[40%] h-[290px] mx-auto"
+          className="w-full h-auto"
         />
       </div>
       <div className="col-span-1 col-start-2 self-end h-full flex flex-col justify-center items-center gap-15">
@@ -20,12 +20,19 @@ export default function DownloadApp() {
           mới và khách hàng thân thiết
         </div>
         <div className="flex gap-6">
-          <Image src="/app-store.svg" alt="AppStore" width="200" height="200" />
+          <Image
+            src="/app-store.svg"
+            alt="AppStore"
+            width="200"
+            height="60"
+            className="w-[200px] h-auto"
+          />
           <Image
             src="/google-play.svg"
             alt="GooglePlay"
             width="200"
-            height="200"
+            height="60"
+            className="w-[200px] h-auto"
           />
         </div>
       </div>

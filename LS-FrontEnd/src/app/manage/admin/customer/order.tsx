@@ -7,6 +7,7 @@ import { OrderListType } from "@/schemaValidations/order.schema";
 import orderApiRequests from "@/apiRequests/order";
 import { Button, Divider, Tag } from "antd";
 import { Modal } from "antd/lib";
+import { useHydrated } from "@/hooks/use-hydrated";
 
 export default function CustomerAllOrder(props: {
   idCustomer: string;
@@ -16,7 +17,7 @@ export default function CustomerAllOrder(props: {
 }) {
   const { idCustomer, openOrder, setOpenOrder, setIdCustomer } = props;
 
-  const [mounted, setMounted] = useState(false);
+  const mounted = useHydrated();
   const actionRef = useRef<ActionType>(null);
   const [meta, setMeta] = useState({
     page: 0,
@@ -28,21 +29,18 @@ export default function CustomerAllOrder(props: {
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const refreshTable = () => {
     actionRef.current?.reload();
   };
 
   // Hàm fetch data riêng để có thể gọi lại khi cần
   const fetchData = async (page: number, size: number, id: string) => {
+    if (!id) {
+      return { data: [], success: true, total: 0 };
+    }
     setLoading(true);
     try {
       // API thường yêu cầu page bắt đầu từ 0
-      console.log(id);
-
       const apiPage = page - 1;
       const query = await orderApiRequests.adminOrderCustomer(
         apiPage,
@@ -68,12 +66,11 @@ export default function CustomerAllOrder(props: {
     }
   };
 
-  // Khi component mount, trigger fetch dữ liệu ban đầu
   useEffect(() => {
-    if (mounted && actionRef.current) {
+    if (mounted && openOrder && idCustomer && actionRef.current) {
       actionRef.current.reload();
     }
-  }, [mounted]);
+  }, [mounted, openOrder, idCustomer]);
 
   if (!mounted) {
     return null;
@@ -128,8 +125,15 @@ export default function CustomerAllOrder(props: {
         }}
         destroyOnClose={true}
         footer={[
-          <Button key="add" type="primary">
-            Thêm mới
+          <Button
+            key="close"
+            type="primary"
+            onClick={() => {
+              setOpenOrder(false);
+              setIdCustomer("");
+            }}
+          >
+            Đóng
           </Button>,
         ]}
       >
@@ -142,7 +146,7 @@ export default function CustomerAllOrder(props: {
           request={async () => {
             return await fetchData(currentPage, pageSize, idCustomer);
           }}
-          rowKey="username"
+          rowKey="id"
           pagination={{
             current: currentPage,
             pageSize: pageSize,

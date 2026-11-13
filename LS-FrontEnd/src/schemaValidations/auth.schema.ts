@@ -15,7 +15,7 @@ export const AuthRes = z.object({
     accessToken: z.string(),
     refreshToken: z.string(),
     account: z.object({
-      id: z.number(),
+      id: z.string(),
       name: z.string(),
       phone: z.string(),
       email: z.string().optional(),

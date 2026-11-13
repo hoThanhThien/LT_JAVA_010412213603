@@ -9,7 +9,7 @@ const StoreOwnerBody = z.object({
   phone: z.string(),
   email: z.string().email().optional(),
   address: z.string().optional(),
-  avtUser: z.string(),
+  avtUser: z.string().nullable().optional(),
   roles: z.enum(RoleValues),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),

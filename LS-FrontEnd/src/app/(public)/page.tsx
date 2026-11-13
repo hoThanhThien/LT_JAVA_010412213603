@@ -55,7 +55,7 @@ function Home() {
                 width="0"
                 height="0"
                 sizes="100vw"
-                className="w-[30%] h-[30%]"
+                className="w-[30%] h-auto"
               />
               <Image
                 src="/google-play.svg"
@@ -63,7 +63,7 @@ function Home() {
                 width="0"
                 height="0"
                 sizes="100vw"
-                className="w-[30%] h-[30%]"
+                className="w-[30%] h-auto"
               />
             </div>
           </div>
@@ -71,10 +71,10 @@ function Home() {
             <Image
               src="/home/phone-banner-desktop.png"
               alt="Banner"
-              width="0"
-              height="0"
-              sizes="100vw"
-              className="w-full h-[552px]"
+              width="700"
+              height="552"
+              loading="eager"
+              className="w-full h-auto"
             />
           </div>
         </div>
@@ -119,7 +119,7 @@ function Home() {
               width="733"
               height="725"
               alt="bg-2"
-              className="lg:block"
+              className="lg:block w-full h-auto"
             />
           </div>
           <div className="flex flex-col gap-5 w-[40%]">
@@ -148,7 +148,7 @@ function Home() {
               width="733"
               height="725"
               alt="bg-2"
-              className="lg:block"
+              className="lg:block w-full h-auto"
             />
           </div>
           <div className="flex flex-col gap-5 w-[50%]">
@@ -185,7 +185,7 @@ function Home() {
               width="677"
               height="776"
               alt="bg-2"
-              className="lg:block"
+              className="lg:block w-full h-auto"
             />
           </div>
         </div>

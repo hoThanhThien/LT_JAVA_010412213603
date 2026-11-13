@@ -14,9 +14,10 @@ import { formatDate } from "@/lib/utils";
 import customerApiRequests from "@/apiRequests/customer";
 import { CustomerType } from "@/schemaValidations/customer.schema";
 import CustomerAllOrder from "./order";
+import { useHydrated } from "@/hooks/use-hydrated";
 
-export default function page() {
-  const [mounted, setMounted] = useState(false);
+export default function AdminCustomersPage() {
+  const mounted = useHydrated();
   const actionRef = useRef<ActionType>(null);
   const [meta, setMeta] = useState({
     page: 0,
@@ -30,10 +31,6 @@ export default function page() {
 
   const [idCustomer, setIdCustomer] = useState("");
   const [openOrder, setOpenOrder] = useState<boolean>(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const refreshTable = () => {
     actionRef.current?.reload();

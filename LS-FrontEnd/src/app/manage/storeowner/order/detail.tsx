@@ -4,7 +4,6 @@ import { formatDate } from "@/lib/utils";
 import { OrderListType } from "@/schemaValidations/order.schema";
 
 import { Descriptions, Drawer, Image, Tag } from "antd";
-import { useEffect, useState } from "react";
 
 export const Detail = (props: {
   openViewDetail: boolean;
@@ -19,22 +18,11 @@ export const Detail = (props: {
     setDataViewDetail,
   } = props;
 
-  const [formattedImage, setFormattedImage] = useState<string>("");
-
-  useEffect(() => {
-    if (dataViewDetail?.imgProduct) {
-      // Kiểm tra xem imgProduct đã có tiền tố data:image chưa
-      if (dataViewDetail?.imgProduct.startsWith("data:image")) {
-        setFormattedImage(dataViewDetail?.imgProduct);
-      } else {
-        // Giả định rằng imgProduct là chuỗi base64 không có tiền tố
-        // Cần xác định kiểu MIME (ví dụ: PNG, JPEG) - ở đây giả định là PNG
-        setFormattedImage(
-          `data:image/png;base64,${dataViewDetail?.imgProduct}`
-        );
-      }
-    }
-  }, [dataViewDetail?.imgProduct]);
+  const formattedImage = dataViewDetail?.imgProduct
+    ? dataViewDetail.imgProduct.startsWith("data:image")
+      ? dataViewDetail.imgProduct
+      : `data:image/png;base64,${dataViewDetail.imgProduct}`
+    : "";
 
   return (
     <>

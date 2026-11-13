@@ -16,9 +16,10 @@ import { formatDate } from "@/lib/utils";
 import { Button } from "antd";
 import { CreateStoreOwnerByAdmin } from "./create";
 import { EditStoreOwnerByAdmin } from "./edit";
+import { useHydrated } from "@/hooks/use-hydrated";
 
 export default function EmployeeOrder() {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useHydrated();
   const actionRef = useRef<ActionType>(null);
   const [meta, setMeta] = useState({
     page: 0,
@@ -34,10 +35,6 @@ export default function EmployeeOrder() {
   const [dataUpdate, setDataUpdate] = useState<StoreOwnerType | null>(null);
 
   const [openModalCreate, setOpenModalCreate] = useState<boolean>(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const refreshTable = () => {
     actionRef.current?.reload();

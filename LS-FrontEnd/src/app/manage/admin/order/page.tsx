@@ -13,9 +13,10 @@ import {
 import { OrderListType } from "@/schemaValidations/order.schema";
 import orderApiRequests from "@/apiRequests/order";
 import { Tag } from "antd";
+import { useHydrated } from "@/hooks/use-hydrated";
 
 export default function AdminOrder() {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useHydrated();
   const actionRef = useRef<ActionType>(null);
   const [meta, setMeta] = useState({
     page: 0,
@@ -26,10 +27,6 @@ export default function AdminOrder() {
   const [currentPage, setCurrentPage] = useState(1); // Bắt đầu từ 1 cho UI
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Hàm fetch data riêng để có thể gọi lại khi cần
   const fetchData = async (page: number, size: number) => {

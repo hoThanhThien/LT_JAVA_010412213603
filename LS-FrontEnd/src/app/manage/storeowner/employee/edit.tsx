@@ -103,12 +103,14 @@ export const EditEmployeeByStoreOwner = (props: {
             danger
             onClick={async () => {
               try {
+                if (!dataUpdate?.phone) return;
                 setIsDelete(true);
                 const deleteResult =
                   await employeeApiRequests.deleteByStoreOwner(
-                    dataUpdate?.phone!
+                    dataUpdate.phone
                   );
                 setOpenModalUpdate(false);
+                setDataUpdate(null);
                 refreshTable();
                 toast.success(deleteResult.payload.message, {
                   position: "bottom-left",
@@ -116,10 +118,10 @@ export const EditEmployeeByStoreOwner = (props: {
                   hideProgressBar: false,
                   closeOnClick: false,
                 });
-                setIsDelete(false);
               } catch (error) {
-                setOpenModalUpdate(false);
                 console.log(error);
+              } finally {
+                setIsDelete(false);
               }
             }}
           >

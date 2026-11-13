@@ -112,7 +112,7 @@ export default function News() {
                 alt={item.title}
                 width="218"
                 height="48"
-                className="max-w-[218px] max-h-[48px] mx-auto mb-5"
+                className="w-auto max-w-[218px] h-[48px] object-contain mx-auto mb-5"
               />
               <div className="text-sm text-gray-500 max-w-[218px] h-[110px]">
                 {item.description}
@@ -123,7 +123,13 @@ export default function News() {
               <Link href={item.link} target="_blank">
                 <button className="flex items-center mt-5 gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
                   Đọc bài viết
-                  <Image src="/arrow.svg" alt="Arrow" width={20} height={20} />
+                  <Image
+                    src="/arrow.svg"
+                    alt="Arrow"
+                    width={20}
+                    height={20}
+                    className="w-5 h-auto"
+                  />
                 </button>
               </Link>
             </div>

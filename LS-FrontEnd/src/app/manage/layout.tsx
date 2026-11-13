@@ -10,7 +10,11 @@ const { Content, Sider } = Layout;
 import "@ant-design/v5-patch-for-react-19";
 import DropdownAvatar from "../(public)/dropdown-avatar";
 
-export default function layout({ children }: { children: React.ReactNode }) {
+export default function ManageLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [collapsed, setCollapsed] = useState(false);
   const [activeMenu, setActiveMenu] = useState("1");
   const pathname = usePathname();

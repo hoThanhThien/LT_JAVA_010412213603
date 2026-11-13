@@ -68,7 +68,6 @@ export const EditService = (props: {
         estimatedTime: dataUpdate.estimatedTime,
         id: dataUpdate.id,
       });
-      setPreviewAvatar(dataUpdate.imageDesc);
     }
   }, [dataUpdate, form]);
 
@@ -109,6 +108,11 @@ export const EditService = (props: {
         }}
         confirmLoading={isSubmit}
         destroyOnClose={true}
+        afterOpenChange={(open) => {
+          if (!open) {
+            setPreviewAvatar("");
+          }
+        }}
         footer={[
           <Button
             key="cancel"
@@ -136,11 +140,13 @@ export const EditService = (props: {
             danger
             onClick={async () => {
               try {
+                if (!dataUpdate?.id) return;
                 setIsDelete(true);
                 const deleteResult = await serviceApiRequests.deleteService(
-                  dataUpdate?.id!
+                  dataUpdate.id
                 );
                 setOpenModalUpdate(false);
+                setPreviewAvatar("");
                 toast.success(deleteResult.payload.message, {
                   position: "bottom-left",
                   autoClose: 3000,
@@ -148,10 +154,10 @@ export const EditService = (props: {
                   closeOnClick: false,
                 });
                 refreshAndClose();
-                setIsDelete(false);
               } catch (error) {
-                setOpenModalUpdate(false);
                 console.log(error);
+              } finally {
+                setIsDelete(false);
               }
             }}
           >
@@ -224,7 +230,7 @@ export const EditService = (props: {
           >
             <div className="flex gap-2 items-start justify-start">
               <Avatar className="aspect-square w-[100px] h-[100px] rounded-md object-cover">
-                <AvatarImage src={previewAvatar} />
+                <AvatarImage src={previewAvatar || dataUpdate?.imageDesc || ""} />
                 <AvatarFallback className="rounded-none">
                   Hình ảnh
                 </AvatarFallback>

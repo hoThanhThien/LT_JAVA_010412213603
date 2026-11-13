@@ -10,7 +10,7 @@ const CustomerBody = z.object({
   phone: z.string(),
   address: z.string().optional(),
   role: z.enum(RoleValues),
-  avtUser: z.string(),
+  avtUser: z.string().nullable().optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });

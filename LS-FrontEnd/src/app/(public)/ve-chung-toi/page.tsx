@@ -28,10 +28,10 @@ export default function VeChungToi() {
             <Image
               src="/home/phone-banner-desktop.png"
               alt="Banner"
-              width="0"
-              height="0"
-              sizes="100vw"
-              className="w-full h-[552px]"
+              width="700"
+              height="552"
+              loading="eager"
+              className="w-full h-auto"
             />
           </div>
         </div>
@@ -90,7 +90,7 @@ export default function VeChungToi() {
               alt="Why us"
               width="343"
               height="217"
-              className="rounded-[20px] max-w-[343px]"
+              className="rounded-[20px] max-w-[343px] w-full h-auto"
             />
           </div>
           <div>
@@ -99,7 +99,7 @@ export default function VeChungToi() {
               alt="Why us"
               width="343"
               height="217"
-              className="rounded-[20px] max-w-[343px]"
+              className="rounded-[20px] max-w-[343px] w-full h-auto"
             />
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function VeChungToi() {
               alt="Why us"
               width="343"
               height="217"
-              className="rounded-[20px] max-w-[343px]"
+              className="rounded-[20px] max-w-[343px] w-full h-auto"
             />
           </div>
           <div>
@@ -199,7 +199,7 @@ export default function VeChungToi() {
               alt="Why us"
               width="343"
               height="217"
-              className="rounded-[20px] max-w-[343px]"
+              className="rounded-[20px] max-w-[343px] w-full h-auto"
             />
           </div>
         </div>
@@ -213,7 +213,7 @@ export default function VeChungToi() {
             <Link href="/tuyen-dung">
               <button className="flex items-center gap-2 bg-transparent border-2 border-black px-9 py-2 rounded-[28px] font-bold cursor-pointer">
                 Tới trang tuyển dụng
-                <Image src="/arrow.svg" alt="Arrow" width={20} height={20} />
+                <Image src="/arrow.svg" alt="Arrow" width={20} height={20} className="w-5 h-auto" />
               </button>
             </Link>
           </div>

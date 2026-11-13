@@ -196,7 +196,11 @@ const listVeSinhMayLanhFAQ = [
 
 const defaultFAQ: any[] = [];
 
-export default function layout({ children }: { children: React.ReactNode }) {
+export default function ServiceLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const path = usePathname() || "";
 
   let listFAQ: any[] = defaultFAQ;
@@ -282,6 +286,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
                 alt="Shipper Info"
                 width="458"
                 height="384"
+                className="w-full max-w-[458px] h-auto"
               />
             </div>
           </div>

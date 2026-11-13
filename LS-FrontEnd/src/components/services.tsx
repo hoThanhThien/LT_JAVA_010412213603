@@ -39,7 +39,7 @@ export default function Services() {
             </div>
             <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
               Xem chi tiết
-              <Image src="/arrow.svg" alt="Arrow" width={20} height={20} />
+              <Image src="/arrow.svg" alt="Arrow" width={20} height={20} className="w-5 h-auto" />
             </button>
           </div>
         </div>
@@ -65,7 +65,7 @@ export default function Services() {
             </div>
             <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
               Xem chi tiết
-              <Image src="/arrow.svg" alt="Arrow" width={20} height={20} />
+              <Image src="/arrow.svg" alt="Arrow" width={20} height={20} className="w-5 h-auto" />
             </button>
           </div>
         </div>
@@ -93,7 +93,7 @@ export default function Services() {
             </div>
             <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
               Xem chi tiết
-              <Image src="/arrow.svg" alt="Arrow" width={20} height={20} />
+              <Image src="/arrow.svg" alt="Arrow" width={20} height={20} className="w-5 h-auto" />
             </button>
           </div>
         </div>
@@ -117,7 +117,7 @@ export default function Services() {
             </div>
             <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
               Xem chi tiết
-              <Image src="/arrow.svg" alt="Arrow" width={20} height={20} />
+              <Image src="/arrow.svg" alt="Arrow" width={20} height={20} className="w-5 h-auto" />
             </button>
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function Services() {
             </div>
             <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
               Xem chi tiết
-              <Image src="/arrow.svg" alt="Arrow" width={20} height={20} />
+              <Image src="/arrow.svg" alt="Arrow" width={20} height={20} className="w-5 h-auto" />
             </button>
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function Services() {
             </div>
             <button className="flex items-center mt-5 mx-auto gap-2 bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer">
               Xem chi tiết
-              <Image src="/arrow.svg" alt="Arrow" width={20} height={20} />
+              <Image src="/arrow.svg" alt="Arrow" width={20} height={20} className="w-5 h-auto" />
             </button>
           </div>
         </div>

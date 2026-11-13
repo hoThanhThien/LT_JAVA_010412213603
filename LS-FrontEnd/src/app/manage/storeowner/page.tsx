@@ -9,19 +9,36 @@ import type { DescriptionsProps } from "antd";
 import { EditStore } from "./editStore";
 import { CreateStore } from "./createStore";
 
-export default function page() {
+export default function StoreOwnerDashboardPage() {
   const [shop, setShop] = useState<ShopType | null>(null);
   const [openModalUpdate, setOpenModalUpdate] = useState<boolean>(false);
 
   const [openModalCreate, setOpenModalCreate] = useState<boolean>(false);
 
   const getShop = async () => {
-    const result = await shopApiRequests.storeOwner();
-    setShop(result.payload.data);
+    try {
+      const result = await shopApiRequests.storeOwner();
+      setShop(result.payload.data);
+    } catch (error) {
+      console.error("Failed to fetch shop:", error);
+    }
   };
 
   useEffect(() => {
-    getShop();
+    let ignore = false;
+    shopApiRequests
+      .storeOwner()
+      .then((result) => {
+        if (!ignore) {
+          setShop(result.payload.data);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch shop:", error);
+      });
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const items: DescriptionsProps["items"] = [
