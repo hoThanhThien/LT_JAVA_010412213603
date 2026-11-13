@@ -119,7 +119,7 @@ export default function EmployeeOrder() {
         request={async () => {
           return await fetchData(currentPage, pageSize);
         }}
-        rowKey="username"
+        rowKey="phone"
         pagination={{
           current: currentPage,
           pageSize: pageSize,

@@ -152,7 +152,7 @@ export default function AdminCustomersPage() {
         request={async () => {
           return await fetchData(currentPage, pageSize);
         }}
-        rowKey="username"
+        rowKey="id"
         pagination={{
           current: currentPage,
           pageSize: pageSize,

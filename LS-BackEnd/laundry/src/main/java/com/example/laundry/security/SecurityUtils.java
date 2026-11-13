@@ -52,3 +52,4 @@ public final class SecurityUtils {
         return findByUsername != null ? findByUsername.apply(principal) : null;
     }
 }
+
