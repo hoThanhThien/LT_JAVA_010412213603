@@ -1,8 +1,5 @@
 package com.example.laundry.repository;
 
-import com.example.laundry.models.order.Order;
-import com.example.laundry.models.shop.LaundryShop;
-import com.example.laundry.models.shop.Service;
 import com.example.laundry.models.user.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

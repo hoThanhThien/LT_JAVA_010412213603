@@ -4,7 +4,6 @@ import com.example.laundry.dto.*;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.utils.ApiResponse;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface AdminService extends UserService {
