@@ -2,7 +2,6 @@ package com.example.laundry.client;
 
 import com.example.laundry.config.CassoProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +54,6 @@ public class CassoClient {
   }
 
   @Data
-  @Getter
   public static class CassoTransaction {
     private String id;
     @JsonProperty("tid")

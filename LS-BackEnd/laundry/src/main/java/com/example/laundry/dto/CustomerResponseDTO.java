@@ -1,6 +1,5 @@
 package com.example.laundry.dto;
 
-import com.example.laundry.models.user.Customer;
 import com.example.laundry.models.user.Roles;
 import lombok.*;
 

@@ -2,9 +2,9 @@ package com.example.laundry.controllers;
 
 import com.example.laundry.dto.OrderResponse;
 import com.example.laundry.dto.PagedResponse;
+import com.example.laundry.dto.OrderResponse;
 import com.example.laundry.models.order.OrderStatus;
 import com.example.laundry.models.user.Employee;
-import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.EmployeeRepository;
 import com.example.laundry.security.SecurityUtils;
 import com.example.laundry.services.EmployeeService;
@@ -33,7 +33,7 @@ public class EmployeeController {
 
   @PutMapping("/{orderId}/status")
   @PreAuthorize("hasRole('EMPLOYEE')")
-  public ResponseEntity<ApiResponse> updateOrderStatus(@PathVariable Long orderId,
+  public ResponseEntity<ApiResponse<OrderResponse>> updateOrderStatus(@PathVariable Long orderId,
                                                        @RequestParam OrderStatus status) {
     Employee employee = getCurrentEmployee();
     if (employee == null) {
@@ -41,7 +41,7 @@ public class EmployeeController {
               .body(new ApiResponse<>("Không tìm thấy thông tin Employee", null));
     }
 
-    ApiResponse response = employeeService.updateOrderStatus(orderId, status, employee);
+    ApiResponse<OrderResponse> response = employeeService.updateOrderStatus(orderId, status, employee);
     if (response.getData() == null) {
       return ResponseEntity.badRequest().body(response);
     }

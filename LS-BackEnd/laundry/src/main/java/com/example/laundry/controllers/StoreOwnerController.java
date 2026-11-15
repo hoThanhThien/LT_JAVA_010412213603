@@ -1,15 +1,10 @@
 package com.example.laundry.controllers;
 
 import com.example.laundry.dto.*;
-import com.example.laundry.models.shop.LaundryShop;
-import com.example.laundry.models.shop.Service;
-import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.StoreOwner;
-import com.example.laundry.repository.LaundryShopRepository;
 import com.example.laundry.repository.StoreOwnerRepository;
 import com.example.laundry.security.SecurityUtils;
 import com.example.laundry.services.EmployeeService;
-import com.example.laundry.services.LaundryShopService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
 
@@ -31,10 +26,6 @@ public class StoreOwnerController {
     private StoreOwnerRepository storeOwnerRepository;
   @Autowired
   private EmployeeService employeeService;
-  @Autowired
-  private LaundryShopService laundryShopService;
-  @Autowired
-  private LaundryShopRepository laundryShopRepository;
 
   // Lấy store owner hiện tại
     private StoreOwner getCurrentStoreOwner() {

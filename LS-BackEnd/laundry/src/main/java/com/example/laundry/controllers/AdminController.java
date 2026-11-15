@@ -1,26 +1,17 @@
 package com.example.laundry.controllers;
 
 import com.example.laundry.dto.*;
-import com.example.laundry.models.user.Customer;
 import com.example.laundry.models.user.StoreOwner;
-import com.example.laundry.repository.StoreOwnerRepository;
 import com.example.laundry.services.AdminService;
 import com.example.laundry.services.EmployeeService;
 import com.example.laundry.services.LaundryShopService;
 import com.example.laundry.utils.ApiResponse;
 
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -32,8 +23,6 @@ public class AdminController {
     private EmployeeService employeeService;
     @Autowired
     private LaundryShopService laundryShopService;
-    @Autowired
-    private StoreOwnerRepository storeOwnerRepository;
 
     @PostMapping("/storeowner/create")
     @PreAuthorize("hasRole('ADMIN')")

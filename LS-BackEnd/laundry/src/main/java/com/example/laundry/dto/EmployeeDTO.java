@@ -1,9 +1,7 @@
 package com.example.laundry.dto;
 
-import com.example.laundry.models.shop.LaundryShop;
 import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.Roles;
-import com.example.laundry.models.user.StoreOwner;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
@@ -17,6 +15,7 @@ import java.util.UUID;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EmployeeDTO implements Serializable {
+    private static final long serialVersionUID = 1L;
     private UUID id;
     private String username;
     private String password;

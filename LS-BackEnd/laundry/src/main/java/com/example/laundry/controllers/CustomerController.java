@@ -3,10 +3,8 @@ package com.example.laundry.controllers;
 import com.example.laundry.dto.*;
 import com.example.laundry.models.user.Customer;
 import com.example.laundry.repository.CustomerRepository;
-import com.example.laundry.security.JwtUtil;
 import com.example.laundry.security.SecurityUtils;
 import com.example.laundry.services.CustomerService;
-import com.example.laundry.services.RefreshTokenService;
 import com.example.laundry.utils.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,11 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/customer")
@@ -28,15 +22,6 @@ public class CustomerController {
 
     @Autowired
     private CustomerRepository customerRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private RefreshTokenService refreshTokenService;
 
     private Customer getCurrentCustomer() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

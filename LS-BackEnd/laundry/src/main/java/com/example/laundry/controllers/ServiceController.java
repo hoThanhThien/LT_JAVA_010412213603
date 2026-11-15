@@ -1,6 +1,5 @@
 package com.example.laundry.controllers;
 
-import com.example.laundry.dto.ServiceCategoryDTO;
 import com.example.laundry.dto.ServiceDTO;
 import com.example.laundry.services.ServiceService;
 import com.example.laundry.utils.ApiResponse;

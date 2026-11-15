@@ -1,6 +1,5 @@
 package com.example.laundry.dto;
 
-import com.example.laundry.models.shop.LaundryShop;
 import lombok.*;
 
 @Data

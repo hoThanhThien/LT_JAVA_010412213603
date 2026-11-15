@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PagedData<T> {
-  private Meta meta;
+  private Meta<T> meta;
   private List<T> result;
 }
 
