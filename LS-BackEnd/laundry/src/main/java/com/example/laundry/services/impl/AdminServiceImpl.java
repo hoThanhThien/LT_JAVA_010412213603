@@ -14,18 +14,20 @@ import com.example.laundry.services.EmployeeService;
 import com.example.laundry.services.OrderService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
+import com.example.laundry.utils.PaginationUtils;
 import com.example.laundry.utils.UserValidator;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -38,6 +40,8 @@ public class AdminServiceImpl implements AdminService {
     private AdminRepository adminRepository;
     @Autowired
     private StoreOwnerRepository storeOwnerRepository;
+    @Autowired
+    private UserRepository userRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
@@ -70,7 +74,7 @@ public class AdminServiceImpl implements AdminService {
         if(!UserValidator.isValidEmail(storeOwnerDTO.getEmail())){
             return new ApiResponse<>("Email không hợp lệ!!!", null);
         }
-        if(storeOwnerRepository.existsByEmail(storeOwnerDTO.getEmail())){
+        if(userRepository.existsByEmail(storeOwnerDTO.getEmail()) || storeOwnerRepository.existsByEmail(storeOwnerDTO.getEmail())){
             return new ApiResponse<>("Email đã tồn tại!!!", null);
         }
 
@@ -78,7 +82,7 @@ public class AdminServiceImpl implements AdminService {
         if(!UserValidator.isValidPhone(storeOwnerDTO.getPhone())){
             return new ApiResponse<>("Phone phải có 10 chữ số!!!", null);
         }
-        if(storeOwnerRepository.existsByPhone(storeOwnerDTO.getPhone())){
+        if(userRepository.existsByPhone(storeOwnerDTO.getPhone()) || storeOwnerRepository.existsByPhone(storeOwnerDTO.getPhone())){
             return new ApiResponse<>("Phone đã tồn tại!!!", null);
         }
 
@@ -116,7 +120,8 @@ public class AdminServiceImpl implements AdminService {
           return new ApiResponse<>("Email không hợp lệ!", null);
         }
         if (!storeOwnerDTO.getEmail().equals(storeOwner.getEmail()) &&
-                storeOwnerRepository.existsByEmail(storeOwnerDTO.getEmail())) {
+                (userRepository.existsByEmail(storeOwnerDTO.getEmail()) ||
+                        storeOwnerRepository.existsByEmail(storeOwnerDTO.getEmail()))) {
           return new ApiResponse<>("Email đã tồn tại!", null);
         }
         storeOwner.setEmail(storeOwnerDTO.getEmail());
@@ -127,7 +132,8 @@ public class AdminServiceImpl implements AdminService {
           return new ApiResponse<>("Phone phải có 10 chữ số!", null);
         }
         if (!storeOwnerDTO.getPhone().equals(storeOwner.getPhone()) &&
-                storeOwnerRepository.existsByPhone(storeOwnerDTO.getPhone())) {
+                (userRepository.existsByPhone(storeOwnerDTO.getPhone()) ||
+                        storeOwnerRepository.existsByPhone(storeOwnerDTO.getPhone()))) {
           return new ApiResponse<>("Phone đã tồn tại!", null);
         }
         storeOwner.setPhone(storeOwnerDTO.getPhone());
@@ -203,7 +209,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public PagedResponse<StoreOwnerDTO> getAllStoreOwners(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PaginationUtils.of(page, size, Sort.by("createdAt").descending());
         Page<StoreOwner> storeOwnerPage = storeOwnerRepository.findAll(pageable);
 
         List<StoreOwnerDTO> storeOwnerDTOs = storeOwnerPage.getContent().stream()
@@ -234,20 +240,35 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public PagedResponse<StoreOwnerWithEmployeeDTO> getAllEmployeesBelongToStoreOwner(int page, int size) {
-      Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+      Pageable pageable = PaginationUtils.of(page, size, Sort.by("createdAt").descending());
       Page<StoreOwner> storeOwnerPage = storeOwnerRepository.findAll(pageable);
 
-      List<StoreOwnerWithEmployeeDTO> ownerDTOS = storeOwnerPage.getContent().stream()
-              .map(owner -> {
-                Optional<LaundryShop> optionalShop = laundryShopRepository.findByStoreOwnerId(owner.getId());
+      List<StoreOwner> owners = storeOwnerPage.getContent();
+      List<UUID> ownerIds = owners.stream().map(StoreOwner::getId).toList();
 
-                Long shopId = null;
-                String shopName = null;
-                if (optionalShop.isPresent()) {
-                  shopId = optionalShop.get().getId();
-                  shopName = optionalShop.get().getName();
-                }
-                List<EmployeeDTO> employees = employeeRepository.findByStoreOwner(owner).stream()
+      Map<UUID, LaundryShop> shopsByOwnerId = ownerIds.isEmpty()
+              ? Collections.emptyMap()
+              : laundryShopRepository.findByStoreOwner_IdIn(ownerIds).stream()
+                      .filter(shop -> shop.getStoreOwner() != null)
+                      .collect(Collectors.toMap(
+                              shop -> shop.getStoreOwner().getId(),
+                              shop -> shop,
+                              (first, second) -> first
+                      ));
+
+      Map<UUID, List<Employee>> employeesByOwnerId = ownerIds.isEmpty()
+              ? Collections.emptyMap()
+              : employeeRepository.findByStoreOwner_IdIn(ownerIds).stream()
+                      .filter(emp -> emp.getStoreOwner() != null)
+                      .collect(Collectors.groupingBy(emp -> emp.getStoreOwner().getId()));
+
+      List<StoreOwnerWithEmployeeDTO> ownerDTOS = owners.stream()
+              .map(owner -> {
+                LaundryShop shop = shopsByOwnerId.get(owner.getId());
+                Long shopId = shop != null ? shop.getId() : null;
+                String shopName = shop != null ? shop.getName() : null;
+
+                List<EmployeeDTO> employees = employeesByOwnerId.getOrDefault(owner.getId(), Collections.emptyList()).stream()
                         .map(employee -> new EmployeeDTO(
                                 employee.getUsername(),
                                 employee.getPhone(),
@@ -258,6 +279,7 @@ public class AdminServiceImpl implements AdminService {
                                 employee.getCreatedAt(),
                                 employee.getUpdatedAt()
                         )).toList();
+
                 return new StoreOwnerWithEmployeeDTO(
                         owner.getId(),
                         owner.getUsername(),
@@ -288,7 +310,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public PagedResponse<OrderResponse> getAllOrders(int page, int size) {
-          Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+          Pageable pageable = PaginationUtils.of(page, size, Sort.by("createdAt").descending());
           Page<Order> orderPage = orderRepository.findAll(pageable);
 
           List<OrderResponse> responseList = mapOrdersToOrderResponses(orderPage.getContent());
@@ -326,7 +348,7 @@ public class AdminServiceImpl implements AdminService {
     Customer customer = customerRepository.findById(customerId)
             .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng với ID: " + customerId));
 
-    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+    Pageable pageable = PaginationUtils.of(page, size, Sort.by("createdAt").descending());
     Page<Order> customerOrders = orderRepository.findByCustomer_Id(customer.getId(), pageable);
 
     if (customerOrders.getContent().isEmpty()) {
@@ -348,7 +370,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public PagedResponse<CustomerDTO> getAllCustomers(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PaginationUtils.of(page, size, Sort.by("createdAt").descending());
         Page<Customer> customerPage = customerRepository.findAll(pageable);
 
         List<CustomerDTO> customerDTOs = customerPage.getContent().stream()
@@ -388,7 +410,7 @@ public class AdminServiceImpl implements AdminService {
             return new PagedResponse<>("Trạng thái đơn hàng không hợp lệ", null);
         }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PaginationUtils.of(page, size, Sort.by("createdAt").descending());
         Page<Order> orderPage = orderRepository.findByOrderStatus(orderStatus, pageable);
 
 

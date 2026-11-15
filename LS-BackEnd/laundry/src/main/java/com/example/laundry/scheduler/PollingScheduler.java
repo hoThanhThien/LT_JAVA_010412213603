@@ -23,6 +23,10 @@ public class PollingScheduler {
   @Scheduled(fixedDelayString = "${casso.polling-interval-ms:10000}")
   public void pollTransactions() {
     log.debug("Starting scheduled transaction polling");
-    paymentService.pollBankTransactions();
+    try {
+      paymentService.pollBankTransactions();
+    } catch (Exception e) {
+      log.warn("Scheduled bank transaction polling failed: {}", e.getMessage());
+    }
   }
 }

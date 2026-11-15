@@ -14,11 +14,11 @@ import com.example.laundry.services.EmployeeService;
 import com.example.laundry.services.OrderService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
+import com.example.laundry.utils.PaginationUtils;
 import com.example.laundry.utils.UserValidator;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -26,8 +26,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
 public class StoreOwnerServiceImpl implements StoreOwnerService {
@@ -36,6 +39,9 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
 
     @Autowired
     private StoreOwnerRepository storeOwnerRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private EmployeeRepository employeeRepository;
@@ -91,7 +97,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
             return new ApiResponse<>("Email không hợp lệ!!!", null);
         }
 
-        if (employeeRepository.existsByEmail(employeeDTO.getEmail())) {
+        if (userRepository.existsByEmail(employeeDTO.getEmail()) || employeeRepository.existsByEmail(employeeDTO.getEmail())) {
             return new ApiResponse<>("Email đã tồn tại!!!", null);
         }
 
@@ -100,7 +106,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
             return new ApiResponse<>("Số điện thoại phải có 10 chữ số!!!", null);
         }
 
-        if (employeeRepository.existsByPhone(employeeDTO.getPhone())) {
+        if (userRepository.existsByPhone(employeeDTO.getPhone()) || employeeRepository.existsByPhone(employeeDTO.getPhone())) {
             return new ApiResponse<>("Số điện thoại đã tồn tại!!!", null);
         }
 
@@ -215,6 +221,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
     }
 
     @Override
+    @Transactional
     public ApiResponse<LaundryShopDTO> createShop(StoreOwner storeOwner, LaundryShopDTO laundryShopDTO) {
         //Kiểm tra xem trước đó đã quản lý shop nào chưa
         if(laundryShopRepository.existsByStoreOwner(storeOwner)) {
@@ -246,6 +253,17 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
 
         // Lưu shop vào database
         LaundryShop createdShop = laundryShopRepository.save(laundryShop);
+
+        // Gán lại các nhân viên hiện có của chủ cửa hàng nếu đang chưa có shop (ví dụ sau khi xóa shop cũ)
+        if (storeOwner != null && storeOwner.getId() != null) {
+            List<Employee> detachedEmployees = employeeRepository.findByStoreOwner_IdIn(List.of(storeOwner.getId())).stream()
+                    .filter(emp -> emp.getShop() == null)
+                    .peek(emp -> emp.setShop(createdShop))
+                    .toList();
+            if (!detachedEmployees.isEmpty()) {
+                employeeRepository.saveAll(detachedEmployees);
+            }
+        }
 
         LaundryShopDTO responseDTO = convertToLaundryDTO(createdShop);
 
@@ -590,14 +608,22 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
             return new PagedResponse<>("Không tìm thấy cửa hàng", null);
         }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Pageable pageable = PaginationUtils.of(page, size, Sort.by("id").descending());
 
         Page<ServiceCategory> categoryPage = serviceCategoryRepository.findServiceCategoryByShop(shop, pageable);
 
+        List<ServiceCategory> categories = categoryPage.getContent();
+        List<Long> categoryIds = categories.stream().map(ServiceCategory::getId).toList();
+        Map<Long, List<Service>> servicesByCategoryId = categoryIds.isEmpty()
+                ? Collections.emptyMap()
+                : serviceRepository.findByCategory_IdIn(categoryIds).stream()
+                        .filter(service -> service.getCategory() != null)
+                        .collect(Collectors.groupingBy(service -> service.getCategory().getId()));
+
         // Chuyển đổi dữ liệu thành danh sách CategoryWithServiceDTO
-        List<CategoryWithServiceDTO> categoryDTOs = categoryPage.getContent().stream()
+        List<CategoryWithServiceDTO> categoryDTOs = categories.stream()
                 .map(category -> {
-                    List<ServiceDTO> services = serviceRepository.findByCategory(category).stream()
+                    List<ServiceDTO> services = servicesByCategoryId.getOrDefault(category.getId(), Collections.emptyList()).stream()
                             .map(service -> new ServiceDTO(
                                     service.getId(),
                                     service.getName(),
@@ -605,7 +631,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
                                     service.getEstimatedTime(),
                                     service.getImageDesc(),
                                     service.getPrice(),
-                                    service.getCategory().getId()
+                                    category.getId()
                             )).toList();
 
                     return new CategoryWithServiceDTO(
@@ -639,7 +665,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
             return new PagedResponse<>("Bạn chưa có cửa hàng", null);
         }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Pageable pageable = PaginationUtils.of(page, size, Sort.by("id").descending());
 
         Page<Order> orderPage = orderRepository.findOrdersByLaundryShop(shop, pageable);
 
@@ -693,10 +719,11 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         dto.setAverageRating(shop.getAverageRating());
         dto.setCreatedAt(shop.getCreatedAt());
 
-        LaundryShopDTO.StoreOwnerSimpleDTO ownerDTO = new LaundryShopDTO.StoreOwnerSimpleDTO();
-        ownerDTO.setUsername(shop.getStoreOwner().getUsername());
-
-        dto.setStoreOwner(ownerDTO);
+        if (shop.getStoreOwner() != null) {
+            LaundryShopDTO.StoreOwnerSimpleDTO ownerDTO = new LaundryShopDTO.StoreOwnerSimpleDTO();
+            ownerDTO.setUsername(shop.getStoreOwner().getUsername());
+            dto.setStoreOwner(ownerDTO);
+        }
 
         return dto;
     }

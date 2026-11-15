@@ -9,6 +9,8 @@ import com.example.laundry.security.SecurityUtils;
 import com.example.laundry.services.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -28,7 +30,7 @@ public class AccountServiceImpl implements AccountService {
         return new GetInfoResponse(null, "Access không được để trống!!!");
       }
 
-      String principalId = jwtUtil.validateTokenAndRetrieveSubject(accessToken);
+      String principalId = jwtUtil.validateAccessTokenAndRetrieveSubject(accessToken);
       User user = SecurityUtils.parseUuid(principalId)
               .flatMap(userRepository::findById)
               .orElseGet(() -> userRepository.findByUsername(principalId));
@@ -36,19 +38,33 @@ public class AccountServiceImpl implements AccountService {
         return new GetInfoResponse(null, "Không tìm thấy thông tin người dùng!!!");
       }
 
-      GetInfoResponse.AccountInfo accountInfo = new GetInfoResponse.AccountInfo(
-              user.getId(),
-              user.getUsername(),
-              user.getPhone(),
-              user.getEmail(),
-              user.getAddress(),
-              user.getAvtUser(),
-              user.getRoles().name()
-      );
-      GetInfoResponse.DataInfo dataInfo = new GetInfoResponse.DataInfo(accountInfo);
-      return new GetInfoResponse(dataInfo, "Lấy thông tin thành công!!!");
+      return buildInfoResponse(user);
     } catch (Exception e) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token không hợp lệ");
     }
+  }
+
+  @Override
+  public GetInfoResponse getCurrentUserInfo(Authentication authentication) {
+    if (authentication == null || !authentication.isAuthenticated()
+            || authentication instanceof AnonymousAuthenticationToken) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Chưa đăng nhập");
+    }
+    User user = SecurityUtils.resolveCurrentUser(authentication, userRepository::findById, userRepository::findByUsername);
+    return buildInfoResponse(user);
+  }
+
+  private GetInfoResponse buildInfoResponse(User user) {
+    GetInfoResponse.AccountInfo accountInfo = new GetInfoResponse.AccountInfo(
+            user.getId(),
+            user.getUsername(),
+            user.getPhone(),
+            user.getEmail(),
+            user.getAddress(),
+            user.getAvtUser(),
+            user.getRoles().name()
+    );
+    GetInfoResponse.DataInfo dataInfo = new GetInfoResponse.DataInfo(accountInfo);
+    return new GetInfoResponse(dataInfo, "Lấy thông tin thành công!!!");
   }
 }

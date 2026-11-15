@@ -26,14 +26,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
 public class PaymentServiceImpl implements PaymentService {
+    private static final int POLL_PAGE_SIZE = 50;
+    private static final int MAX_POLL_PAGES = 5;
+
     @Autowired
     private PaymentRepository paymentRepository;
 
@@ -45,8 +50,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final OrderRepository orderRepository;
     private final CassoClient cassoClient;
-    @Autowired
-    private VietQRCode vietQRCode;
+    private final VietQRCode vietQRCode;
 
     public PaymentServiceImpl(OrderRepository orderRepository, CassoClient cassoClient, VietQRCode vietQRCode) {
             this.orderRepository = orderRepository;
@@ -156,14 +160,10 @@ public class PaymentServiceImpl implements PaymentService {
             return;
         }
 
-        CassoClient.CassoTransactionResponse response = cassoClient.getTransactions(1, 20);
-
-        if (response == null || response.getData() == null || response.getData().getRecords() == null) {
-            log.warn("Failed to get transactions from Casso API");
+        List<CassoClient.CassoTransaction> transactions = fetchRecentTransactions();
+        if (transactions.isEmpty()) {
             return;
         }
-
-        List<CassoClient.CassoTransaction> transactions = response.getData().getRecords();
         log.info("Fetched {} transactions from Casso API", transactions.size());
 
         for (Order order : pendingOrders) {
@@ -186,10 +186,41 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
+    private List<CassoClient.CassoTransaction> fetchRecentTransactions() {
+        List<CassoClient.CassoTransaction> allTransactions = new ArrayList<>();
+        for (int page = 1; page <= MAX_POLL_PAGES; page++) {
+            CassoClient.CassoTransactionResponse response = cassoClient.getTransactions(page, POLL_PAGE_SIZE);
+            if (response == null || response.getData() == null || response.getData().getRecords() == null) {
+                if (page == 1) {
+                    log.warn("Failed to get transactions from Casso API");
+                }
+                break;
+            }
+            List<CassoClient.CassoTransaction> records = response.getData().getRecords();
+            if (records.isEmpty()) {
+                break;
+            }
+            allTransactions.addAll(records);
+            if (records.size() < POLL_PAGE_SIZE) {
+                break;
+            }
+        }
+        return allTransactions;
+    }
+
     private boolean isMatchingTransaction(CassoClient.CassoTransaction transaction, String transferContent, Double requiredAmount) {
-        // Kiểm tra xem nội dung chuyển khoản của cus có thuộc nội dung chuyển khoản yêu cầu không
+        if (transaction == null || transferContent == null || transferContent.isBlank()
+                || requiredAmount == null || transaction.getAmount() == null) {
+            return false;
+        }
+
+        // Kiểm tra mã đơn hàng với ranh giới rõ ràng để tránh khớp nhầm (VD: LAUNDRY1 vs LAUNDRY10)
         String description = transaction.getDescription();
-        if (description == null || !description.toLowerCase().contains(transferContent.toLowerCase().trim())) {
+        if (description == null) {
+            return false;
+        }
+        Pattern codePattern = Pattern.compile("(?i)(?<![a-z0-9])" + Pattern.quote(transferContent.trim()) + "(?!\\d)");
+        if (!codePattern.matcher(description).find()) {
             return false;
         }
 
@@ -201,7 +232,7 @@ public class PaymentServiceImpl implements PaymentService {
         // Kiểm tra transaction gần đây (dưới 24 hours)
         if (transaction.getTransactionTime() == null ||
                 transaction.getTransactionTime().isBefore(LocalDateTime.now().minusHours(24))) {
-            System.out.println("Checking transaction: " + transaction.getDescription());
+            log.debug("Ignoring stale or timestamp-less transaction: {}", transaction.getDescription());
             return false;
         }
 

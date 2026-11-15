@@ -78,7 +78,8 @@ public class CustomerController {
     @GetMapping("/orders/history")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<PagedResponse<OrderResponse>> historyOrder(
-            @RequestParam(defaultValue = "0", name = "paged") int page,
+            @RequestParam(defaultValue = "0", name = "paged") int paged,
+            @RequestParam(required = false, name = "page") Integer page,
             @RequestParam(defaultValue = "10") int size
     ) {
         try {
@@ -88,7 +89,8 @@ public class CustomerController {
                         .body(new PagedResponse<>("Không tìm thấy thông tin khách hàng", null));
             }
 
-            PagedResponse<OrderResponse> response = customerService.historyOrder(customer, page, size);
+            int effectivePage = page != null ? page : paged;
+            PagedResponse<OrderResponse> response = customerService.historyOrder(customer, effectivePage, size);
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {

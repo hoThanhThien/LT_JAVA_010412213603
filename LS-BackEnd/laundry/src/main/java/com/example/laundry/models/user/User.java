@@ -28,20 +28,20 @@ public abstract class User implements Serializable {
     @Column(name="user_id", columnDefinition = "VARCHAR(36)")
     private UUID id;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 100)
     private String username;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String password;
 
-    @Column(unique = true, length = 50, nullable = true)
+    @Column(unique = true, length = 100, nullable = true)
     private String email;
 
-    @Column(unique = true, length = 11)
+    @Column(unique = true, length = 15)
     private String phone;
 
-    @Column(length = 50)
+    @Column(length = 255)
     private String address;
 
     @Enumerated(EnumType.STRING)
@@ -49,11 +49,9 @@ public abstract class User implements Serializable {
     private Roles roles;
 
     @Column(name = "created_at")
-    @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
     @Column(name = "updated_at")
-    @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
 
     @Lob

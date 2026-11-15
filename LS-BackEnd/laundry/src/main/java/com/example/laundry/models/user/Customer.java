@@ -13,19 +13,18 @@ import java.util.List;
 import java.util.ArrayList;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = "orderHistory")
+@ToString(exclude = "orderHistory")
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
-//@EqualsAndHashCode(callSuper = false)
 @Entity
 @Table(name="customers")
 @DiscriminatorValue("CUSTOMER")
 public class Customer extends User {
+    @Builder.Default
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Order> orderHistory =  new ArrayList<>();
+    private List<Order> orderHistory = new ArrayList<>();
 
     public Customer(String username, String password, String email, String phone, String address, Roles roles) {
         super(username, password, email, phone, address, Roles.Customer);

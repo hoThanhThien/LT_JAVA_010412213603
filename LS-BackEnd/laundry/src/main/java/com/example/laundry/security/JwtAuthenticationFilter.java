@@ -19,9 +19,18 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+  private static final Set<String> PUBLIC_POST_PATHS = Set.of(
+          "/auth/login",
+          "/auth/logout",
+          "/auth/refresh-token",
+          "/auth/register",
+          "/customer/register"
+  );
 
   private final JwtUtil jwtUtil;
   private final UserDetailsService userDetailsService;
@@ -33,11 +42,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     this.tokenBlackListServiceImpl = tokenBlackListServiceImpl;
   }
 
+  private String resolveRequestPath(HttpServletRequest request) {
+    String requestUri = request.getRequestURI();
+    if (requestUri != null && !requestUri.isEmpty()) {
+      String contextPath = request.getContextPath();
+      if (contextPath != null && !contextPath.isEmpty() && requestUri.startsWith(contextPath)) {
+        return requestUri.substring(contextPath.length());
+      }
+      return requestUri;
+    }
+    String servletPath = request.getServletPath();
+    return servletPath != null ? servletPath : "";
+  }
+
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    String path = resolveRequestPath(request);
+    String method = request.getMethod();
+    if ("POST".equalsIgnoreCase(method) && PUBLIC_POST_PATHS.contains(path)) {
+      return true;
+    }
+    if ("GET".equalsIgnoreCase(method)) {
+      if ("/shops".equals(path)) {
+        return true;
+      }
+      if (path.startsWith("/shop/") && (path.endsWith("/categories") || path.endsWith("/services"))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private void writeUnauthorized(HttpServletResponse response, String message) throws IOException {
     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     response.setContentType("application/json");
     response.setCharacterEncoding("UTF-8");
-    response.getWriter().write("{\"message\": \"" + message + "\"}");
+    String safeMessage = message == null ? "" : message.replace("\\", "\\\\").replace("\"", "\\\"");
+    response.getWriter().write("{\"message\": \"" + safeMessage + "\"}");
   }
 
   @Override
@@ -58,7 +99,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       }
 
       try {
-        principalId = jwtUtil.validateTokenAndRetrieveSubject(token);
+        principalId = jwtUtil.validateAccessTokenAndRetrieveSubject(token);
       } catch (JwtException e) {
         logger.warn("JWT token validation failed: " + e.getMessage());
         writeUnauthorized(response, "Token không hợp lệ hoặc đã hết hạn");

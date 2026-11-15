@@ -1,24 +1,19 @@
 package com.example.laundry.models.user;
 
-import com.example.laundry.models.order.Order;
-import com.example.laundry.models.order.OrderStatus;
 import com.example.laundry.models.shop.LaundryShop;
 import jakarta.persistence.*;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.springframework.stereotype.Service;
 
 import java.util.Date;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {"shop", "storeOwner"})
+@ToString(exclude = {"shop", "storeOwner"})
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
-//@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name="employees")
 @DiscriminatorValue("EMPLOYEE")

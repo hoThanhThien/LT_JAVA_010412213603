@@ -1,22 +1,32 @@
 package com.example.laundry;
 
+import com.example.laundry.client.CassoClient;
 import com.example.laundry.dto.CustomerDTO;
+import com.example.laundry.dto.EmployeeDTO;
+import com.example.laundry.dto.LaundryShopDTO;
 import com.example.laundry.dto.ServiceCategoryDTO;
 import com.example.laundry.dto.ServiceDTO;
+import com.example.laundry.dto.StoreOwnerDTO;
 import com.example.laundry.models.shop.LaundryShop;
 import com.example.laundry.models.user.Admin;
 import com.example.laundry.models.user.Customer;
+import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.Roles;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.AdminRepository;
 import com.example.laundry.repository.CustomerRepository;
+import com.example.laundry.repository.EmployeeRepository;
 import com.example.laundry.repository.LaundryShopRepository;
 import com.example.laundry.repository.ServiceCategoryRepository;
 import com.example.laundry.repository.ServiceRepository;
 import com.example.laundry.repository.StoreOwnerRepository;
+import com.example.laundry.services.AdminService;
 import com.example.laundry.services.CustomerService;
+import com.example.laundry.services.PaymentService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
+import com.example.laundry.utils.UserValidator;
+import com.example.laundry.utils.VietQRCode;
 import com.jayway.jsonpath.JsonPath;
 import jakarta.servlet.Filter;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,11 +37,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -78,6 +90,18 @@ class SecurityAndServiceRegressionTests {
 
   @Autowired
   private CustomerService customerService;
+
+  @Autowired
+  private AdminService adminService;
+
+  @Autowired
+  private EmployeeRepository employeeRepository;
+
+  @Autowired
+  private PaymentService paymentService;
+
+  @Autowired
+  private VietQRCode vietQRCode;
 
   private MockMvc mockMvc;
 
@@ -342,5 +366,162 @@ class SecurityAndServiceRegressionTests {
             .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST"))
         .andExpect(status().isForbidden())
         .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
+  }
+
+  @Test
+  void refreshTokenCannotBeUsedAsAccessTokenAndStillRefreshesSession() throws Exception {
+    Customer customer = new Customer("Refresh Guard", passwordEncoder.encode("secret123"), "refreshguard@test.local", "0960000001", "HCMC", Roles.Customer);
+    customerRepository.save(customer);
+
+    MvcResult loginRes = mockMvc.perform(post("/auth/login")
+            .header("Authorization", "Bearer expired-or-garbage-token")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"phone\":\"0960000001\",\"password\":\"secret123\"}"))
+        .andExpect(status().isOk())
+        .andReturn();
+    String json = loginRes.getResponse().getContentAsString();
+    String accessToken = JsonPath.read(json, "$.data.accessToken");
+    String refreshToken = JsonPath.read(json, "$.data.refreshToken");
+
+    // Refresh token must NOT authenticate protected endpoints
+    mockMvc.perform(get("/accounts/me")
+            .header("Authorization", "Bearer " + refreshToken))
+        .andExpect(status().isUnauthorized());
+
+    // Passing accessToken to /auth/refresh-token must be rejected
+    mockMvc.perform(post("/auth/refresh-token")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(String.format("{\"refreshToken\":\"%s\"}", accessToken)))
+        .andExpect(status().isForbidden());
+
+    // Frontend sends Authorization: Bearer <refreshToken> to /auth/refresh-token — must keep working
+    mockMvc.perform(post("/auth/refresh-token")
+            .header("Authorization", "Bearer " + refreshToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(String.format("{\"refreshToken\":\"%s\"}", refreshToken)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
+  }
+
+  @Test
+  void logoutBlacklistsAccessTokenEvenWhenRefreshTokenMissingOrInvalid() throws Exception {
+    Customer customer = new Customer("Logout NoRefresh", passwordEncoder.encode("secret123"), "logoutnr@test.local", "0960000002", "HCMC", Roles.Customer);
+    customerRepository.save(customer);
+
+    String accessToken = loginAndExtractToken("0960000002", "secret123", "accessToken");
+
+    mockMvc.perform(post("/auth/logout")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(String.format("{\"accessToken\":\"%s\",\"refreshToken\":\"invalid-or-missing-refresh\"}", accessToken)))
+        .andExpect(status().isOk());
+
+    mockMvc.perform(get("/accounts/me")
+            .header("Authorization", "Bearer " + accessToken))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void crossRoleDuplicatePhoneAndEmailAreRejected() {
+    Customer customer = new Customer("Cross Role", passwordEncoder.encode("secret123"), "cross@test.local", "0960000003", "HCMC", Roles.Customer);
+    customerRepository.save(customer);
+
+    StoreOwnerDTO dupPhoneOwner = new StoreOwnerDTO();
+    dupPhoneOwner.setUsername("Owner DupPhone");
+    dupPhoneOwner.setPassword("Secret@123");
+    dupPhoneOwner.setEmail("owner-unique@test.local");
+    dupPhoneOwner.setPhone("0960000003");
+    dupPhoneOwner.setAddress("HCMC");
+    ApiResponse<StoreOwner> ownerRes = adminService.createStoreOwner(dupPhoneOwner);
+    assertNull(ownerRes.getData());
+
+    StoreOwner owner = createOwnerWithShop("0960000013", "Cross Shop");
+    EmployeeDTO dupEmailEmp = new EmployeeDTO();
+    dupEmailEmp.setUsername("Emp DupEmail");
+    dupEmailEmp.setPassword("Secret!123");
+    dupEmailEmp.setEmail("cross@test.local");
+    dupEmailEmp.setPhone("0960000023");
+    dupEmailEmp.setAddress("HCMC");
+    ApiResponse<EmployeeDTO> empRes = storeOwnerService.createEmployee(owner, dupEmailEmp);
+    assertNull(empRes.getData());
+
+    assertTrue(UserValidator.isValidPassword("Secret!123"));
+    assertTrue(UserValidator.isValidPassword("Secret_123"));
+  }
+
+  @Test
+  void vietQrAndCassoTransactionMatchingHandleFormattingAndBoundariesSafely() {
+    String wholeAmountUrl = vietQRCode.generateQRCode("MB", "123456", "35000.0", "LAUNDRY9", "TEST");
+    assertTrue(wholeAmountUrl.contains("amount=35000&"));
+
+    String fractionalAmountUrl = vietQRCode.generateQRCode("MB", "123456", "1000.05", "LAUNDRY9", "TEST");
+    assertTrue(fractionalAmountUrl.contains("amount=1000.05&"));
+
+    CassoClient.CassoTransaction txTen = new CassoClient.CassoTransaction();
+    txTen.setDescription("CHUYEN KHOAN LAUNDRY10");
+    txTen.setAmount(100000.0);
+    txTen.setTransactionTime(LocalDateTime.now().minusMinutes(5));
+    Boolean matchedTen = ReflectionTestUtils.invokeMethod(paymentService, "isMatchingTransaction", txTen, "LAUNDRY1", 50000.0);
+    assertEquals(Boolean.FALSE, matchedTen);
+
+    CassoClient.CassoTransaction txOne = new CassoClient.CassoTransaction();
+    txOne.setDescription("MBVCB.LAUNDRY1.CT");
+    txOne.setAmount(50000.0);
+    txOne.setTransactionTime(LocalDateTime.now().minusMinutes(5));
+    Boolean matchedOne = ReflectionTestUtils.invokeMethod(paymentService, "isMatchingTransaction", txOne, "LAUNDRY1", 50000.0);
+    assertEquals(Boolean.TRUE, matchedOne);
+
+    txOne.setAmount(null);
+    Boolean nullAmountMatch = ReflectionTestUtils.invokeMethod(paymentService, "isMatchingTransaction", txOne, "LAUNDRY1", 50000.0);
+    assertEquals(Boolean.FALSE, nullAmountMatch);
+  }
+
+  @Test
+  void createShopRelinksExistingEmployeesWithoutShop() {
+    StoreOwner owner = new StoreOwner("Rebuild Owner", passwordEncoder.encode("secret123"), "rebuild@test.local", "0960000004", "HCMC", Roles.StoreOwner);
+    StoreOwner savedOwner = storeOwnerRepository.save(owner);
+
+    LaundryShopDTO shop1Dto = new LaundryShopDTO();
+    shop1Dto.setName("Initial Shop");
+    shop1Dto.setAddress("123 Street");
+    ApiResponse<LaundryShopDTO> shop1Res = storeOwnerService.createShop(savedOwner, shop1Dto);
+    assertNotNull(shop1Res.getData());
+
+    Employee emp = new Employee("Relink Emp", passwordEncoder.encode("secret123"), "relink-emp@test.local", "0960000005", "HCMC", Roles.Employee, savedOwner);
+    emp.setShop(null);
+    Employee savedEmp = employeeRepository.save(emp);
+
+    // Simulate owner recreating shop cleanly
+    LaundryShop shop1 = laundryShopRepository.findByStoreOwner(savedOwner);
+    assertNotNull(shop1);
+    laundryShopRepository.delete(shop1);
+
+    LaundryShopDTO shop2Dto = new LaundryShopDTO();
+    shop2Dto.setName("Rebuilt Shop");
+    shop2Dto.setAddress("456 Street");
+    ApiResponse<LaundryShopDTO> shop2Res = storeOwnerService.createShop(savedOwner, shop2Dto);
+    assertNotNull(shop2Res.getData());
+
+    Employee reloadedEmp = employeeRepository.findById(savedEmp.getId()).orElseThrow();
+    assertNotNull(reloadedEmp.getShop());
+    assertEquals(shop2Res.getData().getId(), reloadedEmp.getShop().getId());
+  }
+
+  @Test
+  void invalidPaginationReturnsBadRequest() throws Exception {
+    Admin admin = new Admin("Page Admin", passwordEncoder.encode("secret123"), "pageadmin@test.local", "0960000006", "HCMC", Roles.Admin);
+    adminRepository.save(admin);
+    String adminToken = loginAndExtractToken("0960000006", "secret123", "accessToken");
+
+    mockMvc.perform(get("/admin/customers")
+            .header("Authorization", "Bearer " + adminToken)
+            .param("page", "-1")
+            .param("size", "10"))
+        .andExpect(status().isBadRequest());
+
+    mockMvc.perform(get("/admin/customers")
+            .header("Authorization", "Bearer " + adminToken)
+            .param("page", "0")
+            .param("size", "101"))
+        .andExpect(status().isBadRequest());
   }
 }

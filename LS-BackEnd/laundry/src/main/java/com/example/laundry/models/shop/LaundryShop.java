@@ -12,8 +12,8 @@ import java.util.List;
 
 @Data
 @Builder
-@Setter
-@Getter
+@EqualsAndHashCode(exclude = {"serviceCategories", "storeOwner"})
+@ToString(exclude = {"serviceCategories", "storeOwner"})
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -41,9 +41,9 @@ public class LaundryShop {
     private double averageRating;
 
     @Column(name = "created_at")
-    @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
+    @Builder.Default
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL)
     private List<ServiceCategory> serviceCategories = new ArrayList<>();
 

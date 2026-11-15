@@ -9,6 +9,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@EqualsAndHashCode(exclude = {"shop", "services"})
+@ToString(exclude = {"shop", "services"})
 @Entity
 @Table(
         name = "service_categories",

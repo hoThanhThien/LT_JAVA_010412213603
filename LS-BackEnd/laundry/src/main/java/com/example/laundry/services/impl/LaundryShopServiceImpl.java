@@ -6,9 +6,9 @@ import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.LaundryShopRepository;
 import com.example.laundry.services.LaundryShopService;
 import com.example.laundry.utils.ApiResponse;
+import com.example.laundry.utils.PaginationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -43,7 +43,7 @@ public class LaundryShopServiceImpl implements LaundryShopService {
 
     @Override
     public PagedResponse<LaundryShopDTO> getAllShops(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PaginationUtils.of(page, size, Sort.by("createdAt").descending());
         Page<LaundryShop> shopPage = laundryShopRepository.findAll(pageable);
 
         List<LaundryShopDTO> dtos = shopPage.getContent().stream()
@@ -80,9 +80,11 @@ public class LaundryShopServiceImpl implements LaundryShopService {
         dto.setOpeningHours(laundryShop.getOpeningHours());
         dto.setAverageRating(laundryShop.getAverageRating());
         dto.setCreatedAt(laundryShop.getCreatedAt());
-        LaundryShopDTO.StoreOwnerSimpleDTO storeOwnerSimpleDTO = new LaundryShopDTO.StoreOwnerSimpleDTO();
-        storeOwnerSimpleDTO.setUsername(laundryShop.getStoreOwner().getUsername());
-        dto.setStoreOwner(storeOwnerSimpleDTO);
+        if (laundryShop.getStoreOwner() != null) {
+            LaundryShopDTO.StoreOwnerSimpleDTO storeOwnerSimpleDTO = new LaundryShopDTO.StoreOwnerSimpleDTO();
+            storeOwnerSimpleDTO.setUsername(laundryShop.getStoreOwner().getUsername());
+            dto.setStoreOwner(storeOwnerSimpleDTO);
+        }
 
         return dto;
     }

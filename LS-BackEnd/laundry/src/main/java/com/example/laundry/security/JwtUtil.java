@@ -16,6 +16,9 @@ import java.util.UUID;
 
 @Component
 public class JwtUtil {
+    public static final String TOKEN_TYPE_ACCESS = "access";
+    public static final String TOKEN_TYPE_REFRESH = "refresh";
+
     private final SecretKey key;
 
     // Hạn token (ms) lấy từ cấu hình: jwt.access.duration / jwt.refresh.duration
@@ -33,26 +36,27 @@ public class JwtUtil {
     }
 
     public String generateAccessToken(UUID userId, String username, Roles role) {
-        return buildToken(userId, username, role, accessTokenDuration);
+        return buildToken(userId, username, role, accessTokenDuration, TOKEN_TYPE_ACCESS);
     }
 
     public String generateAccessToken(String username, Roles role) {
-        return buildToken(null, username, role, accessTokenDuration);
+        return buildToken(null, username, role, accessTokenDuration, TOKEN_TYPE_ACCESS);
     }
 
     public String generateRefreshToken(UUID userId, String username, Roles role) {
-        return buildToken(userId, username, role, refreshTokenDuration);
+        return buildToken(userId, username, role, refreshTokenDuration, TOKEN_TYPE_REFRESH);
     }
 
     public String generateRefreshToken(String username, Roles role) {
-        return buildToken(null, username, role, refreshTokenDuration);
+        return buildToken(null, username, role, refreshTokenDuration, TOKEN_TYPE_REFRESH);
     }
 
-    private String buildToken(UUID userId, String username, Roles role, long duration) {
+    private String buildToken(UUID userId, String username, Roles role, long duration, String tokenType) {
         var builder = Jwts.builder()
                 .subject("Laundry Management System")
                 .claim("username", username)
                 .claim("role", role != null ? role.name() : null)
+                .claim("tokenType", tokenType)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + duration))
                 .issuer("LAUNDRY")
@@ -83,11 +87,15 @@ public class JwtUtil {
     }
 
     /**
-     * Validates the token and returns the immutable userId claim when present,
+     * Validates an access token (rejecting refresh tokens) and returns the immutable userId claim when present,
      * falling back to the legacy username claim for pre-existing tokens.
      */
-    public String validateTokenAndRetrieveSubject(String token) throws JwtException {
+    public String validateAccessTokenAndRetrieveSubject(String token) throws JwtException {
         Claims claims = parseAndValidate(token);
+        String tokenType = claims.get("tokenType", String.class);
+        if (!TOKEN_TYPE_ACCESS.equals(tokenType)) {
+            throw new JwtException("Token không phải access token hợp lệ");
+        }
         String userId = claims.get("userId", String.class);
         if (userId != null && !userId.isBlank()) {
             return userId;
@@ -97,6 +105,22 @@ public class JwtUtil {
             throw new JwtException("Token thiếu định danh người dùng");
         }
         return username;
+    }
+
+    public String validateTokenAndRetrieveSubject(String token) throws JwtException {
+        return validateAccessTokenAndRetrieveSubject(token);
+    }
+
+    public void validateRefreshToken(String token) throws JwtException {
+        Claims claims = parseAndValidate(token);
+        String tokenType = claims.get("tokenType", String.class);
+        if (!TOKEN_TYPE_REFRESH.equals(tokenType)) {
+            throw new JwtException("Token không phải refresh token hợp lệ");
+        }
+    }
+
+    public String extractTokenType(String token) {
+        return parse(token).get("tokenType", String.class);
     }
 
     public Optional<UUID> extractUserId(String token) {

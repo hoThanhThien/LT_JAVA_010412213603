@@ -17,6 +17,7 @@ import java.util.Date;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"customer", "laundryShop", "serviceCategory", "service"})
 @Entity
 @Table(name = "orders")
 public class Order {
@@ -61,6 +62,7 @@ public class Order {
     private Date updatedAt;
     private String instructions;
 
+    @Builder.Default
     @Column(name = "payment_status")
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus = PaymentStatus.PENDING;

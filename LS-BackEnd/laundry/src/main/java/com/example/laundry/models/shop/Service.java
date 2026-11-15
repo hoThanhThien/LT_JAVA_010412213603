@@ -6,15 +6,11 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 import com.example.laundry.models.order.Order;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
 
 @Data
-@Setter
-@Getter
 @Builder
+@EqualsAndHashCode(exclude = {"category", "orders"})
+@ToString(exclude = {"category", "orders"})
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -45,7 +41,8 @@ public class Service {
     @JoinColumn(name = "category_id")
     private ServiceCategory category;
 
-    @OneToMany(mappedBy = "service", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @Builder.Default
+    @OneToMany(mappedBy = "service")
     private List<Order> orders = new ArrayList<>();
 
     public Service(String name, double price, String description, String estimatedTime) {

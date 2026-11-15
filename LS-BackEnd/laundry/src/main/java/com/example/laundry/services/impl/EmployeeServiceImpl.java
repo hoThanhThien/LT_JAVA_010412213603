@@ -10,9 +10,9 @@ import com.example.laundry.repository.EmployeeRepository;
 import com.example.laundry.repository.OrderRepository;
 import com.example.laundry.services.EmployeeService;
 import com.example.laundry.utils.ApiResponse;
+import com.example.laundry.utils.PaginationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -82,7 +82,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         return new PagedResponse<>("Nhân viên chưa được phân công vào cửa hàng", null);
       }
 
-      Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+      Pageable pageable = PaginationUtils.of(page, size, Sort.by("id").descending());
 
       Page<Order> orderPage = orderRepository.findOrdersByLaundryShop(laundryShop, pageable);
 
@@ -103,7 +103,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public PagedResponse<EmployeeDTO> getAllEmployees(int page, int size) {
-    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+    Pageable pageable = PaginationUtils.of(page, size, Sort.by("createdAt").descending());
     Page<Employee> employeePage = employeeRepository.findAll(pageable);
 
     List<EmployeeDTO> dtos = employeePage.getContent().stream()
@@ -123,7 +123,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public PagedResponse<EmployeeDTO> getAllEmployeesByStoreOwner(StoreOwner storeOwner, int page, int size) {
-    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+    Pageable pageable = PaginationUtils.of(page, size, Sort.by("createdAt").descending());
     Page<Employee> employeePage = employeeRepository.findByStoreOwner(storeOwner, pageable);
 
     List<EmployeeDTO> dtos = employeePage.getContent().stream()

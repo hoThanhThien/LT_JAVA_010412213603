@@ -42,14 +42,27 @@ public class AuthController {
   }
 
   @PostMapping("/logout")
-  public ResponseEntity<LogoutResponse> logout(@RequestBody LogoutRequest logoutRequest) {
-    LogoutResponse response = authService.logout(logoutRequest);
+  public ResponseEntity<LogoutResponse> logout(
+          @RequestBody(required = false) LogoutRequest logoutRequest,
+          @RequestHeader(value = "Authorization", required = false) String authHeader) {
+    LogoutRequest effectiveRequest = logoutRequest != null ? logoutRequest : new LogoutRequest();
+    if ((effectiveRequest.getAccessToken() == null || effectiveRequest.getAccessToken().isBlank())
+            && authHeader != null && authHeader.startsWith("Bearer ")) {
+      effectiveRequest.setAccessToken(authHeader.substring(7));
+    }
+    LogoutResponse response = authService.logout(effectiveRequest);
     return ResponseEntity.ok(response);
   }
 
   @PostMapping("/refresh-token")
   public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken(@RequestBody RefreshTokenRequest request) {
     try {
+      if (request == null || request.getRefreshToken() == null || request.getRefreshToken().isBlank()) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
+      // Xác thực chữ ký JWT và claim tokenType=refresh trước khi tra DB
+      jwtUtil.validateRefreshToken(request.getRefreshToken());
+
       //Kiểm tra refresh token xem tồn tại và còn hạn không
       RefreshToken refreshToken = refreshTokenService.findByToken(request.getRefreshToken());
       refreshTokenService.verifyExpiration(refreshToken);

@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -13,10 +15,9 @@ import java.util.Map;
 @Data
 @Entity
 @Builder
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(exclude = "reportData")
 @ToString(exclude = "reportData")
 @Table(name = "report")
 public class Report {
@@ -31,19 +32,19 @@ public class Report {
     @Column(name = "report_type", nullable = false)
     private ReportType reportType;
 
-    @Temporal(TemporalType.DATE)
+    @JdbcTypeCode(SqlTypes.DATE)
     @Column(name = "start_date")
     private Date startDate;
 
-    @Temporal(TemporalType.DATE)
+    @JdbcTypeCode(SqlTypes.DATE)
     @Column(name = "end_date")
     private Date endDate;
 
     @CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "generated_date", updatable = false)
     private Date generatedDate;
 
+    @Builder.Default
     @ElementCollection
     @CollectionTable(name = "report_data",
             joinColumns = @JoinColumn(name = "report_id"))

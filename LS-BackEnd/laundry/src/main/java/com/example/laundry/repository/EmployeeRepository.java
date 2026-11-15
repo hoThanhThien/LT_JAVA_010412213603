@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,4 +22,5 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
     boolean existsById(@NonNull UUID id);
     Page<Employee> findByStoreOwner(StoreOwner storeOwner, Pageable pageable);
     List<Employee> findByStoreOwner(StoreOwner storeOwner);
+    List<Employee> findByStoreOwner_IdIn(Collection<UUID> storeOwnerIds);
 }

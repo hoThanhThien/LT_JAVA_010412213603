@@ -6,6 +6,7 @@ import lombok.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,4 +18,5 @@ public interface LaundryShopRepository extends JpaRepository<LaundryShop, Intege
   boolean existsByName(String name);
   Optional<LaundryShop> findById(@NonNull Integer id);
   Optional<LaundryShop> findByStoreOwnerId(UUID storeOwner_Id);
+  List<LaundryShop> findByStoreOwner_IdIn(Collection<UUID> storeOwnerIds);
 }

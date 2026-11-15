@@ -32,14 +32,23 @@ public class AccountController {
   }
 
   @GetMapping("/accounts/me")
-  public ResponseEntity<GetInfoResponse> getAccountInfo(@RequestHeader("Authorization") String authHeader) {
+  public ResponseEntity<GetInfoResponse> getAccountInfo(
+          @RequestHeader(value = "Authorization", required = false) String authHeader) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication != null && authentication.isAuthenticated()
+            && !(authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
+      return ResponseEntity.ok(accountService.getCurrentUserInfo(authentication));
+    }
+
     String token = null;
     if (authHeader != null && authHeader.startsWith("Bearer ")) {
       token = authHeader.substring(7);
     }
+    if (token == null || token.isBlank()) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new GetInfoResponse(null, "Chưa đăng nhập"));
+    }
 
-    GetInfoRequest getInfoRequest = new GetInfoRequest(token);
-    GetInfoResponse response = accountService.getInfo(getInfoRequest);
+    GetInfoResponse response = accountService.getInfo(new GetInfoRequest(token));
     return ResponseEntity.ok(response);
   }
 }

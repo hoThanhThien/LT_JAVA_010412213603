@@ -2,9 +2,11 @@ package com.example.laundry.models.user;
 
 import com.example.laundry.models.shop.LaundryShop;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
@@ -17,7 +19,9 @@ import java.util.ArrayList;
 @Setter
 @NoArgsConstructor
 @SuperBuilder
+@ToString(exclude = "employees")
 public class StoreOwner extends User {
+    @Builder.Default
     @OneToMany(mappedBy = "storeOwner", cascade = CascadeType.ALL)
     private List<Employee> employees = new ArrayList<>();
 

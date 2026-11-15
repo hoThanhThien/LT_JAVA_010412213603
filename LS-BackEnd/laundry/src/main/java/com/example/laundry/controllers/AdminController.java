@@ -61,8 +61,27 @@ public class AdminController {
 
     @DeleteMapping("/storeowner/delete")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<String>> deleteStoreOwner(@RequestBody StoreOwnerDTO storeOwnerDTO) {
-        ApiResponse<String> response = adminService.removeStoreOwner(storeOwnerDTO);
+    public ResponseEntity<ApiResponse<String>> deleteStoreOwner(
+            @RequestBody(required = false) StoreOwnerDTO storeOwnerDTO,
+            @RequestParam(required = false) UUID id,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String username) {
+        StoreOwnerDTO effectiveDto = storeOwnerDTO != null ? storeOwnerDTO : new StoreOwnerDTO();
+        if (effectiveDto.getId() == null && id != null) {
+            effectiveDto.setId(id);
+        }
+        if ((effectiveDto.getEmail() == null || effectiveDto.getEmail().isBlank()) && email != null) {
+            effectiveDto.setEmail(email);
+        }
+        if ((effectiveDto.getPhone() == null || effectiveDto.getPhone().isBlank()) && phone != null) {
+            effectiveDto.setPhone(phone);
+        }
+        if ((effectiveDto.getUsername() == null || effectiveDto.getUsername().isBlank()) && username != null) {
+            effectiveDto.setUsername(username);
+        }
+
+        ApiResponse<String> response = adminService.removeStoreOwner(effectiveDto);
 
         if (response.getData() == null) {
             return ResponseEntity.badRequest().body(response);
@@ -103,7 +122,7 @@ public class AdminController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new PagedResponse<>("Lấy danh sách nhân viên thất bại: " + e.getMessage(), null));
+                    .body(new PagedResponse<>("Lấy danh sách chủ cửa hàng thất bại: " + e.getMessage(), null));
         }
     }
 
@@ -169,7 +188,7 @@ public class AdminController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new PagedResponse<>("Lấy danh sách nhân viên thất bại: " + e.getMessage(), null));
+                    .body(new PagedResponse<>("Lấy danh sách cửa hàng thất bại: " + e.getMessage(), null));
         }
     }
 }

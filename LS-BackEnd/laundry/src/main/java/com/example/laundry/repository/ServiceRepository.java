@@ -15,5 +15,6 @@ public interface ServiceRepository extends JpaRepository<Service,Long> {
   List<Service> findByCategoryId(Integer id);
   List<Service> findByCategoryIdAndCategoryShopId(Integer categoryId, Integer shopId);
   List<Service> findByCategory(ServiceCategory category);
+  List<Service> findByCategory_IdIn(Collection<Long> categoryIds);
   boolean existsByNameAndCategory(String name, ServiceCategory serviceCategory);
 }

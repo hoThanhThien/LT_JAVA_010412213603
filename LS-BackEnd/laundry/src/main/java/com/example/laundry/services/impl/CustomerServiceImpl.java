@@ -15,13 +15,13 @@ import com.example.laundry.services.CustomerService;
 import com.example.laundry.services.OrderService;
 import com.example.laundry.services.RefreshTokenService;
 import com.example.laundry.utils.ApiResponse;
+import com.example.laundry.utils.PaginationUtils;
 import com.example.laundry.utils.UserValidator;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -97,9 +97,8 @@ public class CustomerServiceImpl implements CustomerService {
                 return new CustomerResponseDTO("Số điện thoại không tồn tại", null);
             }
 
-            //Kiểm tra tồn tại
-            if (customerRepository.findByPhone(verifiedPhone).isPresent()) {
-                System.out.println("Số điện thoại đã tồn tại trong hệ thống: " + verifiedPhone);
+            // Kiểm tra tồn tại trên toàn hệ thống (mọi bảng role của User)
+            if (userRepository.existsByPhone(verifiedPhone) || customerRepository.findByPhone(verifiedPhone).isPresent()) {
                 return new CustomerResponseDTO("Số điện thoại đã được đăng ký trong hệ thống", null);
             }
 
@@ -153,9 +152,12 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public ApiResponse<OrderResponse> bookService(Customer customer, OrderDTO orderDTO) {
+        if (customer == null || customer.getId() == null) {
+            throw new RuntimeException("Customer not found");
+        }
         // Kiem tra customer
         Customer customerId = customerRepository.findById(customer.getId())
-                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + customer));
+                .orElseThrow(() -> new RuntimeException("Customer not found with id: " + customer.getId()));
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         // Load LaundryShop từ database
         LaundryShop laundryShop = null;
@@ -221,7 +223,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public PagedResponse<OrderResponse> historyOrder(Customer customer, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PaginationUtils.of(page, size, Sort.by("createdAt").descending());
         Page<Order> orderPage = orderRepository.findByCustomer_Id(customer.getId(), pageable);
 
         List<OrderResponse> orderResponses = orderPage.getContent().stream()
@@ -248,8 +250,9 @@ public class CustomerServiceImpl implements CustomerService {
                     return new ApiResponse<>("Email không hợp lệ!", null);
                 }
 
-                if (customerRepository.existsByEmail(customerDTO.getEmail()) &&
-                        !customerDTO.getEmail().equals(customer.getEmail())) {
+                if (!customerDTO.getEmail().equals(customer.getEmail()) &&
+                        (userRepository.existsByEmail(customerDTO.getEmail()) ||
+                                customerRepository.existsByEmail(customerDTO.getEmail()))) {
                     return new ApiResponse<>("Email đã tồn tại trong hệ thống", null);
                 }
 
@@ -263,7 +266,8 @@ public class CustomerServiceImpl implements CustomerService {
                 }
 
                 if (!customerDTO.getPhone().equals(customer.getPhone()) &&
-                        customerRepository.existsByPhone(customerDTO.getPhone())) {
+                        (userRepository.existsByPhone(customerDTO.getPhone()) ||
+                                customerRepository.existsByPhone(customerDTO.getPhone()))) {
                     return new ApiResponse<>("Số điện thoại đã tồn tại trong hệ thống", null);
                 }
 

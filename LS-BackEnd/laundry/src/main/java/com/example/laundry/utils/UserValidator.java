@@ -4,7 +4,7 @@ import java.util.regex.Pattern;
 
 public class UserValidator {
     private static final int MIN_PASSWORD_LENGTH = 8;
-    private static final String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[@#$%^&+=]).{8,}$";
+    private static final String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[@#$%^&+=!*._?-]).{8,}$";
     private static final String EMAIL_PATTERN = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
     private static final String PHONE_PATTERN = "^\\d{10}$";
 
