@@ -24,14 +24,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
@@ -158,7 +155,6 @@ public class CustomerServiceImpl implements CustomerService {
         // Kiem tra customer
         Customer customerId = customerRepository.findById(customer.getId())
                 .orElseThrow(() -> new RuntimeException("Customer not found with id: " + customer.getId()));
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         // Load LaundryShop từ database
         LaundryShop laundryShop = null;
         if (orderDTO.getLaundryShop() != null && orderDTO.getLaundryShop().getId() != null) {
@@ -230,7 +226,7 @@ public class CustomerServiceImpl implements CustomerService {
                 .map(OrderResponse::from)
                 .collect(Collectors.toList());
 
-        Meta meta = new Meta(
+        Meta<OrderResponse> meta = new Meta<>(
                 orderPage.getNumber() + 1,
                 orderPage.getSize(),
                 orderPage.getTotalElements(),

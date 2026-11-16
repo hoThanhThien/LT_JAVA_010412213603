@@ -1,6 +1,5 @@
 package com.example.laundry.models.shop;
 
-import com.example.laundry.dto.LaundryShopDTO;
 import com.example.laundry.models.user.StoreOwner;
 import jakarta.persistence.*;
 
@@ -24,7 +23,6 @@ public class LaundryShop {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Getter
     @Column(nullable = false, unique = true)
     private String name;
 

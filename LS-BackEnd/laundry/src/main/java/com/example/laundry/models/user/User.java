@@ -22,6 +22,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @SuperBuilder
 public abstract class User implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @GeneratedValue(strategy = GenerationType.UUID)

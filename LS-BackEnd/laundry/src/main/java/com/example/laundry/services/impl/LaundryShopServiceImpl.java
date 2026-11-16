@@ -50,7 +50,7 @@ public class LaundryShopServiceImpl implements LaundryShopService {
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
 
-        Meta meta = new Meta(
+        Meta<LaundryShopDTO> meta = new Meta<>(
                 shopPage.getNumber() + 1,
                 shopPage.getSize(),
                 shopPage.getTotalElements(),

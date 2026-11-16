@@ -1,6 +1,5 @@
 package com.example.laundry.models.user;
 
-import com.example.laundry.models.shop.LaundryShop;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,6 +20,8 @@ import java.util.ArrayList;
 @SuperBuilder
 @ToString(exclude = "employees")
 public class StoreOwner extends User {
+    private static final long serialVersionUID = 1L;
+
     @Builder.Default
     @OneToMany(mappedBy = "storeOwner", cascade = CascadeType.ALL)
     private List<Employee> employees = new ArrayList<>();

@@ -10,7 +10,6 @@ import com.example.laundry.models.user.Roles;
 import com.example.laundry.models.user.User;
 import com.example.laundry.repository.EmployeeRepository;
 import com.example.laundry.repository.OrderRepository;
-import com.example.laundry.repository.PaymentRepository;
 import com.example.laundry.repository.UserRepository;
 import com.example.laundry.security.SecurityUtils;
 import com.example.laundry.services.PaymentService;
@@ -38,9 +37,6 @@ import java.util.regex.Pattern;
 public class PaymentServiceImpl implements PaymentService {
     private static final int POLL_PAGE_SIZE = 50;
     private static final int MAX_POLL_PAGES = 5;
-
-    @Autowired
-    private PaymentRepository paymentRepository;
 
     @Autowired
     private UserRepository userRepository;

@@ -18,6 +18,8 @@ import java.util.Date;
 @Table(name="employees")
 @DiscriminatorValue("EMPLOYEE")
 public class Employee extends User {
+    private static final long serialVersionUID = 1L;
+
     @ManyToOne
     @JoinColumn(name = "shop_id")
     private LaundryShop shop;

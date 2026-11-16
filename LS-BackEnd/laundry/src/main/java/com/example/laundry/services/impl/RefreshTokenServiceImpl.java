@@ -3,7 +3,6 @@ package com.example.laundry.services.impl;
 import com.example.laundry.models.notification.RefreshToken;
 import com.example.laundry.models.user.User;
 import com.example.laundry.repository.RefreshTokenRepository;
-import com.example.laundry.repository.UserRepository;
 import com.example.laundry.security.JwtUtil;
 import com.example.laundry.services.RefreshTokenService;
 import jakarta.transaction.Transactional;
@@ -20,9 +19,6 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
   @Autowired
   private RefreshTokenRepository refreshTokenRepository;
-
-  @Autowired
-  private UserRepository userRepository;
 
   @Autowired
   private JwtUtil jwtUtil;

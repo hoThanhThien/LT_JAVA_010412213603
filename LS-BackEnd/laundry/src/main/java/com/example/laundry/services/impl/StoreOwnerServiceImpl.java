@@ -9,9 +9,7 @@ import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.Roles;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.*;
-import com.example.laundry.security.SecurityUtils;
 import com.example.laundry.services.EmployeeService;
-import com.example.laundry.services.OrderService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
 import com.example.laundry.utils.PaginationUtils;
@@ -21,9 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collections;
@@ -59,14 +54,6 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
     private ServiceRepository serviceRepository;
     @Autowired
     private OrderRepository orderRepository;
-    @Autowired
-    private OrderService orderService;
-
-    // Lấy store owner hiện tại
-    private StoreOwner getCurrentStoreOwner() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return SecurityUtils.resolveCurrentUser(authentication, storeOwnerRepository::findById, storeOwnerRepository::findByUsername);
-    }
 
     @Override
     public void addStoreOwner(StoreOwner storeOwner) {
@@ -673,7 +660,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
                 .map(OrderResponse::from)
                 .toList();
 
-        Meta meta = new Meta(
+        Meta<OrderResponse> meta = new Meta<>(
                 orderPage.getNumber() + 1,
                 orderPage.getSize(),
                 orderPage.getTotalElements(),

@@ -1,6 +1,5 @@
 package com.example.laundry.services.impl;
 
-import com.example.laundry.dto.ServiceCategoryDTO;
 import com.example.laundry.dto.ServiceDTO;
 import com.example.laundry.models.shop.Service;
 import com.example.laundry.repository.ServiceRepository;

@@ -1,16 +1,11 @@
 package com.example.laundry.services.impl;
 
-import com.example.laundry.dto.OrderDTO;
 import com.example.laundry.models.order.Order;
 import com.example.laundry.models.order.OrderStatus;
-import com.example.laundry.models.user.Customer;
 import com.example.laundry.repository.OrderRepository;
 import com.example.laundry.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {

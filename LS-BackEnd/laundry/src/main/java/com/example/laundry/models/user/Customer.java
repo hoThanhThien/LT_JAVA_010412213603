@@ -1,9 +1,6 @@
 package com.example.laundry.models.user;
 
 import com.example.laundry.models.order.Order;
-import com.example.laundry.models.order.Payment;
-import com.example.laundry.models.shop.LaundryShop;
-import com.example.laundry.models.shop.Service;
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -22,6 +19,8 @@ import java.util.ArrayList;
 @Table(name="customers")
 @DiscriminatorValue("CUSTOMER")
 public class Customer extends User {
+    private static final long serialVersionUID = 1L;
+
     @Builder.Default
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orderHistory = new ArrayList<>();

@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -90,7 +89,7 @@ public class EmployeeServiceImpl implements EmployeeService {
               .map(OrderResponse::from)
               .toList();
 
-      Meta meta = new Meta(
+      Meta<OrderResponse> meta = new Meta<>(
               orderPage.getNumber() + 1,
               orderPage.getSize(),
               orderPage.getTotalElements(),
@@ -110,7 +109,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             .map(this::convertToDTO)
             .collect(Collectors.toList());
 
-    Meta meta = new Meta(
+    Meta<EmployeeDTO> meta = new Meta<>(
             employeePage.getNumber() + 1,
             employeePage.getSize(),
             employeePage.getTotalElements(),
@@ -130,7 +129,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             .map(this::convertToDTO)
             .collect(Collectors.toList());
 
-    Meta meta = new Meta(
+    Meta<EmployeeDTO> meta = new Meta<>(
             employeePage.getNumber() + 1,
             employeePage.getSize(),
             employeePage.getTotalElements(),

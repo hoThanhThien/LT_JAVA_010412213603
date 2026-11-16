@@ -10,8 +10,6 @@ import com.example.laundry.models.user.Roles;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.*;
 import com.example.laundry.services.AdminService;
-import com.example.laundry.services.EmployeeService;
-import com.example.laundry.services.OrderService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
 import com.example.laundry.utils.PaginationUtils;
@@ -21,14 +19,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -36,8 +32,6 @@ import java.util.stream.Collectors;
 public class AdminServiceImpl implements AdminService {
     @Autowired
     private EmployeeRepository employeeRepository;
-    @Autowired
-    private AdminRepository adminRepository;
     @Autowired
     private StoreOwnerRepository storeOwnerRepository;
     @Autowired
@@ -52,11 +46,6 @@ public class AdminServiceImpl implements AdminService {
     private LaundryShopRepository laundryShopRepository;
     @Autowired
     private CustomerRepository customerRepository;
-
-    @Autowired
-    private OrderService orderService;
-    @Autowired
-    private EmployeeService employeeService;
 
     @Override
     public ApiResponse<StoreOwner> createStoreOwner(StoreOwnerDTO storeOwnerDTO) {
@@ -226,7 +215,7 @@ public class AdminServiceImpl implements AdminService {
                 ))
                 .toList();
 
-        Meta meta = new Meta(
+        Meta<StoreOwnerDTO> meta = new Meta<>(
                 storeOwnerPage.getNumber() + 1,
                 storeOwnerPage.getSize(),
                 storeOwnerPage.getTotalElements(),
@@ -235,7 +224,7 @@ public class AdminServiceImpl implements AdminService {
         PagedData<StoreOwnerDTO> pagedData = new PagedData<>(meta, storeOwnerDTOs);
         PagedResponse<StoreOwnerDTO> response = new PagedResponse<>("Lấy danh sách thành công", pagedData);
 
-        return ResponseEntity.ok(response).getBody();
+        return response;
     }
 
     @Override
@@ -315,7 +304,7 @@ public class AdminServiceImpl implements AdminService {
 
           List<OrderResponse> responseList = mapOrdersToOrderResponses(orderPage.getContent());
 
-          Meta meta = new Meta(
+          Meta<OrderResponse> meta = new Meta<>(
                   orderPage.getNumber() + 1,
                   orderPage.getSize(),
                   orderPage.getTotalElements(),
@@ -357,7 +346,7 @@ public class AdminServiceImpl implements AdminService {
 
     List<OrderResponse> responseList = mapOrdersToOrderResponses(customerOrders.getContent());
 
-    Meta meta = new Meta(
+    Meta<OrderResponse> meta = new Meta<>(
             customerOrders.getNumber() + 1,
             customerOrders.getSize(),
             customerOrders.getTotalElements(),
@@ -388,7 +377,7 @@ public class AdminServiceImpl implements AdminService {
                 ))
                 .toList();
 
-        Meta meta = new Meta(
+        Meta<CustomerDTO> meta = new Meta<>(
                 customerPage.getNumber() + 1,
                 customerPage.getSize(),
                 customerPage.getTotalElements(),
@@ -398,7 +387,7 @@ public class AdminServiceImpl implements AdminService {
         PagedData<CustomerDTO> pagedData = new PagedData<>(meta, customerDTOs);
         PagedResponse<CustomerDTO> response = new PagedResponse<>("Lấy danh sách thành công", pagedData);
 
-        return ResponseEntity.ok(response).getBody();
+        return response;
     }
 
     @Override
@@ -416,7 +405,7 @@ public class AdminServiceImpl implements AdminService {
 
         List<OrderResponse> responseList = mapOrdersToOrderResponses(orderPage.getContent());
 
-        Meta meta = new Meta(
+        Meta<OrderResponse> meta = new Meta<>(
                 orderPage.getNumber() + 1,
                 orderPage.getSize(),
                 orderPage.getTotalElements(),
