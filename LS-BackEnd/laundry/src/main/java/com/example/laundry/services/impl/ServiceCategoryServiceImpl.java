@@ -20,13 +20,12 @@ public class ServiceCategoryServiceImpl implements ServiceCategoryService {
     List<ServiceCategory> categories = serviceCategoryRepository.findByShopId(shopId);
 
     List<ServiceCategoryDTO> categoriesDTOs = categories.stream()
-            .map(serviceCategory -> new ServiceCategoryDTO(
-                    serviceCategory.getId(),
-                    serviceCategory.getName(),
-                    serviceCategory.getImageDesc(),
-                    serviceCategory.getDescription()
-            ))
-            .toList();
+        .map(serviceCategory -> new ServiceCategoryDTO(
+            serviceCategory.getId(),
+            serviceCategory.getName(),
+            serviceCategory.getImageDesc(),
+            serviceCategory.getDescription()))
+        .toList();
 
     return new ApiResponse<>("Danh sách các mục dịch vụ", categoriesDTOs);
   }

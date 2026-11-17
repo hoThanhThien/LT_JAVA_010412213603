@@ -16,7 +16,7 @@ import java.util.ArrayList;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name="customers")
+@Table(name = "customers")
 @DiscriminatorValue("CUSTOMER")
 public class Customer extends User {
     private static final long serialVersionUID = 1L;

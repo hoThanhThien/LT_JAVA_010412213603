@@ -38,7 +38,7 @@ public class LaundryShopServiceImpl implements LaundryShopService {
 
     @Override
     public LaundryShop createShopByStoreOwner(LaundryShop laundryShop, StoreOwner storeOwner) {
-      return laundryShopRepository.save(laundryShop);
+        return laundryShopRepository.save(laundryShop);
     }
 
     @Override
@@ -54,8 +54,7 @@ public class LaundryShopServiceImpl implements LaundryShopService {
                 shopPage.getNumber() + 1,
                 shopPage.getSize(),
                 shopPage.getTotalElements(),
-                shopPage.getTotalPages()
-        );
+                shopPage.getTotalPages());
 
         PagedData<LaundryShopDTO> pagedData = new PagedData<>(meta, dtos);
         return new PagedResponse<>("Lấy danh sách tất cả cửa hàng thành công", pagedData);
