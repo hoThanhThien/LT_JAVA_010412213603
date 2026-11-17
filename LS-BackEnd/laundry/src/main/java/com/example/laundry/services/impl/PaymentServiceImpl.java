@@ -49,10 +49,10 @@ public class PaymentServiceImpl implements PaymentService {
     private final VietQRCode vietQRCode;
 
     public PaymentServiceImpl(OrderRepository orderRepository, CassoClient cassoClient, VietQRCode vietQRCode) {
-            this.orderRepository = orderRepository;
-            this.cassoClient = cassoClient;
-            this.vietQRCode = vietQRCode;
-      }
+        this.orderRepository = orderRepository;
+        this.cassoClient = cassoClient;
+        this.vietQRCode = vietQRCode;
+    }
 
     @Value("${account-holder}")
     private String accountHolder;
@@ -62,7 +62,8 @@ public class PaymentServiceImpl implements PaymentService {
 
     private void verifyOrderAccess(Order order) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getName())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Yêu cầu đăng nhập");
         }
 
@@ -72,14 +73,16 @@ public class PaymentServiceImpl implements PaymentService {
             return;
         }
 
-        User currentUser = SecurityUtils.resolveCurrentUser(authentication, userRepository::findById, userRepository::findByUsername);
+        User currentUser = SecurityUtils.resolveCurrentUser(authentication, userRepository::findById,
+                userRepository::findByUsername);
         if (currentUser == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Không tìm thấy thông tin người dùng");
         }
 
         if (currentUser.getRoles() == Roles.Customer) {
             if (order.getCustomer() == null || !order.getCustomer().getId().equals(currentUser.getId())) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền truy cập thanh toán của đơn hàng này");
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Bạn không có quyền truy cập thanh toán của đơn hàng này");
             }
             return;
         }
@@ -87,7 +90,8 @@ public class PaymentServiceImpl implements PaymentService {
         if (currentUser.getRoles() == Roles.StoreOwner) {
             if (order.getLaundryShop() == null || order.getLaundryShop().getStoreOwner() == null
                     || !order.getLaundryShop().getStoreOwner().getId().equals(currentUser.getId())) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền truy cập thanh toán của cửa hàng khác");
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Bạn không có quyền truy cập thanh toán của cửa hàng khác");
             }
             return;
         }
@@ -96,7 +100,8 @@ public class PaymentServiceImpl implements PaymentService {
             Employee employee = employeeRepository.findById(currentUser.getId()).orElse(null);
             if (employee == null || employee.getShop() == null || order.getLaundryShop() == null
                     || !employee.getShop().getId().equals(order.getLaundryShop().getId())) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền truy cập thanh toán của cửa hàng khác");
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Bạn không có quyền truy cập thanh toán của cửa hàng khác");
             }
             return;
         }
@@ -114,7 +119,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         verifyOrderAccess(order);
 
-        //Tạo mã qr
+        // Tạo mã qr
         String transferContent = "LAUNDRY" + order.getId();
         String bankCode = "MB";
         String totalAmount = order.getTotalAmount().toString();
@@ -204,13 +209,15 @@ public class PaymentServiceImpl implements PaymentService {
         return allTransactions;
     }
 
-    private boolean isMatchingTransaction(CassoClient.CassoTransaction transaction, String transferContent, Double requiredAmount) {
+    private boolean isMatchingTransaction(CassoClient.CassoTransaction transaction, String transferContent,
+            Double requiredAmount) {
         if (transaction == null || transferContent == null || transferContent.isBlank()
                 || requiredAmount == null || transaction.getAmount() == null) {
             return false;
         }
 
-        // Kiểm tra mã đơn hàng với ranh giới rõ ràng để tránh khớp nhầm (VD: LAUNDRY1 vs LAUNDRY10)
+        // Kiểm tra mã đơn hàng với ranh giới rõ ràng để tránh khớp nhầm (VD: LAUNDRY1
+        // vs LAUNDRY10)
         String description = transaction.getDescription();
         if (description == null) {
             return false;
