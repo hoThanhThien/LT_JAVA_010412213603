@@ -63,7 +63,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       return true;
     }
     if ("GET".equalsIgnoreCase(method)) {
-      if ("/shops".equals(path)) {
+      if ("/shops".equals(path)
+          || "/v3/api-docs".equals(path)
+          || path.startsWith("/v3/api-docs/")
+          || "/v3/api-docs.yaml".equals(path)
+          || "/swagger-ui.html".equals(path)
+          || path.startsWith("/swagger-ui/")) {
         return true;
       }
       if (path.startsWith("/shop/") && (path.endsWith("/categories") || path.endsWith("/services"))) {

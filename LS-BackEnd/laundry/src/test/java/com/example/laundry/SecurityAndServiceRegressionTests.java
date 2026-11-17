@@ -524,4 +524,23 @@ class SecurityAndServiceRegressionTests {
             .param("size", "101"))
         .andExpect(status().isBadRequest());
   }
+
+  @Test
+  void openApiAndSwaggerUiEndpointsAreAccessibleWithBearerScheme() throws Exception {
+    mockMvc.perform(get("/v3/api-docs"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.openapi").exists())
+        .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.scheme").value("bearer"))
+        .andExpect(jsonPath("$.paths['/auth/login']").exists());
+
+    mockMvc.perform(get("/v3/api-docs")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer invalid-stale-token"))
+        .andExpect(status().isOk());
+
+    mockMvc.perform(get("/swagger-ui.html"))
+        .andExpect(status().isFound());
+
+    mockMvc.perform(get("/swagger-ui/index.html"))
+        .andExpect(status().isOk());
+  }
 }
