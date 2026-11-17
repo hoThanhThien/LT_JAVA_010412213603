@@ -1,6 +1,4 @@
-# LT_JAVA_010412213603 — Phần mềm quản lý giặt ủi online (Chủ đề số 10)
-
-- **Học phần:** Lập trình Java
+# Phần mềm quản lý giặt ủi nhiều của hàng online
 - **Nhóm thực hiện:** Thành Thiện, Minh Quang, Minh Chí, Triều Dương, Cao Phi
 
 Ứng dụng web quản lý đặt lịch và vận hành dịch vụ giặt ủi theo mô hình nhiều cửa hàng với 4 vai trò: **Admin**, **StoreOwner** (chủ cửa hàng), **Employee** (nhân viên), và **Customer** (khách hàng).
