@@ -44,7 +44,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler())
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login", "/auth/logout", "/auth/refresh-token", "/auth/register", "/customer/register").permitAll()
+                        .requestMatchers("/auth/login", "/auth/google", "/auth/logout", "/auth/refresh-token", "/auth/register", "/customer/register").permitAll()
                         .requestMatchers("/shops", "/shop/*/categories", "/shop/*/category/*/services").permitAll()
                         .requestMatchers("/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml", "/swagger-ui.html", "/swagger-ui/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")

@@ -4,7 +4,7 @@ import z from "zod";
 export const AccountSchema = z.object({
   id: z.string(),
   username: z.string(),
-  phone: z.string(),
+  phone: z.string().nullable().optional(),
   role: z.string(),
   email: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
@@ -47,7 +47,7 @@ export const UpdateMeResSchema = z
         username: z.string(),
         password: z.string().nullable().optional(),
         email: z.string().email().nullable().optional(),
-        phone: z.string(),
+        phone: z.string().nullable().optional(),
         address: z.string().nullable().optional(),
         role: z.string().optional(),
         avtUser: z.string().nullable().optional(),

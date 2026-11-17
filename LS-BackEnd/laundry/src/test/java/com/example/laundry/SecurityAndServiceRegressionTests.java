@@ -21,22 +21,27 @@ import com.example.laundry.repository.ServiceCategoryRepository;
 import com.example.laundry.repository.ServiceRepository;
 import com.example.laundry.repository.StoreOwnerRepository;
 import com.example.laundry.services.AdminService;
+import com.example.laundry.services.AuthService;
 import com.example.laundry.services.CustomerService;
 import com.example.laundry.services.PaymentService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
 import com.example.laundry.utils.UserValidator;
 import com.example.laundry.utils.VietQRCode;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseToken;
 import com.jayway.jsonpath.JsonPath;
 import jakarta.servlet.Filter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.AopTestUtils;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -99,6 +104,9 @@ class SecurityAndServiceRegressionTests {
 
   @Autowired
   private PaymentService paymentService;
+
+  @Autowired
+  private AuthService authService;
 
   @Autowired
   private VietQRCode vietQRCode;
@@ -542,5 +550,77 @@ class SecurityAndServiceRegressionTests {
 
     mockMvc.perform(get("/swagger-ui/index.html"))
         .andExpect(status().isOk());
+  }
+
+  @Test
+  void googleLoginRejectsMissingAndInvalidTokens() throws Exception {
+    mockMvc.perform(post("/auth/google")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{}"))
+        .andExpect(status().isUnauthorized());
+
+    mockMvc.perform(post("/auth/google")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"idToken\":\"invalid-google-token\"}"))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void googleLoginCreatesNewCustomerOnceReusesOnReloginAndBlocksEmptyPhoneLogin() throws Exception {
+    Object targetAuth = AopTestUtils.getUltimateTargetObject(authService);
+    FirebaseAuth mockFirebaseAuth = Mockito.mock(FirebaseAuth.class);
+    FirebaseToken mockToken = Mockito.mock(FirebaseToken.class);
+    Mockito.when(mockToken.getEmail()).thenReturn("newgoogleuser@gmail.com");
+    Mockito.when(mockToken.isEmailVerified()).thenReturn(true);
+    Mockito.when(mockToken.getName()).thenReturn("Google Test User");
+    Mockito.when(mockToken.getPicture()).thenReturn("https://example.com/avatar.png");
+    Mockito.when(mockFirebaseAuth.verifyIdToken("mock-firebase-id-token")).thenReturn(mockToken);
+
+    ReflectionTestUtils.setField(targetAuth, "firebaseAuth", mockFirebaseAuth);
+    try {
+      MvcResult firstResult = mockMvc.perform(post("/auth/google")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"idToken\":\"mock-firebase-id-token\"}"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+          .andExpect(jsonPath("$.data.refreshToken").isNotEmpty())
+          .andExpect(jsonPath("$.data.account.email").value("newgoogleuser@gmail.com"))
+          .andExpect(jsonPath("$.data.account.role").value("Customer"))
+          .andReturn();
+
+      String firstJson = firstResult.getResponse().getContentAsString();
+      assertNull(JsonPath.read(firstJson, "$.data.account.phone"));
+      String firstId = JsonPath.read(firstJson, "$.data.account.id");
+      String accessToken = JsonPath.read(firstJson, "$.data.accessToken");
+
+      Customer saved = customerRepository.findByEmail("newgoogleuser@gmail.com").orElseThrow();
+      assertNull(saved.getPhone());
+      assertEquals(firstId, saved.getId().toString());
+
+      mockMvc.perform(get("/accounts/me")
+              .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.account.email").value("newgoogleuser@gmail.com"));
+
+      MvcResult secondResult = mockMvc.perform(post("/auth/google")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"idToken\":\"mock-firebase-id-token\"}"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.account.id").value(firstId))
+          .andReturn();
+      assertEquals(firstId, JsonPath.read(secondResult.getResponse().getContentAsString(), "$.data.account.id"));
+
+      mockMvc.perform(post("/auth/login")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"phone\":null,\"password\":\"secret\"}"))
+          .andExpect(status().isUnauthorized());
+
+      mockMvc.perform(post("/auth/login")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"phone\":\"\",\"password\":\"secret\"}"))
+          .andExpect(status().isUnauthorized());
+    } finally {
+      ReflectionTestUtils.setField(targetAuth, "firebaseAuth", null);
+    }
   }
 }

@@ -34,6 +34,15 @@ public class AuthController {
     return ResponseEntity.ok(response);
   }
 
+  @PostMapping("/google")
+  public ResponseEntity<LoginResponse> googleLogin(@RequestBody GoogleLoginRequest request) {
+    LoginResponse response = authService.loginWithGoogle(request);
+    if (response.getData() == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+    return ResponseEntity.ok(response);
+  }
+
   @PostMapping("/logout")
   public ResponseEntity<LogoutResponse> logout(
           @RequestBody(required = false) LogoutRequest logoutRequest,

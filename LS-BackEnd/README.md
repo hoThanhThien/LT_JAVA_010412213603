@@ -56,6 +56,7 @@ cd LS-BackEnd\laundry
 
 ### Public (không cần token)
 - `POST /auth/login` — Đăng nhập (SĐT + mật khẩu), trả về `accessToken`, `refreshToken`, `account`
+- `POST /auth/google` — Đăng nhập / tự động tạo tài khoản Customer bằng Google (`idToken` Firebase hoặc `googleIdToken`)
 - `POST /auth/logout` — Thu hồi token (lưu blacklist trong DB)
 - `POST /auth/refresh-token` — Cấp `accessToken` mới từ `refreshToken`
 - `POST /auth/register`, `POST /customer/register` — Đăng ký tài khoản khách hàng

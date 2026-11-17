@@ -1,6 +1,7 @@
 import http from "@/lib/http";
 import {
   LoginBodyType,
+  GoogleLoginBodyType,
   AuthResType,
   ClientAuthResType,
   SessionResType,
@@ -14,6 +15,13 @@ const authApiRequests = {
   sLogin: (body: LoginBodyType) => http.post<AuthResType>("/auth/login", body),
   login: (body: LoginBodyType) =>
     http.post<ClientAuthResType>("api/auth/login", body, {
+      baseUrl: "",
+    }),
+
+  sGoogleLogin: (body: GoogleLoginBodyType) =>
+    http.post<AuthResType>("/auth/google", body),
+  googleLogin: (body: GoogleLoginBodyType) =>
+    http.post<ClientAuthResType>("api/auth/google", body, {
       baseUrl: "",
     }),
 

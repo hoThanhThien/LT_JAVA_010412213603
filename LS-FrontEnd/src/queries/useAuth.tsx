@@ -7,6 +7,12 @@ export const useLoginMutation = () => {
   });
 };
 
+export const useGoogleLoginMutation = () => {
+  return useMutation({
+    mutationFn: authApiRequests.googleLogin,
+  });
+};
+
 export const useRegisterMutation = () => {
   return useMutation({
     mutationFn: authApiRequests.register,

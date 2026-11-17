@@ -17,9 +17,9 @@ export const AuthRes = z.object({
     account: z.object({
       id: z.string(),
       name: z.string(),
-      phone: z.string(),
-      email: z.string().optional(),
-      address: z.string().optional(),
+      phone: z.string().nullable().optional(),
+      email: z.string().nullable().optional(),
+      address: z.string().nullable().optional(),
       role: z.enum(RoleValues),
     }),
   }),
@@ -54,6 +54,15 @@ export const RegisterBody = z
   .strict();
 
 export type RegisterBodyType = z.TypeOf<typeof RegisterBody>;
+
+export const GoogleLoginBody = z
+  .object({
+    idToken: z.string().min(1),
+    googleIdToken: z.string().nullable().optional(),
+  })
+  .strict();
+
+export type GoogleLoginBodyType = z.TypeOf<typeof GoogleLoginBody>;
 
 export const RefreshTokenBody = z
   .object({
