@@ -36,6 +36,10 @@ Tạo file `LS-BackEnd/laundry/.env` từ [`laundry/.env.example`](laundry/.env.
 
 ## 3. Chạy ứng dụng & Chạy Test
 
+### Chạy server local & Swagger UI
+- Tài liệu hướng dẫn chi tiết cách test toàn bộ API qua **Swagger UI**, tài khoản mẫu và payload chuẩn xem tại [`laundry/README.md`](laundry/README.md).
+- Khi server đang chạy, mở Swagger UI tại: `http://localhost:8080/swagger-ui.html` (OpenAPI JSON: `http://localhost:8080/v3/api-docs`).
+
 ```powershell
 cd LS-BackEnd\laundry
 
