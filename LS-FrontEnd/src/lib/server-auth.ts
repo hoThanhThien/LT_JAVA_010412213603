@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import authApiRequests from "@/apiRequests/auth";
+import envConfig from "@/config";
 import { HttpError } from "@/lib/http";
 
 export const ACCESS_COOKIE = "accessToken";
@@ -12,7 +13,7 @@ const cookieOptions = (token: string) => {
     path: "/",
     httpOnly: true,
     sameSite: "strict" as const,
-    secure: true,
+    secure: envConfig.NEXT_PUBLIC_URL.startsWith("https://"),
     ...(decoded?.exp ? { expires: decoded.exp * 1000 } : {}),
   };
 };

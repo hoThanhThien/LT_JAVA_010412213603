@@ -105,6 +105,16 @@ const request = async <Response>(
     payload,
   };
   // Interceptor là nời chúng ta xử lý request và response trước khi trả về cho phía component
+  const normalizeUrl = normalizePath(url);
+  const isAuthEndpoint = [
+    "api/auth/login",
+    "api/auth/google",
+    "api/auth/register",
+    "auth/login",
+    "auth/google",
+    "auth/register",
+  ].includes(normalizeUrl);
+
   if (!res.ok) {
     if (res.status === ENTITY_ERROR_STATUS) {
       throw new EntityError(
@@ -114,6 +124,9 @@ const request = async <Response>(
         }
       );
     } else if (res.status === AUTHENTICATION_ERROR_STATUS) {
+      if (isAuthEndpoint) {
+        throw new HttpError(data);
+      }
       if (isClient) {
         if (!clientLogoutRequest) {
           clientLogoutRequest = fetch("/api/auth/logout", {
@@ -145,10 +158,10 @@ const request = async <Response>(
   }
   // Đảm bảo logic dưới đây chỉ chạy ở phía client (browser)
   if (isClient) {
-    const normalizeUrl = normalizePath(url);
     // Cookie đã được server Next set/xóa; chỉ cần làm mới cache phiên ở client
     if (
       normalizeUrl === "api/auth/login" ||
+      normalizeUrl === "api/auth/google" ||
       normalizeUrl === "api/auth/register" ||
       normalizeUrl === "api/auth/logout"
     ) {

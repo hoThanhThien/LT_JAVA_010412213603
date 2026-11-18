@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { UseFormSetError } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
 import { EntityError } from "./http";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import authApiRequests from "@/apiRequests/auth";
 import type { SessionResType } from "@/schemaValidations/auth.schema";
 import dayjs from "dayjs";
@@ -36,7 +36,7 @@ export const handleErrorApi = ({
     });
   } else {
     toast.error(error?.payload?.message ?? "Lỗi không xác định", {
-      duration: duration ?? 5000,
+      autoClose: duration ?? 5000,
     });
   }
 };

@@ -34,6 +34,8 @@ import java.util.UUID;
 public class AuthServiceImpl implements AuthService {
   private static final String FIREBASE_PUBLIC_CERTS_URL =
           "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
+  private static final NetHttpTransport GOOGLE_HTTP_TRANSPORT = new NetHttpTransport();
+  private static final GsonFactory GOOGLE_JSON_FACTORY = GsonFactory.getDefaultInstance();
 
   public record GoogleUserInfo(String email, boolean emailVerified, String name, String picture) {}
 
@@ -60,6 +62,9 @@ public class AuthServiceImpl implements AuthService {
 
   @Value("${firebase.project-id:fir-service-account-18466}")
   private String firebaseProjectId;
+
+  private volatile GoogleIdTokenVerifier firebaseTokenVerifier;
+  private volatile GoogleIdTokenVerifier googleOAuthVerifier;
 
   @Override
   public LoginResponse login(LoginRequest loginRequest) {
@@ -162,18 +167,8 @@ public class AuthServiceImpl implements AuthService {
       }
     }
 
-    NetHttpTransport transport = new NetHttpTransport();
-    GsonFactory jsonFactory = GsonFactory.getDefaultInstance();
-
     if (request.getIdToken() != null && !request.getIdToken().isBlank()) {
-      GooglePublicKeysManager keysManager = new GooglePublicKeysManager.Builder(transport, jsonFactory)
-              .setPublicCertsEncodedUrl(FIREBASE_PUBLIC_CERTS_URL)
-              .build();
-      GoogleIdTokenVerifier firebaseVerifier = new GoogleIdTokenVerifier.Builder(keysManager)
-              .setIssuer("https://securetoken.google.com/" + firebaseProjectId)
-              .setAudience(Collections.singletonList(firebaseProjectId))
-              .build();
-      GoogleUserInfo verifiedFirebase = verifyWithGoogleVerifier(firebaseVerifier, request.getIdToken());
+      GoogleUserInfo verifiedFirebase = verifyWithGoogleVerifier(getFirebaseTokenVerifier(), request.getIdToken());
       if (verifiedFirebase != null) {
         return verifiedFirebase;
       }
@@ -183,13 +178,50 @@ public class AuthServiceImpl implements AuthService {
             ? request.getGoogleIdToken()
             : request.getIdToken();
     if (oauthToken != null && !oauthToken.isBlank()) {
-      GoogleIdTokenVerifier googleVerifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
-              .setIssuers(Arrays.asList("https://accounts.google.com", "accounts.google.com"))
-              .build();
-      return verifyWithGoogleVerifier(googleVerifier, oauthToken);
+      return verifyWithGoogleVerifier(getGoogleOAuthVerifier(), oauthToken);
     }
 
     return null;
+  }
+
+  private GoogleIdTokenVerifier getFirebaseTokenVerifier() {
+    GoogleIdTokenVerifier verifier = firebaseTokenVerifier;
+    if (verifier == null) {
+      synchronized (this) {
+        verifier = firebaseTokenVerifier;
+        if (verifier == null) {
+          GooglePublicKeysManager keysManager = new GooglePublicKeysManager.Builder(
+                  GOOGLE_HTTP_TRANSPORT, GOOGLE_JSON_FACTORY)
+                  .setPublicCertsEncodedUrl(FIREBASE_PUBLIC_CERTS_URL)
+                  .build();
+          String projectId = (firebaseProjectId != null && !firebaseProjectId.isBlank())
+                  ? firebaseProjectId
+                  : "fir-service-account-18466";
+          verifier = new GoogleIdTokenVerifier.Builder(keysManager)
+                  .setIssuer("https://securetoken.google.com/" + projectId)
+                  .setAudience(Collections.singletonList(projectId))
+                  .build();
+          firebaseTokenVerifier = verifier;
+        }
+      }
+    }
+    return verifier;
+  }
+
+  private GoogleIdTokenVerifier getGoogleOAuthVerifier() {
+    GoogleIdTokenVerifier verifier = googleOAuthVerifier;
+    if (verifier == null) {
+      synchronized (this) {
+        verifier = googleOAuthVerifier;
+        if (verifier == null) {
+          verifier = new GoogleIdTokenVerifier.Builder(GOOGLE_HTTP_TRANSPORT, GOOGLE_JSON_FACTORY)
+                  .setIssuers(Arrays.asList("https://accounts.google.com", "accounts.google.com"))
+                  .build();
+          googleOAuthVerifier = verifier;
+        }
+      }
+    }
+    return verifier;
   }
 
   private GoogleUserInfo verifyWithGoogleVerifier(GoogleIdTokenVerifier verifier, String rawToken) {
@@ -206,7 +238,7 @@ public class AuthServiceImpl implements AuthService {
               (String) payload.get("picture")
       );
     } catch (Exception e) {
-      log.debug("GoogleIdTokenVerifier verification failed: {}", e.getMessage());
+      log.warn("GoogleIdTokenVerifier verification failed: {}", e.getMessage());
       return null;
     }
   }
