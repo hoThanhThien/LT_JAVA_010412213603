@@ -87,4 +87,18 @@ public class AuthController {
     }
     return ResponseEntity.ok(response);
   }
+
+  @PostMapping("/forgot-password")
+  public ResponseEntity<com.example.laundry.utils.ApiResponse<java.util.Map<String, Object>>> forgotPassword(
+          @RequestBody ForgotPasswordRequest request
+  ) {
+    return ResponseEntity.ok(authService.forgotPassword(request));
+  }
+
+  @PostMapping("/reset-password")
+  public ResponseEntity<com.example.laundry.utils.ApiResponse<Void>> resetPassword(
+          @RequestBody ResetPasswordRequest request
+  ) {
+    return ResponseEntity.ok(authService.resetPassword(request));
+  }
 }

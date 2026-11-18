@@ -26,6 +26,37 @@ export const AccountRes = z
 
 export type AccountResType = z.TypeOf<typeof AccountRes>;
 
+import {
+  STRONG_PASSWORD_MESSAGE,
+  STRONG_PASSWORD_REGEX,
+} from "@/schemaValidations/auth.schema";
+
+export const ChangePasswordBody = z
+  .object({
+    currentPassword: z.string().optional(),
+    newPassword: z.string().regex(STRONG_PASSWORD_REGEX, STRONG_PASSWORD_MESSAGE),
+    confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu mới"),
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    if (data.newPassword !== data.confirmPassword) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["confirmPassword"],
+        message: "Xác nhận mật khẩu mới không khớp",
+      });
+    }
+  });
+
+export type ChangePasswordBodyType = z.TypeOf<typeof ChangePasswordBody>;
+
+export const ChangePasswordRes = z.object({
+  message: z.string(),
+  data: z.unknown().nullable().optional(),
+});
+
+export type ChangePasswordResType = z.TypeOf<typeof ChangePasswordRes>;
+
 export const UpdateMeBody = z
   .object({
     phone: z.string().optional(),

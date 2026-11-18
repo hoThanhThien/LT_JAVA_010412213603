@@ -135,12 +135,13 @@ export default function Login(props: {
                       Mật khẩu
                     </label>
                     <div className="text-sm">
-                      <a
-                        href="#"
-                        className="font-semibold text-main hover:text-hover"
+                      <button
+                        type="button"
+                        onClick={() => props.setActiveTab("forgot-password")}
+                        className="cursor-pointer font-semibold text-main hover:text-hover"
                       >
                         Quên mật khẩu?
-                      </a>
+                      </button>
                     </div>
                   </div>
                   <div className="mt-2">

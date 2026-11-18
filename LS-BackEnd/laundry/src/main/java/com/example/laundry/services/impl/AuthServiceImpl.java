@@ -10,6 +10,8 @@ import com.example.laundry.repository.UserRepository;
 import com.example.laundry.security.JwtUtil;
 import com.example.laundry.services.AuthService;
 import com.example.laundry.services.RefreshTokenService;
+import com.example.laundry.utils.ApiResponse;
+import com.example.laundry.utils.UserValidator;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.auth.oauth2.GooglePublicKeysManager;
@@ -20,14 +22,24 @@ import com.google.firebase.auth.FirebaseToken;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.security.SecureRandom;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -37,7 +49,15 @@ public class AuthServiceImpl implements AuthService {
   private static final NetHttpTransport GOOGLE_HTTP_TRANSPORT = new NetHttpTransport();
   private static final GsonFactory GOOGLE_JSON_FACTORY = GsonFactory.getDefaultInstance();
 
+  private static final long OTP_TTL_SECONDS = 300;
+  private static final int MAX_OTP_ATTEMPTS = 5;
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
   public record GoogleUserInfo(String email, boolean emailVerified, String name, String picture) {}
+
+  private record PasswordResetOtpEntry(String otpCode, Instant expiresAt, int failedAttempts) {}
+
+  private final Map<UUID, PasswordResetOtpEntry> resetOtpStore = new ConcurrentHashMap<>();
 
   @Autowired
   private UserRepository userRepository;
@@ -60,8 +80,14 @@ public class AuthServiceImpl implements AuthService {
   @Autowired(required = false)
   private FirebaseAuth firebaseAuth;
 
+  @Autowired(required = false)
+  private JavaMailSender mailSender;
+
   @Value("${firebase.project-id:fir-service-account-18466}")
   private String firebaseProjectId;
+
+  @Value("${spring.mail.username:}")
+  private String mailUsername;
 
   private volatile GoogleIdTokenVerifier firebaseTokenVerifier;
   private volatile GoogleIdTokenVerifier googleOAuthVerifier;
@@ -299,6 +325,148 @@ public class AuthServiceImpl implements AuthService {
       log.error("Logout thất bại: {}", e.getMessage(), e);
       return new LogoutResponse("Logout thất bại: " + e.getMessage());
     }
+  }
+
+  @Override
+  public ApiResponse<Map<String, Object>> forgotPassword(ForgotPasswordRequest request) {
+    if (request == null || request.getIdentifier() == null || request.getIdentifier().isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vui lòng nhập email hoặc số điện thoại");
+    }
+
+    User user = findUserByIdentifier(request.getIdentifier());
+    if (user == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không tìm thấy tài khoản với email hoặc số điện thoại này");
+    }
+
+    Instant now = Instant.now();
+    resetOtpStore.entrySet().removeIf(entry -> entry.getValue().expiresAt().isBefore(now));
+
+    String otp = String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
+    resetOtpStore.put(user.getId(), new PasswordResetOtpEntry(otp, now.plus(Duration.ofSeconds(OTP_TTL_SECONDS)), 0));
+
+    String targetEmail = user.getEmail() != null ? user.getEmail().trim() : "";
+    boolean hasEmail = !targetEmail.isBlank();
+    boolean emailSent = false;
+
+    if (hasEmail && mailSender != null && mailUsername != null && !mailUsername.isBlank()) {
+      try {
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setFrom(mailUsername.trim());
+        mailMessage.setTo(targetEmail);
+        mailMessage.setSubject("[HERAMO] Mã OTP khôi phục mật khẩu");
+        mailMessage.setText(
+                "Xin chào " + user.getUsername() + ",\n\n"
+                        + "Mã OTP khôi phục mật khẩu của bạn là: " + otp + "\n"
+                        + "Mã có hiệu lực trong 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai.\n\n"
+                        + "Trân trọng,\nHERAMO Laundry"
+        );
+        mailSender.send(mailMessage);
+        emailSent = true;
+      } catch (Exception ex) {
+        log.warn("Không thể gửi email OTP khôi phục mật khẩu tới {}: {}", targetEmail, ex.getMessage());
+      }
+    }
+
+    String maskedEmail = hasEmail ? maskEmail(targetEmail) : null;
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("emailSent", emailSent);
+    data.put("maskedEmail", maskedEmail);
+    data.put("expiresInSeconds", OTP_TTL_SECONDS);
+    if (!emailSent) {
+      data.put("devOtp", otp);
+    }
+
+    String message;
+    if (emailSent) {
+      message = "Mã OTP khôi phục mật khẩu đã được gửi tới email " + maskedEmail;
+    } else if (hasEmail) {
+      message = "Không thể gửi email tự động lúc này, vui lòng sử dụng mã OTP hiển thị trên màn hình (hiệu lực 5 phút)";
+    } else {
+      message = "Tài khoản chưa liên kết email, vui lòng sử dụng mã OTP hiển thị trên màn hình (hiệu lực 5 phút)";
+    }
+
+    return new ApiResponse<>(message, data);
+  }
+
+  @Override
+  @Transactional
+  public ApiResponse<Void> resetPassword(ResetPasswordRequest request) {
+    if (request == null || request.getIdentifier() == null || request.getIdentifier().isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vui lòng nhập email hoặc số điện thoại");
+    }
+    if (request.getOtp() == null || request.getOtp().isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vui lòng nhập mã OTP");
+    }
+    if (request.getNewPassword() == null || !UserValidator.isValidPassword(request.getNewPassword())) {
+      throw new ResponseStatusException(
+              HttpStatus.BAD_REQUEST,
+              "Mật khẩu mới phải từ 8 ký tự trở lên, gồm chữ, số và ký tự đặc biệt (@#$%^&+=!*._?-)"
+      );
+    }
+    if (request.getConfirmPassword() == null || !request.getNewPassword().equals(request.getConfirmPassword())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Xác nhận mật khẩu không khớp");
+    }
+
+    User user = findUserByIdentifier(request.getIdentifier());
+    if (user == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không tìm thấy tài khoản với email hoặc số điện thoại này");
+    }
+
+    PasswordResetOtpEntry entry = resetOtpStore.get(user.getId());
+    if (entry == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bạn chưa yêu cầu mã OTP hoặc mã đã hết hạn");
+    }
+    if (Instant.now().isAfter(entry.expiresAt())) {
+      resetOtpStore.remove(user.getId());
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.");
+    }
+
+    String submittedOtp = request.getOtp().trim();
+    if (!entry.otpCode().equals(submittedOtp)) {
+      int nextAttempts = entry.failedAttempts() + 1;
+      if (nextAttempts >= MAX_OTP_ATTEMPTS) {
+        resetOtpStore.remove(user.getId());
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Bạn đã nhập sai mã OTP quá 5 lần. Vui lòng yêu cầu mã mới."
+        );
+      }
+      resetOtpStore.put(user.getId(), new PasswordResetOtpEntry(entry.otpCode(), entry.expiresAt(), nextAttempts));
+      throw new ResponseStatusException(
+              HttpStatus.BAD_REQUEST,
+              "Mã OTP không chính xác (còn " + (MAX_OTP_ATTEMPTS - nextAttempts) + " lần thử)"
+      );
+    }
+
+    updatePasswordWithEncryption(user, request.getNewPassword());
+    resetOtpStore.remove(user.getId());
+    return new ApiResponse<>("Đặt lại mật khẩu thành công");
+  }
+
+  private User findUserByIdentifier(String rawIdentifier) {
+    String trimmed = rawIdentifier.trim();
+    String normalizedEmail = trimmed.toLowerCase(Locale.ROOT);
+    User user = userRepository.findByEmail(normalizedEmail);
+    if (user == null && !trimmed.equals(normalizedEmail)) {
+      user = userRepository.findByEmail(trimmed);
+    }
+    if (user == null) {
+      user = userRepository.findByPhone(trimmed);
+    }
+    return user;
+  }
+
+  private String maskEmail(String email) {
+    int atIndex = email.indexOf('@');
+    if (atIndex <= 0) {
+      return "***";
+    }
+    String localPart = email.substring(0, atIndex);
+    String domainPart = email.substring(atIndex);
+    if (localPart.length() <= 2) {
+      return localPart.charAt(0) + "***" + domainPart;
+    }
+    return localPart.substring(0, 2) + "***" + domainPart;
   }
 
   private boolean isPasswordValid(User user, String rawPassword) {

@@ -40,3 +40,15 @@ export const useLogoutMutation = () => {
     },
   });
 };
+
+export const useForgotPasswordMutation = () => {
+  return useMutation({
+    mutationFn: authApiRequests.forgotPassword,
+  });
+};
+
+export const useResetPasswordMutation = () => {
+  return useMutation({
+    mutationFn: authApiRequests.resetPassword,
+  });
+};

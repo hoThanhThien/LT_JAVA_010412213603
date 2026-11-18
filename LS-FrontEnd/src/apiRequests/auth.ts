@@ -7,7 +7,11 @@ import {
   SessionResType,
   RegisterBodyType,
   LogoutBodyType,
+  ApiMessageResType,
+  ForgotPasswordBodyType,
+  ForgotPasswordResType,
   RefreshTokenBodyType,
+  ResetPasswordBodyType,
   RefreshTokenResType,
 } from "@/schemaValidations/auth.schema";
 
@@ -78,6 +82,10 @@ const authApiRequests = {
         Authorization: `Bearer ${body.refreshToken}`,
       },
     }),
+  forgotPassword: (body: ForgotPasswordBodyType) =>
+    http.post<ForgotPasswordResType>("auth/forgot-password", body),
+  resetPassword: (body: ResetPasswordBodyType) =>
+    http.post<ApiMessageResType>("auth/reset-password", body),
 };
 
 export default authApiRequests;

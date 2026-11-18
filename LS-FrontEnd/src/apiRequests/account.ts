@@ -1,6 +1,8 @@
 import http from "@/lib/http";
 import {
   AccountResType,
+  ChangePasswordBodyType,
+  ChangePasswordResType,
   UpdateMeType,
 } from "@/schemaValidations/account.schema";
 
@@ -15,6 +17,8 @@ const accountApiRequests = {
 
   updateMe: (body: UpdateMeType) =>
     http.put<AccountResType>("/customer/update", body),
+  changePassword: (body: ChangePasswordBodyType) =>
+    http.post<ChangePasswordResType>("/accounts/change-password", body),
 };
 
 export default accountApiRequests;

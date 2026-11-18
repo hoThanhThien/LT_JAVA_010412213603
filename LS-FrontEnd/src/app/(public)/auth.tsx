@@ -7,6 +7,7 @@ import Login from "@/components/login";
 import { useState } from "react";
 import Register from "@/components/register";
 import Otp from "@/components/otp";
+import ForgotPassword from "@/components/forgot-password";
 import { RegisterBodyType } from "@/schemaValidations/auth.schema";
 import { useAuthStore } from "@/lib/zustand";
 
@@ -64,6 +65,12 @@ export default function Auth() {
               </TabsContent>
               <TabsContent value="otp">
                 <Otp dataRegister={dataRegister} setOpenAuth={setOpenAuth} />
+              </TabsContent>
+              <TabsContent value="forgot-password">
+                <ForgotPassword
+                  onBack={() => setActiveTab("login")}
+                  onSuccess={() => setActiveTab("login")}
+                />
               </TabsContent>
             </Tabs>
           </div>

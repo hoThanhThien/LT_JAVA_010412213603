@@ -34,12 +34,15 @@ import com.jayway.jsonpath.JsonPath;
 import jakarta.servlet.Filter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.AopTestUtils;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -118,6 +121,172 @@ class SecurityAndServiceRegressionTests {
     this.mockMvc = MockMvcBuilders.webAppContextSetup(context)
         .addFilters(springSecurityFilterChain)
         .build();
+  }
+
+  @Test
+  void forgotPasswordAndResetPasswordAllowLoginWithNewPassword() throws Exception {
+    long suffix = System.currentTimeMillis() % 10000000L;
+    String phone = "097" + String.format("%07d", suffix);
+    String email = "forgot" + suffix + "@test.local";
+
+    Customer customer = new Customer();
+    customer.setUsername("Forgot User " + suffix);
+    customer.setPhone(phone);
+    customer.setEmail(email);
+    customer.setPassword(passwordEncoder.encode("OldPass@123"));
+    customer.setRoles(Roles.Customer);
+    customerRepository.save(customer);
+
+    String phoneOnlyPhone = "096" + String.format("%07d", suffix);
+    Customer phoneOnlyCustomer = new Customer();
+    phoneOnlyCustomer.setUsername("PhoneOnly " + suffix);
+    phoneOnlyCustomer.setPhone(phoneOnlyPhone);
+    phoneOnlyCustomer.setEmail(null);
+    phoneOnlyCustomer.setPassword(passwordEncoder.encode("OldPass@123"));
+    phoneOnlyCustomer.setRoles(Roles.Customer);
+    customerRepository.save(phoneOnlyCustomer);
+
+    Object targetAuthService = AopTestUtils.getTargetObject(authService);
+    Object originalMailSender = ReflectionTestUtils.getField(targetAuthService, "mailSender");
+    Object originalMailUsername = ReflectionTestUtils.getField(targetAuthService, "mailUsername");
+
+    try {
+      JavaMailSender mockMailSender = Mockito.mock(JavaMailSender.class);
+      ReflectionTestUtils.setField(targetAuthService, "mailSender", mockMailSender);
+      ReflectionTestUtils.setField(targetAuthService, "mailUsername", "noreply@heramo.test");
+
+      mockMvc.perform(post("/auth/forgot-password")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"identifier\":\"" + email + "\"}"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.emailSent").value(true))
+          .andExpect(jsonPath("$.data.devOtp").doesNotExist());
+
+      ArgumentCaptor<SimpleMailMessage> mailCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+      Mockito.verify(mockMailSender).send(mailCaptor.capture());
+      String emailBody = mailCaptor.getValue().getText();
+      assertNotNull(emailBody);
+      java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\b(\\d{6})\\b").matcher(emailBody);
+      assertTrue(matcher.find(), "OTP 6 digits should be included in recovery email");
+      String otp = matcher.group(1);
+
+      mockMvc.perform(post("/auth/reset-password")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(String.format(
+                  "{\"identifier\":\"%s\",\"otp\":\"000000\",\"newPassword\":\"NewPass@123\",\"confirmPassword\":\"NewPass@123\"}",
+                  email
+              )))
+          .andExpect(status().isBadRequest());
+
+      mockMvc.perform(post("/auth/reset-password")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(String.format(
+                  "{\"identifier\":\"%s\",\"otp\":\"%s\",\"newPassword\":\"NewPass@123\",\"confirmPassword\":\"NewPass@123\"}",
+                  email, otp
+              )))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.message").value("Đặt lại mật khẩu thành công"));
+
+      String newToken = loginAndExtractToken(phone, "NewPass@123", "accessToken");
+      assertNotNull(newToken);
+      assertFalse(newToken.isBlank());
+
+      MvcResult fallbackResult = mockMvc.perform(post("/auth/forgot-password")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"identifier\":\"" + phoneOnlyPhone + "\"}"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.emailSent").value(false))
+          .andReturn();
+      String devOtp = JsonPath.read(fallbackResult.getResponse().getContentAsString(), "$.data.devOtp");
+      assertNotNull(devOtp);
+      assertEquals(6, devOtp.length());
+
+      mockMvc.perform(post("/auth/reset-password")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(String.format(
+                  "{\"identifier\":\"%s\",\"otp\":\"%s\",\"newPassword\":\"ResetOk@456\",\"confirmPassword\":\"ResetOk@456\"}",
+                  phoneOnlyPhone, devOtp
+              )))
+          .andExpect(status().isOk());
+
+      String phoneOnlyToken = loginAndExtractToken(phoneOnlyPhone, "ResetOk@456", "accessToken");
+      assertNotNull(phoneOnlyToken);
+    } finally {
+      ReflectionTestUtils.setField(targetAuthService, "mailSender", originalMailSender);
+      ReflectionTestUtils.setField(targetAuthService, "mailUsername", originalMailUsername);
+    }
+  }
+
+  @Test
+  void authenticatedCustomerAndGoogleUserCanChangePassword() throws Exception {
+    long suffix = System.currentTimeMillis() % 10000000L;
+    String phone = "095" + String.format("%07d", suffix);
+
+    Customer customer = new Customer();
+    customer.setUsername("ChangePass User " + suffix);
+    customer.setPhone(phone);
+    customer.setEmail("changepass" + suffix + "@test.local");
+    customer.setPassword(passwordEncoder.encode("InitPass@123"));
+    customer.setRoles(Roles.Customer);
+    customerRepository.save(customer);
+
+    String accessToken = loginAndExtractToken(phone, "InitPass@123", "accessToken");
+
+    mockMvc.perform(post("/accounts/change-password")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"currentPassword\":\"Wrong@123\",\"newPassword\":\"Changed@456\",\"confirmPassword\":\"Changed@456\"}"))
+        .andExpect(status().isBadRequest());
+
+    mockMvc.perform(post("/accounts/change-password")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"currentPassword\":\"\",\"newPassword\":\"Changed@456\",\"confirmPassword\":\"Changed@456\"}"))
+        .andExpect(status().isBadRequest());
+
+    mockMvc.perform(post("/accounts/change-password")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"currentPassword\":\"InitPass@123\",\"newPassword\":\"Changed@456\",\"confirmPassword\":\"Changed@456\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.message").value("Đổi mật khẩu thành công"));
+
+    String newToken = loginAndExtractToken(phone, "Changed@456", "accessToken");
+    assertNotNull(newToken);
+
+    Object targetAuthService = AopTestUtils.getTargetObject(authService);
+    Object originalFirebaseAuth = ReflectionTestUtils.getField(targetAuthService, "firebaseAuth");
+    String googleEmail = "googlecp" + suffix + "@gmail.com";
+
+    try {
+      FirebaseAuth mockFirebaseAuth = Mockito.mock(FirebaseAuth.class);
+      FirebaseToken mockToken = Mockito.mock(FirebaseToken.class);
+      Mockito.when(mockToken.getEmail()).thenReturn(googleEmail);
+      Mockito.when(mockToken.isEmailVerified()).thenReturn(true);
+      Mockito.when(mockToken.getName()).thenReturn("Google User");
+      Mockito.when(mockToken.getPicture()).thenReturn("https://example.com/avt.png");
+      Mockito.when(mockFirebaseAuth.verifyIdToken("mock-cp-google-token")).thenReturn(mockToken);
+      ReflectionTestUtils.setField(targetAuthService, "firebaseAuth", mockFirebaseAuth);
+
+      MvcResult googleLoginRes = mockMvc.perform(post("/auth/google")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"idToken\":\"mock-cp-google-token\"}"))
+          .andExpect(status().isOk())
+          .andReturn();
+      String googleAccessToken = JsonPath.read(googleLoginRes.getResponse().getContentAsString(), "$.data.accessToken");
+
+      mockMvc.perform(post("/accounts/change-password")
+              .header(HttpHeaders.AUTHORIZATION, "Bearer " + googleAccessToken)
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"currentPassword\":\"\",\"newPassword\":\"GoogleSet@789\",\"confirmPassword\":\"GoogleSet@789\"}"))
+          .andExpect(status().isOk());
+
+      Customer reloadedGoogleCustomer = customerRepository.findByEmail(googleEmail).orElse(null);
+      assertNotNull(reloadedGoogleCustomer);
+      assertTrue(passwordEncoder.matches("GoogleSet@789", reloadedGoogleCustomer.getPassword()));
+    } finally {
+      ReflectionTestUtils.setField(targetAuthService, "firebaseAuth", originalFirebaseAuth);
+    }
   }
 
   private String loginAndExtractToken(String phone, String rawPassword, String field) throws Exception {
