@@ -121,9 +121,6 @@ export default function Order() {
     setCategoryId(0);
     setSelectedPrice(0);
     setPreviewAvatar("");
-    if (avatarInputRef.current) {
-      avatarInputRef.current.value = "";
-    }
   };
 
   const onSubmit = async (values: OrderType) => {
@@ -150,6 +147,9 @@ export default function Order() {
       onOpenChange={(open: boolean) => {
         if (!open) {
           reset();
+          if (avatarInputRef.current) {
+            avatarInputRef.current.value = "";
+          }
         }
         setOpenOrder(open);
       }}
