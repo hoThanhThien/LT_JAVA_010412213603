@@ -672,4 +672,84 @@ class SecurityAndServiceRegressionTests {
     assertEquals(33000.0, orderRes.getData().getTotalAmount());
     assertEquals("123 Profile St", orderRes.getData().getAddress());
   }
+
+  @Test
+  void googleCustomerCanBookOrderPersistInitialAddressViewHistoryAndGetPaymentQr() throws Exception {
+    StoreOwner owner = createOwnerWithShop("0971000001", "Google Booking Shop");
+    LaundryShop shop = laundryShopRepository.findByStoreOwner(owner);
+    assertNotNull(shop);
+
+    ServiceCategoryDTO catDto = new ServiceCategoryDTO();
+    catDto.setName("Giặt Sấy E2E");
+    catDto.setImageDesc("img");
+    catDto.setDescription("Desc");
+    Long categoryId = storeOwnerService.createServiceCategory(owner, catDto).getData().getId();
+
+    ServiceDTO svcDto = new ServiceDTO();
+    svcDto.setCategoryId(categoryId);
+    svcDto.setName("Giặt Sấy Thường");
+    svcDto.setDescription("Desc");
+    svcDto.setEstimatedTime("24h");
+    svcDto.setPrice(25000.0);
+    svcDto.setImageDesc("img");
+    Long serviceId = storeOwnerService.createService(owner, svcDto).getData().getId();
+
+    Object targetAuth = AopTestUtils.getUltimateTargetObject(authService);
+    FirebaseAuth mockFirebaseAuth = Mockito.mock(FirebaseAuth.class);
+    FirebaseToken mockToken = Mockito.mock(FirebaseToken.class);
+    Mockito.when(mockToken.getEmail()).thenReturn("googlebooking@gmail.com");
+    Mockito.when(mockToken.isEmailVerified()).thenReturn(true);
+    Mockito.when(mockToken.getName()).thenReturn("Google Booking User");
+    Mockito.when(mockToken.getPicture()).thenReturn("https://example.com/avt.png");
+    Mockito.when(mockFirebaseAuth.verifyIdToken("mock-google-booking-token")).thenReturn(mockToken);
+
+    ReflectionTestUtils.setField(targetAuth, "firebaseAuth", mockFirebaseAuth);
+    String accessToken;
+    String customerId;
+    try {
+      MvcResult loginRes = mockMvc.perform(post("/auth/google")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"idToken\":\"mock-google-booking-token\"}"))
+          .andExpect(status().isOk())
+          .andReturn();
+      String loginJson = loginRes.getResponse().getContentAsString();
+      accessToken = JsonPath.read(loginJson, "$.data.accessToken");
+      customerId = JsonPath.read(loginJson, "$.data.account.id");
+    } finally {
+      ReflectionTestUtils.setField(targetAuth, "firebaseAuth", null);
+    }
+
+    String orderBody = String.format(
+        "{\"laundryShop\":{\"id\":%d},\"serviceCategory\":{\"id\":%d},\"service\":{\"id\":%d},\"orderVolume\":2.0,\"address\":\"456 Le Loi, Q1\",\"instructions\":\"Nhan buoi sang\",\"imgProduct\":\"\"}",
+        shop.getId(), categoryId, serviceId);
+
+    MvcResult createRes = mockMvc.perform(post("/customer/orders/create")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(orderBody))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.totalAmount").value(50000.0))
+        .andExpect(jsonPath("$.data.address").value("456 Le Loi, Q1"))
+        .andExpect(jsonPath("$.data.orderStatus").value("IN_PROGRESS"))
+        .andReturn();
+
+    Number createdOrderId = JsonPath.read(createRes.getResponse().getContentAsString(), "$.data.id");
+
+    Customer reloaded = customerRepository.findById(java.util.UUID.fromString(customerId)).orElseThrow();
+    assertEquals("456 Le Loi, Q1", reloaded.getAddress());
+
+    mockMvc.perform(get("/customer/orders/history")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.result[0].id").value(createdOrderId.longValue()))
+        .andExpect(jsonPath("$.data.result[0].address").value("456 Le Loi, Q1"))
+        .andExpect(jsonPath("$.data.result[0].paymentStatus").value("PENDING"));
+
+    mockMvc.perform(get("/api/payments/info/" + createdOrderId.longValue())
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.orderId").value(createdOrderId.longValue()))
+        .andExpect(jsonPath("$.totalAmount").value(50000.0))
+        .andExpect(jsonPath("$.qrCode").isNotEmpty());
+  }
 }

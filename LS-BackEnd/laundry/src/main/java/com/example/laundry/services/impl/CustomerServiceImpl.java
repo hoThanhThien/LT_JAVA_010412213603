@@ -217,6 +217,10 @@ public class CustomerServiceImpl implements CustomerService {
         if (resolvedAddress == null || resolvedAddress.isBlank()) {
             return new ApiResponse<>("Vui lòng nhập địa chỉ giao nhận đơn hàng!");
         }
+        if (customerId.getAddress() == null || customerId.getAddress().isBlank()) {
+            customerId.setAddress(resolvedAddress);
+            customerRepository.save(customerId);
+        }
 
         Order order = new Order();
         order.setCustomer(customerId);

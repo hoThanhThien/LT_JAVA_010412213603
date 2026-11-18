@@ -64,6 +64,7 @@ export default function Order() {
 
   const { data: meData } = useAccountMe(isAuth && openOrder);
   const account = meData?.payload?.data?.account;
+  const isNonCustomer = Boolean(account?.role && account.role !== "Customer");
 
   const orderMutation = useOrderMutation();
 
@@ -228,6 +229,7 @@ export default function Order() {
                     <FormItem>
                       <Label>Loại hình dịch vụ</Label>
                       <Select
+                        key={`category-${shopId}`}
                         disabled={!shopId || isFetchingCategories}
                         value={field.value ? String(field.value) : ""}
                         onValueChange={(value) => {
@@ -252,6 +254,13 @@ export default function Order() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          {categories.length === 0 &&
+                            shopId > 0 &&
+                            !isFetchingCategories && (
+                              <SelectItem value="__empty" disabled>
+                                Cửa hàng chưa có loại dịch vụ
+                              </SelectItem>
+                            )}
                           {categories.map((item) => (
                             <SelectItem
                               key={item.id}
@@ -275,6 +284,7 @@ export default function Order() {
                     <FormItem>
                       <Label>Dịch vụ</Label>
                       <Select
+                        key={`service-${shopId}-${categoryId}`}
                         disabled={!categoryId || isFetchingServices}
                         value={field.value ? String(field.value) : ""}
                         onValueChange={(value) => {
@@ -300,6 +310,13 @@ export default function Order() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          {services.length === 0 &&
+                            categoryId > 0 &&
+                            !isFetchingServices && (
+                              <SelectItem value="__empty" disabled>
+                                Chưa có dịch vụ trong mục này
+                              </SelectItem>
+                            )}
                           {services.map((item) => (
                             <SelectItem
                               key={item.id}
@@ -444,9 +461,15 @@ export default function Order() {
                 )}
               />
 
+              {isNonCustomer && (
+                <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  Chỉ tài khoản Khách hàng mới có thể đặt lịch dịch vụ.
+                </p>
+              )}
+
               <div>
                 <button
-                  disabled={orderMutation.isPending}
+                  disabled={orderMutation.isPending || isNonCustomer}
                   className="cursor-pointer flex w-full justify-center rounded-md bg-main px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-main disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {orderMutation.isPending

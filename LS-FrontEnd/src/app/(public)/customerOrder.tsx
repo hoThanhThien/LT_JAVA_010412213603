@@ -127,21 +127,26 @@ export default function CustomerListOrder() {
                 Thanh toán
               </div>
             </DialogTitle>
-            <ProTable<OrderListType>
-              columns={columns}
-              actionRef={actionRef}
-              cardBordered
-              search={false}
-              request={async (params) => {
-                return await fetchData(params.current ?? 1, params.pageSize ?? 10);
-              }}
-              rowKey="id"
-              pagination={{
-                defaultPageSize: 10,
-                showSizeChanger: true,
-              }}
-              loading={loading}
-            />
+            {openPay && (
+              <ProTable<OrderListType>
+                columns={columns}
+                actionRef={actionRef}
+                cardBordered
+                search={false}
+                request={async (params) => {
+                  return await fetchData(
+                    params.current ?? 1,
+                    params.pageSize ?? 10
+                  );
+                }}
+                rowKey="id"
+                pagination={{
+                  defaultPageSize: 10,
+                  showSizeChanger: true,
+                }}
+                loading={loading}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>

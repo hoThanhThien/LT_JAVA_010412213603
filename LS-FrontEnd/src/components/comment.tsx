@@ -5,8 +5,10 @@ import "swiper/swiper-bundle.css";
 import { Swiper as SwiperCore } from "swiper/types";
 import Image from "next/image";
 import { useState } from "react";
+import { useAuthStore } from "@/lib/zustand";
 
 export default function Comment() {
+  const { isAuth, setOpenAuth, setOpenOrder } = useAuthStore();
   const [swiper, setSwiper] = useState<SwiperCore | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   return (
@@ -178,6 +180,14 @@ export default function Comment() {
         <form
           className="bg-white rounded-4xl shadow-2xl py-10 px-20 space-y-10"
           noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!isAuth) {
+              setOpenAuth(true);
+            } else {
+              setOpenOrder(true);
+            }
+          }}
         >
           <div className="font-bold text-center text-3xl">ĐẶT DỊCH VỤ</div>
           <div className="text-center mx-auto text-sm w-[60%] block text-gray-400">

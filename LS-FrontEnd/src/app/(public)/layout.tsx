@@ -21,8 +21,7 @@ export default function Layout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { isAuth, openSetting, openOrder, openPay, setIsAuth, setOpenAuth } =
-    useAuthStore();
+  const { isAuth, setIsAuth, setOpenAuth } = useAuthStore();
 
   useEffect(() => {
     getSession()
@@ -83,9 +82,9 @@ export default function Layout({
         <Suspense fallback={null}>
           <Auth />
         </Suspense>
-        {isAuth && openSetting && <Setting />}
-        {isAuth && openPay && <CustomerListOrder />}
-        {isAuth && openOrder && <Order />}
+        {isAuth && <Setting />}
+        {isAuth && <CustomerListOrder />}
+        {isAuth && <Order />}
       </header>
       <main className="flex flex-1 flex-col mt-24 gap-4 md:gap-8">
         {children}

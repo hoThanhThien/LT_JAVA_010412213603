@@ -130,6 +130,7 @@ function ThanhToan() {
                   alt="QR Code thanh toán"
                   width={300}
                   height={300}
+                  unoptimized
                   className="mx-auto"
                 />
               </div>
