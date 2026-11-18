@@ -600,7 +600,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         Page<ServiceCategory> categoryPage = serviceCategoryRepository.findServiceCategoryByShop(shop, pageable);
 
         List<ServiceCategory> categories = categoryPage.getContent();
-        List<Long> categoryIds = categories.stream().map(ServiceCategory::getId).toList();
+        List<Long> categoryIds = categories.stream().map(category -> category.getId()).toList();
         Map<Long, List<Service>> servicesByCategoryId = categoryIds.isEmpty()
                 ? Collections.emptyMap()
                 : serviceRepository.findByCategory_IdIn(categoryIds).stream()
