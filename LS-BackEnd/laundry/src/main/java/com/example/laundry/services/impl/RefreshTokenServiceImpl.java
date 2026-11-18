@@ -28,6 +28,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
   public RefreshToken createRefreshToken(User user) {
     //Xóa các refresh cũ của user
     refreshTokenRepository.deleteByUser(user);
+    refreshTokenRepository.flush();
 
     RefreshToken refreshToken = new RefreshToken();
     refreshToken.setUser(user);
