@@ -15,6 +15,7 @@ import java.util.Date;
 @NoArgsConstructor
 public class OrderDTO {
     private Long customerId;
+    private String phone;
     private String address;
     private Double totalAmount;
     private OrderStatus orderStatus;

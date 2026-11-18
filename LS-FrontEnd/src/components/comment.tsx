@@ -8,9 +8,11 @@ import { useState } from "react";
 import { useAuthStore } from "@/lib/zustand";
 
 export default function Comment() {
-  const { isAuth, setOpenAuth, setOpenOrder } = useAuthStore();
+  const { isAuth, setOpenAuth, setOpenOrder, setBookingPreset } =
+    useAuthStore();
   const [swiper, setSwiper] = useState<SwiperCore | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [draftPhoneInput, setDraftPhoneInput] = useState("");
   return (
     <div className="grid lg:grid-cols-2 max-w-7xl mx-auto">
       <div className="lg:col-span-1 lg:col-start-1">
@@ -182,6 +184,9 @@ export default function Comment() {
           noValidate
           onSubmit={(e) => {
             e.preventDefault();
+            if (draftPhoneInput.trim()) {
+              setBookingPreset({ phone: draftPhoneInput.trim() });
+            }
             if (!isAuth) {
               setOpenAuth(true);
             } else {
@@ -212,8 +217,10 @@ export default function Comment() {
             </label>
             <div className="mt-2">
               <input
-                type="text"
-                placeholder="0123456789"
+                type="tel"
+                value={draftPhoneInput}
+                onChange={(e) => setDraftPhoneInput(e.target.value)}
+                placeholder="0901234567"
                 className="block w-full rounded-md bg-white px-3 py-2.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
               />
             </div>
@@ -224,8 +231,10 @@ export default function Comment() {
             </label>
             <div className="mt-2">
               <input
-                type="text"
-                placeholder="0123456789"
+                type="tel"
+                value={draftPhoneInput}
+                onChange={(e) => setDraftPhoneInput(e.target.value)}
+                placeholder="0901234567"
                 className="block w-full rounded-md bg-white px-3 py-2.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
               />
             </div>

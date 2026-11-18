@@ -9,6 +9,7 @@ import Auth from "./auth";
 import DropdownAvatar from "./dropdown-avatar";
 import { useAuthStore } from "@/lib/zustand";
 import DropdownService from "./dropdown-services";
+import ButtonOrder from "@/components/ui/buttonOrder";
 
 const Setting = dynamic(() => import("./setting"), { ssr: false });
 const Order = dynamic(() => import("./order"), { ssr: false });
@@ -63,10 +64,19 @@ export default function Layout({
                 Trở thành đối tác
               </Link>
             </div>
-            <div>
+            <div className="flex items-center gap-3">
+              <ButtonOrder>
+                <button
+                  type="button"
+                  className="bg-main hover:bg-hover text-black text-[15px] px-6 py-2.5 rounded-[28px] h-11 font-bold cursor-pointer whitespace-nowrap transition-colors"
+                >
+                  Đặt dịch vụ
+                </button>
+              </ButtonOrder>
               {!isAuth ? (
                 <button
-                  className="bg-main hover:text-white text-[18px] px-10 py-0 rounded-[28px] h-12 font-medium cursor-pointer"
+                  type="button"
+                  className="border border-main text-main hover:bg-main hover:text-black text-[15px] px-6 py-2.5 rounded-[28px] h-11 font-semibold cursor-pointer whitespace-nowrap transition-colors"
                   onClick={() => setOpenAuth(true)}
                 >
                   Đăng nhập

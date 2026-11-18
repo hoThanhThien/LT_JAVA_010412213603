@@ -24,7 +24,7 @@ export default function DropdownAvatar() {
   const { data } = useAccountMe();
   const account = data?.payload?.data?.account;
 
-  const { setIsAuth, setOpenSetting, setOpenPay } = useAuthStore();
+  const { setIsAuth, setOpenSetting, setOpenPay, setOpenOrder } = useAuthStore();
 
   // Role lấy từ thông tin tài khoản (token nằm trong cookie HttpOnly, JS không đọc được)
   const decodedAccessToken = account ? { role: account.role } : null;
@@ -65,48 +65,45 @@ export default function DropdownAvatar() {
         <DropdownMenuSeparator />
 
         {decodedAccessToken && decodedAccessToken.role === "Customer" && (
-          <DropdownMenuItem asChild>
-            <div
+          <>
+            <DropdownMenuItem
+              className="cursor-pointer font-medium"
+              onClick={() => setOpenOrder(true)}
+            >
+              Đặt dịch vụ ngay
+            </DropdownMenuItem>
+            <DropdownMenuItem
               className="cursor-pointer"
-              onClick={() => {
-                setOpenSetting(true);
-              }}
+              onClick={() => setOpenPay(true)}
+            >
+              Đơn hàng & Thanh toán
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => setOpenSetting(true)}
             >
               Cài đặt tài khoản
-            </div>
-          </DropdownMenuItem>
+            </DropdownMenuItem>
+          </>
         )}
 
-        {decodedAccessToken && decodedAccessToken.role !== "Admin" && (
-          <DropdownMenuItem>
-            <div
-              className="cursor-pointer"
-              onClick={() => {
-                setOpenPay(true);
-              }}
-            >
-              Thanh toán
-            </div>
-          </DropdownMenuItem>
-        )}
-
-        <DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link href="https://www.messenger.com/t/331186783932984/">
             Hỗ trợ
           </Link>
         </DropdownMenuItem>
         {decodedAccessToken && decodedAccessToken.role === "Admin" && (
-          <DropdownMenuItem>
+          <DropdownMenuItem asChild>
             <Link href="/manage/admin">Quản lý</Link>
           </DropdownMenuItem>
         )}
         {decodedAccessToken && decodedAccessToken.role === "StoreOwner" && (
-          <DropdownMenuItem>
+          <DropdownMenuItem asChild>
             <Link href="/manage/storeowner">Quản lý</Link>
           </DropdownMenuItem>
         )}
         {decodedAccessToken && decodedAccessToken.role === "Employee" && (
-          <DropdownMenuItem>
+          <DropdownMenuItem asChild>
             <Link href="/manage/employee">Quản lý</Link>
           </DropdownMenuItem>
         )}

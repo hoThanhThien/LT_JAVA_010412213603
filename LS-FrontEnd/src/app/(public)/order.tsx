@@ -20,7 +20,7 @@ import {
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@/components/ui/label";
-import { Upload } from "lucide-react";
+import { Clock, MapPin, Phone, Sparkles, Upload } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { OrderSchema, OrderType } from "@/schemaValidations/order.schema";
@@ -39,34 +39,28 @@ import {
 } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
+const matchesPreference = (candidate: string, preference: string) => {
+  const c = candidate.trim().toLowerCase();
+  const p = preference.trim().toLowerCase();
+  if (!p) return false;
+  return c.includes(p) || p.includes(c);
+};
+
 export default function Order() {
-  const { openOrder, setOpenOrder, isAuth } = useAuthStore();
-  const [shopId, setShopId] = useState<number>(0);
-  const [categoryId, setCategoryId] = useState<number>(0);
+  const {
+    openOrder,
+    setOpenOrder,
+    isAuth,
+    preferredCategory,
+    preferredService,
+    draftPhone,
+    setBookingPreset,
+    clearBookingPreset,
+  } = useAuthStore();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [previewAvatar, setPreviewAvatar] = useState("");
-  const [selectedPrice, setSelectedPrice] = useState<number>(0);
 
   const router = useRouter();
-
-  const { data: shopsData, isLoading: isLoadingShops } = useShops(
-    isAuth && openOrder
-  );
-  const allShops = shopsData?.payload.data ?? [];
-
-  const { data: categoriesData, isFetching: isFetchingCategories } =
-    useShopCategories(shopId);
-  const categories = categoriesData?.payload.data ?? [];
-
-  const { data: servicesData, isFetching: isFetchingServices } =
-    useShopServices(shopId, categoryId);
-  const services = servicesData?.payload.data ?? [];
-
-  const { data: meData } = useAccountMe(isAuth && openOrder);
-  const account = meData?.payload?.data?.account;
-  const isNonCustomer = Boolean(account?.role && account.role !== "Customer");
-
-  const orderMutation = useOrderMutation();
 
   const form = useForm<OrderType>({
     resolver: zodResolver(OrderSchema),
@@ -75,22 +69,107 @@ export default function Order() {
       serviceCategory: { id: 0 },
       service: { id: 0 },
       orderVolume: 1,
+      phone: "",
       address: "",
       instructions: "",
       imgProduct: "",
     },
   });
 
+  const watchedShopId =
+    useWatch({ control: form.control, name: "laundryShop.id" }) || 0;
+  const watchedCategoryId =
+    useWatch({ control: form.control, name: "serviceCategory.id" }) || 0;
+  const watchedServiceId =
+    useWatch({ control: form.control, name: "service.id" }) || 0;
+  const watchedVolume =
+    useWatch({ control: form.control, name: "orderVolume" }) || 0;
+
+  const { data: shopsData, isLoading: isLoadingShops } = useShops(
+    isAuth && openOrder
+  );
+  const allShops = shopsData?.payload.data ?? [];
+
+  const effectiveShopId =
+    watchedShopId > 0 ? watchedShopId : allShops[0]?.id ?? 0;
+
+  const { data: categoriesData, isFetching: isFetchingCategories } =
+    useShopCategories(openOrder ? effectiveShopId : 0);
+  const categories = categoriesData?.payload.data ?? [];
+
+  const effectiveCategoryId = (() => {
+    if (
+      watchedCategoryId > 0 &&
+      categories.some((c) => c.id === watchedCategoryId)
+    ) {
+      return watchedCategoryId;
+    }
+    if (categories.length === 0) return 0;
+    const matched = preferredCategory
+      ? categories.find((c) => matchesPreference(c.name, preferredCategory))
+      : undefined;
+    return (matched ?? categories[0]).id;
+  })();
+
+  const { data: servicesData, isFetching: isFetchingServices } =
+    useShopServices(openOrder ? effectiveShopId : 0, effectiveCategoryId);
+  const services = servicesData?.payload.data ?? [];
+
+  const selectedServiceObj = (() => {
+    if (watchedServiceId > 0) {
+      const existing = services.find((s) => s.id === watchedServiceId);
+      if (existing) return existing;
+    }
+    if (services.length === 0) return undefined;
+    const matched = preferredService
+      ? services.find((s) => matchesPreference(s.name, preferredService))
+      : undefined;
+    return matched ?? services[0];
+  })();
+  const effectiveServiceId = selectedServiceObj?.id ?? 0;
+  const selectedPrice = selectedServiceObj?.price ?? 0;
+
+  const { data: meData } = useAccountMe(isAuth && openOrder);
+  const account = meData?.payload?.data?.account;
+  const isNonCustomer = Boolean(account?.role && account.role !== "Customer");
+
+  const orderMutation = useOrderMutation();
+
+  // Đồng bộ lựa chọn tự động (cửa hàng, loại dịch vụ, dịch vụ) vào React Hook Form
   useEffect(() => {
-    if (openOrder && account?.address && !form.getValues("address")) {
+    if (!openOrder) return;
+    if (effectiveShopId > 0 && watchedShopId !== effectiveShopId) {
+      form.setValue("laundryShop.id", effectiveShopId);
+    }
+    if (effectiveCategoryId > 0 && watchedCategoryId !== effectiveCategoryId) {
+      form.setValue("serviceCategory.id", effectiveCategoryId);
+    }
+    if (effectiveServiceId > 0 && watchedServiceId !== effectiveServiceId) {
+      form.setValue("service.id", effectiveServiceId);
+    }
+  }, [
+    openOrder,
+    effectiveShopId,
+    effectiveCategoryId,
+    effectiveServiceId,
+    watchedShopId,
+    watchedCategoryId,
+    watchedServiceId,
+    form,
+  ]);
+
+  // Điền sẵn số điện thoại & địa chỉ từ form nhanh hoặc hồ sơ tài khoản
+  useEffect(() => {
+    if (!openOrder) return;
+    const phonePreset = draftPhone || account?.phone || "";
+    if (phonePreset && !form.getValues("phone")) {
+      form.setValue("phone", phonePreset);
+    }
+    if (account?.address && !form.getValues("address")) {
       form.setValue("address", account.address);
     }
-  }, [openOrder, account?.address, form]);
+  }, [openOrder, draftPhone, account?.phone, account?.address, form]);
 
-  const watchedVolume = useWatch({
-    control: form.control,
-    name: "orderVolume",
-  });
   const volume = watchedVolume || 0;
   const totalAmount = Number.isFinite(selectedPrice * volume)
     ? Math.round(selectedPrice * volume * 100) / 100
@@ -114,21 +193,20 @@ export default function Order() {
       serviceCategory: { id: 0 },
       service: { id: 0 },
       orderVolume: 1,
-      address: account?.address ?? "",
+      phone: "",
+      address: "",
       instructions: "",
       imgProduct: "",
     });
-    setShopId(0);
-    setCategoryId(0);
-    setSelectedPrice(0);
     setPreviewAvatar("");
   };
 
   const onSubmit = async (values: OrderType) => {
-    if (orderMutation.isPending) return;
+    if (orderMutation.isPending || isNonCustomer) return;
     try {
       const result = await orderMutation.mutateAsync(values);
       setOpenOrder(false);
+      clearBookingPreset();
       reset();
       toast.success(result.payload.message, {
         position: "bottom-left",
@@ -147,6 +225,7 @@ export default function Order() {
       open={openOrder}
       onOpenChange={(open: boolean) => {
         if (!open) {
+          clearBookingPreset();
           reset();
           if (avatarInputRef.current) {
             avatarInputRef.current.value = "";
@@ -156,21 +235,30 @@ export default function Order() {
       }}
     >
       <DialogContent
-        className="border-none w-full max-w-lg sm:max-w-xl md:max-w-2xl"
+        className="border-none w-full max-w-lg sm:max-w-xl md:max-w-2xl p-0 overflow-hidden max-h-[90vh] overflow-y-auto rounded-[28px]"
         aria-describedby={undefined}
         onInteractOutside={(e) => {
           e.preventDefault();
         }}
       >
-        <div className="flex min-h-full flex-col justify-center px-6 py-8 lg:px-8">
-          <DialogTitle className="z-500 sm:mx-auto sm:w-full sm:max-w-sm">
-            <div className="mb-5 text-center text-2xl/9 font-bold tracking-tight text-gray-900">
-              Đăng ký dịch vụ
-            </div>
+        <div className="bg-black px-6 py-5 text-white">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-main px-3 py-1 text-xs font-bold text-black mb-2">
+            <Sparkles className="h-3.5 w-3.5" />
+            HERAMO • ĐẶT DỊCH VỤ 4.0
+          </div>
+          <DialogTitle className="text-2xl font-bold text-white">
+            Đặt lịch giặt ủi & vệ sinh
           </DialogTitle>
+          <p className="mt-1 text-sm text-gray-300">
+            Chọn cửa hàng, dịch vụ và địa chỉ giao nhận — thanh toán nhanh bằng
+            VietQR.
+          </p>
+        </div>
+
+        <div className="px-6 py-6">
           <Form {...form}>
             <form
-              className="space-y-3"
+              className="space-y-4"
               noValidate
               onSubmit={form.handleSubmit(onSubmit)}
               onReset={reset}
@@ -180,15 +268,13 @@ export default function Order() {
                 name="laundryShop.id"
                 render={({ field }) => (
                   <FormItem>
-                    <Label>Chọn cửa hàng</Label>
+                    <Label className="font-semibold">Chọn cửa hàng</Label>
                     <Select
-                      value={field.value ? String(field.value) : ""}
+                      value={effectiveShopId ? String(effectiveShopId) : ""}
                       onValueChange={(value) => {
                         const nextShopId = parseInt(value, 10);
                         field.onChange(nextShopId);
-                        setShopId(nextShopId);
-                        setCategoryId(0);
-                        setSelectedPrice(0);
+                        setBookingPreset({ category: "", service: "" });
                         form.setValue("serviceCategory.id", 0);
                         form.setValue("service.id", 0);
                       }}
@@ -221,22 +307,25 @@ export default function Order() {
                 )}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="serviceCategory.id"
                   render={({ field }) => (
                     <FormItem>
-                      <Label>Loại hình dịch vụ</Label>
+                      <Label className="font-semibold">Loại hình dịch vụ</Label>
                       <Select
-                        key={`category-${shopId}`}
-                        disabled={!shopId || isFetchingCategories}
-                        value={field.value ? String(field.value) : ""}
+                        key={`category-${effectiveShopId}`}
+                        disabled={!effectiveShopId || isFetchingCategories}
+                        value={
+                          effectiveCategoryId
+                            ? String(effectiveCategoryId)
+                            : ""
+                        }
                         onValueChange={(value) => {
                           const nextCategoryId = parseInt(value, 10);
                           field.onChange(nextCategoryId);
-                          setCategoryId(nextCategoryId);
-                          setSelectedPrice(0);
+                          setBookingPreset({ service: "" });
                           form.setValue("service.id", 0);
                         }}
                       >
@@ -244,7 +333,7 @@ export default function Order() {
                           <SelectTrigger className="w-full">
                             <SelectValue
                               placeholder={
-                                !shopId
+                                !effectiveShopId
                                   ? "Chọn cửa hàng trước"
                                   : isFetchingCategories
                                   ? "Đang tải..."
@@ -255,7 +344,7 @@ export default function Order() {
                         </FormControl>
                         <SelectContent>
                           {categories.length === 0 &&
-                            shopId > 0 &&
+                            effectiveShopId > 0 &&
                             !isFetchingCategories && (
                               <SelectItem value="__empty" disabled>
                                 Cửa hàng chưa có loại dịch vụ
@@ -282,25 +371,23 @@ export default function Order() {
                   name="service.id"
                   render={({ field }) => (
                     <FormItem>
-                      <Label>Dịch vụ</Label>
+                      <Label className="font-semibold">Dịch vụ</Label>
                       <Select
-                        key={`service-${shopId}-${categoryId}`}
-                        disabled={!categoryId || isFetchingServices}
-                        value={field.value ? String(field.value) : ""}
+                        key={`service-${effectiveShopId}-${effectiveCategoryId}`}
+                        disabled={!effectiveCategoryId || isFetchingServices}
+                        value={
+                          effectiveServiceId ? String(effectiveServiceId) : ""
+                        }
                         onValueChange={(value) => {
                           const nextServiceId = parseInt(value, 10);
                           field.onChange(nextServiceId);
-                          const selectedService = services.find(
-                            (service) => service.id === nextServiceId
-                          );
-                          setSelectedPrice(selectedService?.price ?? 0);
                         }}
                       >
                         <FormControl>
                           <SelectTrigger className="w-full">
                             <SelectValue
                               placeholder={
-                                !categoryId
+                                !effectiveCategoryId
                                   ? "Chọn loại dịch vụ trước"
                                   : isFetchingServices
                                   ? "Đang tải..."
@@ -311,7 +398,7 @@ export default function Order() {
                         </FormControl>
                         <SelectContent>
                           {services.length === 0 &&
-                            categoryId > 0 &&
+                            effectiveCategoryId > 0 &&
                             !isFetchingServices && (
                               <SelectItem value="__empty" disabled>
                                 Chưa có dịch vụ trong mục này
@@ -334,96 +421,120 @@ export default function Order() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                 <FormField
                   control={form.control}
                   name="orderVolume"
                   render={({ field }) => (
                     <FormItem>
-                      <div>
-                        <label className="block text-sm/6 font-medium text-gray-900">
-                          Khối lượng (kg)
-                        </label>
-                        <div className="mt-2">
-                          <input
-                            type="number"
-                            min={0.1}
-                            step="0.5"
-                            className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
-                            name={field.name}
-                            onBlur={field.onBlur}
-                            ref={field.ref}
-                            onChange={(e) => {
-                              const parsed = parseFloat(e.target.value);
-                              field.onChange(
-                                Number.isFinite(parsed) ? parsed : 0
-                              );
-                            }}
-                            value={field.value || ""}
-                          />
-                        </div>
-                        <FormMessage />
-                      </div>
+                      <Label className="font-semibold">
+                        Số lượng / Khối lượng (kg)
+                      </Label>
+                      <input
+                        type="number"
+                        min={0.5}
+                        step="0.5"
+                        className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        onChange={(e) => {
+                          const parsed = parseFloat(e.target.value);
+                          field.onChange(Number.isFinite(parsed) ? parsed : 0);
+                        }}
+                        value={field.value || ""}
+                      />
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <div>
-                  <label className="block text-sm/6 font-medium text-gray-900">
-                    Tổng tiền (VND)
-                  </label>
-                  <div className="mt-2">
-                    <input
-                      type="text"
-                      disabled
-                      value={formatCurrency(totalAmount)}
-                      className="block w-full rounded-md bg-gray-50 px-3 py-1.5 text-base font-medium text-gray-900 outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/6"
-                    />
+                <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3">
+                  <div className="flex items-center justify-between text-xs text-gray-600">
+                    <span>Đơn giá:</span>
+                    <span className="font-semibold text-gray-900">
+                      {formatCurrency(selectedPrice)}
+                    </span>
+                  </div>
+                  {selectedServiceObj?.estimatedTime && (
+                    <div className="mt-1 flex items-center justify-between text-xs text-gray-600">
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        Thời gian dự kiến:
+                      </span>
+                      <span className="font-semibold text-gray-900">
+                        {selectedServiceObj.estimatedTime}
+                      </span>
+                    </div>
+                  )}
+                  <div className="mt-2 flex items-center justify-between border-t border-amber-200 pt-2">
+                    <span className="text-sm font-semibold text-gray-800">
+                      Tổng tạm tính:
+                    </span>
+                    <span className="text-lg font-bold text-black">
+                      {formatCurrency(totalAmount)}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <div>
-                      <label className="block text-sm/6 font-medium text-gray-900">
-                        Địa chỉ giao nhận
-                      </label>
-                      <div className="mt-2">
-                        <input
-                          type="text"
-                          placeholder="Nhập địa chỉ nhận và trả đồ"
-                          className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
-                          {...field}
-                        />
-                      </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label className="inline-flex items-center gap-1.5 font-semibold">
+                        <Phone className="h-3.5 w-3.5 text-gray-500" />
+                        Số điện thoại liên hệ
+                      </Label>
+                      <input
+                        type="tel"
+                        placeholder="0901234567"
+                        className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
+                        {...field}
+                      />
                       <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label className="inline-flex items-center gap-1.5 font-semibold">
+                        <MapPin className="h-3.5 w-3.5 text-gray-500" />
+                        Địa chỉ giao nhận
+                      </Label>
+                      <input
+                        type="text"
+                        placeholder="Số nhà, đường, quận/huyện"
+                        className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
+                        {...field}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
                 name="instructions"
                 render={({ field }) => (
                   <FormItem>
-                    <div>
-                      <label className="block text-sm/6 font-medium text-gray-900">
-                        Ghi chú
-                      </label>
-                      <div className="mt-2">
-                        <input
-                          type="text"
-                          className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
-                          {...field}
-                        />
-                      </div>
-                      <FormMessage />
-                    </div>
+                    <Label className="font-semibold">
+                      Ghi chú cho nhân viên
+                    </Label>
+                    <input
+                      type="text"
+                      placeholder="Ví dụ: Giao buổi tối sau 18h, không dùng nước xả..."
+                      className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
+                      {...field}
+                    />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -433,11 +544,13 @@ export default function Order() {
                 name="imgProduct"
                 render={() => (
                   <FormItem>
-                    <Label htmlFor="name">Hình ảnh đơn hàng</Label>
-                    <div className="flex gap-2 items-start justify-start">
-                      <Avatar className="aspect-square w-[100px] h-[100px] rounded-md object-cover">
+                    <Label className="font-semibold">
+                      Hình ảnh món đồ (tùy chọn)
+                    </Label>
+                    <div className="flex gap-3 items-center justify-start">
+                      <Avatar className="aspect-square w-[84px] h-[84px] rounded-xl object-cover border">
                         <AvatarImage src={previewAvatar} />
-                        <AvatarFallback className="rounded-none">
+                        <AvatarFallback className="rounded-xl text-xs">
                           Hình ảnh
                         </AvatarFallback>
                       </Avatar>
@@ -449,12 +562,12 @@ export default function Order() {
                         onChange={handleFileChange}
                       />
                       <button
-                        className="flex aspect-square w-[100px] items-center justify-center rounded-md border border-dashed cursor-pointer"
+                        className="flex aspect-square w-[84px] flex-col gap-1 items-center justify-center rounded-xl border border-dashed border-gray-300 hover:border-main cursor-pointer text-xs text-gray-500"
                         type="button"
                         onClick={() => avatarInputRef.current?.click()}
                       >
                         <Upload className="h-4 w-4 text-muted-foreground" />
-                        <span className="sr-only">Upload</span>
+                        <span>Tải ảnh</span>
                       </button>
                     </div>
                   </FormItem>
@@ -462,19 +575,19 @@ export default function Order() {
               />
 
               {isNonCustomer && (
-                <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                <p className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
                   Chỉ tài khoản Khách hàng mới có thể đặt lịch dịch vụ.
                 </p>
               )}
 
-              <div>
+              <div className="pt-2">
                 <button
                   disabled={orderMutation.isPending || isNonCustomer}
-                  className="cursor-pointer flex w-full justify-center rounded-md bg-main px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-main disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="cursor-pointer flex w-full justify-center rounded-[28px] bg-main px-5 py-3 text-base font-bold text-black shadow-xs hover:bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {orderMutation.isPending
                     ? "Đang tạo đơn hàng..."
-                    : "Đăng ký dịch vụ"}
+                    : "Xác nhận đặt lịch & Thanh toán"}
                 </button>
               </div>
             </form>

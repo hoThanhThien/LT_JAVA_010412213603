@@ -720,7 +720,7 @@ class SecurityAndServiceRegressionTests {
     }
 
     String orderBody = String.format(
-        "{\"laundryShop\":{\"id\":%d},\"serviceCategory\":{\"id\":%d},\"service\":{\"id\":%d},\"orderVolume\":2.0,\"address\":\"456 Le Loi, Q1\",\"instructions\":\"Nhan buoi sang\",\"imgProduct\":\"\"}",
+        "{\"laundryShop\":{\"id\":%d},\"serviceCategory\":{\"id\":%d},\"service\":{\"id\":%d},\"orderVolume\":2.0,\"phone\":\"0971234567\",\"address\":\"456 Le Loi, Q1\",\"instructions\":\"Nhan buoi sang\",\"imgProduct\":\"\"}",
         shop.getId(), categoryId, serviceId);
 
     MvcResult createRes = mockMvc.perform(post("/customer/orders/create")
@@ -729,6 +729,7 @@ class SecurityAndServiceRegressionTests {
             .content(orderBody))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.data.totalAmount").value(50000.0))
+        .andExpect(jsonPath("$.data.phone").value("0971234567"))
         .andExpect(jsonPath("$.data.address").value("456 Le Loi, Q1"))
         .andExpect(jsonPath("$.data.orderStatus").value("IN_PROGRESS"))
         .andReturn();
@@ -737,6 +738,7 @@ class SecurityAndServiceRegressionTests {
 
     Customer reloaded = customerRepository.findById(java.util.UUID.fromString(customerId)).orElseThrow();
     assertEquals("456 Le Loi, Q1", reloaded.getAddress());
+    assertEquals("0971234567", reloaded.getPhone());
 
     mockMvc.perform(get("/customer/orders/history")
             .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))

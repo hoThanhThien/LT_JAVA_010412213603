@@ -217,8 +217,24 @@ public class CustomerServiceImpl implements CustomerService {
         if (resolvedAddress == null || resolvedAddress.isBlank()) {
             return new ApiResponse<>("Vui lòng nhập địa chỉ giao nhận đơn hàng!");
         }
+
+        boolean customerChanged = false;
+        if (orderDTO.getPhone() != null && !orderDTO.getPhone().isBlank()) {
+            String trimmedPhone = orderDTO.getPhone().trim();
+            if (!UserValidator.isValidPhone(trimmedPhone)) {
+                return new ApiResponse<>("Số điện thoại liên hệ không hợp lệ! Phải có đúng 10 chữ số.");
+            }
+            if ((customerId.getPhone() == null || customerId.getPhone().isBlank())
+                    && !userRepository.existsByPhone(trimmedPhone)) {
+                customerId.setPhone(trimmedPhone);
+                customerChanged = true;
+            }
+        }
         if (customerId.getAddress() == null || customerId.getAddress().isBlank()) {
             customerId.setAddress(resolvedAddress);
+            customerChanged = true;
+        }
+        if (customerChanged) {
             customerRepository.save(customerId);
         }
 

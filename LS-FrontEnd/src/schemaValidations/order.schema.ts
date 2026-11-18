@@ -59,6 +59,13 @@ export const OrderSchema = z
     orderVolume: z
       .number({ message: "Vui lòng nhập khối lượng" })
       .positive("Khối lượng phải lớn hơn 0"),
+    phone: z
+      .string()
+      .trim()
+      .regex(
+        /^0\d{9}$/,
+        "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0"
+      ),
     address: z.string().trim().min(1, "Vui lòng nhập địa chỉ giao nhận"),
     imgProduct: z.string(),
     instructions: z.string(),
