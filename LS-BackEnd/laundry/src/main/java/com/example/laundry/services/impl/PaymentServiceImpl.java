@@ -60,6 +60,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${account-number}")
     private String accountNumber;
 
+    @Value("${casso.api-key:}")
+    private String cassoApiKey;
+
     private void verifyOrderAccess(Order order) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()
@@ -153,6 +156,10 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public void pollBankTransactions() {
+        if (cassoApiKey == null || cassoApiKey.isBlank()) {
+            log.debug("Skipping bank transaction polling because casso.api-key is not configured");
+            return;
+        }
 
         List<Order> pendingOrders = orderRepository.findByPaymentStatus(PaymentStatus.PENDING);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { ProTable } from "@ant-design/pro-components";
 import { EllipsisIcon } from "lucide-react";
@@ -15,8 +15,9 @@ import orderApiRequests from "@/apiRequests/order";
 import { Tag } from "antd";
 import { Detail } from "./detail";
 import { useHydrated } from "@/hooks/use-hydrated";
+import { formatCurrency } from "@/lib/utils";
 
-export default function AdminOrder() {
+export default function StoreOwnerOrder() {
   const mounted = useHydrated();
   const [openViewDetail, setOpenViewDetail] = useState<boolean>(false);
   const [dataViewDetail, setDataViewDetail] = useState<OrderListType | null>(
@@ -24,14 +25,6 @@ export default function AdminOrder() {
   );
 
   const actionRef = useRef<ActionType>(null);
-  const [meta, setMeta] = useState({
-    page: 0,
-    size: 10,
-    totalElements: 0,
-    totalPages: 0,
-  });
-  const [currentPage, setCurrentPage] = useState(1); // Bắt đầu từ 1 cho UI
-  const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
 
   // Hàm fetch data riêng để có thể gọi lại khi cần
@@ -44,7 +37,6 @@ export default function AdminOrder() {
       const res = query.payload;
 
       if (res.data) {
-        setMeta(res.data.meta);
         return {
           data: res.data.result || [],
           success: true,
@@ -59,13 +51,6 @@ export default function AdminOrder() {
       setLoading(false);
     }
   };
-
-  // Khi component mount, trigger fetch dữ liệu ban đầu
-  useEffect(() => {
-    if (mounted && actionRef.current) {
-      actionRef.current.reload();
-    }
-  }, [mounted]);
 
   if (!mounted) {
     return null;
@@ -117,6 +102,7 @@ export default function AdminOrder() {
       title: "Tổng tiền (VND)",
       dataIndex: "totalAmount",
       align: "center",
+      render: (_, entity) => <span>{formatCurrency(entity.totalAmount)}</span>,
     },
     {
       hideInSearch: true,
@@ -153,18 +139,13 @@ export default function AdminOrder() {
         actionRef={actionRef}
         cardBordered
         search={false}
-        request={async () => {
-          return await fetchData(currentPage, pageSize);
+        request={async (params) => {
+          return await fetchData(params.current ?? 1, params.pageSize ?? 10);
         }}
         rowKey="id"
         pagination={{
-          current: currentPage,
-          pageSize: pageSize,
-          total: meta.totalElements,
-          onChange: (page, size) => {
-            setCurrentPage(page);
-            setPageSize(size);
-          },
+          defaultPageSize: 10,
+          showSizeChanger: true,
           showTotal: (total, range) => (
             <div>
               {range[0]}-{range[1]} trên {total} rows

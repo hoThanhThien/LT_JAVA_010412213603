@@ -2,22 +2,27 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { Suspense, useEffect } from "react";
 import { getSession } from "@/lib/utils";
 import Auth from "./auth";
 import DropdownAvatar from "./dropdown-avatar";
 import { useAuthStore } from "@/lib/zustand";
-import Setting from "./setting";
-import Order from "./order";
 import DropdownService from "./dropdown-services";
-import CustomerListOrder from "./customerOrder";
+
+const Setting = dynamic(() => import("./setting"), { ssr: false });
+const Order = dynamic(() => import("./order"), { ssr: false });
+const CustomerListOrder = dynamic(() => import("./customerOrder"), {
+  ssr: false,
+});
 
 export default function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { isAuth, setIsAuth, setOpenAuth } = useAuthStore();
+  const { isAuth, openSetting, openOrder, openPay, setIsAuth, setOpenAuth } =
+    useAuthStore();
 
   useEffect(() => {
     getSession()
@@ -78,9 +83,9 @@ export default function Layout({
         <Suspense fallback={null}>
           <Auth />
         </Suspense>
-        <Setting />
-        <CustomerListOrder />
-        <Order />
+        {isAuth && openSetting && <Setting />}
+        {isAuth && openPay && <CustomerListOrder />}
+        {isAuth && openOrder && <Order />}
       </header>
       <main className="flex flex-1 flex-col mt-24 gap-4 md:gap-8">
         {children}

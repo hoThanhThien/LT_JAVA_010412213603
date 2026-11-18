@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { ProTable } from "@ant-design/pro-components";
 import { OrderListType } from "@/schemaValidations/order.schema";
@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAuthStore } from "@/lib/zustand";
 import { useRouter } from "next/navigation";
 import { useHydrated } from "@/hooks/use-hydrated";
+import { formatCurrency } from "@/lib/utils";
 
 export default function CustomerListOrder() {
   const { openPay, setOpenPay } = useAuthStore();
@@ -17,24 +18,17 @@ export default function CustomerListOrder() {
 
   const mounted = useHydrated();
   const actionRef = useRef<ActionType>(null);
-  const [meta, setMeta] = useState({
-    page: 0,
-    size: 10,
-    totalElements: 0,
-    totalPages: 0,
-  });
   const [loading, setLoading] = useState(false);
 
   // Hàm fetch data riêng để có thể gọi lại khi cần
-  const fetchData = async () => {
+  const fetchData = async (page: number, size: number) => {
     setLoading(true);
     try {
-      // API thường yêu cầu page bắt đầu từ 0
-      const query = await orderApiRequests.customerListOrder();
+      const apiPage = page - 1;
+      const query = await orderApiRequests.customerListOrder(apiPage, size);
       const res = query.payload;
 
       if (res.data) {
-        setMeta(res.data.meta);
         return {
           data: res.data.result || [],
           success: true,
@@ -49,13 +43,6 @@ export default function CustomerListOrder() {
       setLoading(false);
     }
   };
-
-  // Khi component mount, trigger fetch dữ liệu ban đầu
-  useEffect(() => {
-    if (mounted && openPay && actionRef.current) {
-      actionRef.current.reload();
-    }
-  }, [mounted, openPay]);
 
   if (!mounted) {
     return null;
@@ -97,6 +84,7 @@ export default function CustomerListOrder() {
       dataIndex: "totalAmount",
       hideInSearch: true,
       align: "center",
+      render: (_, entity) => <span>{formatCurrency(entity.totalAmount)}</span>,
     },
     {
       title: "Thanh toán",
@@ -106,6 +94,7 @@ export default function CustomerListOrder() {
         ) : (
           <Button
             onClick={() => {
+              setOpenPay(false);
               router.push(`/thanh-toan?orderId=${entity.id}`);
             }}
             color="cyan"
@@ -143,11 +132,14 @@ export default function CustomerListOrder() {
               actionRef={actionRef}
               cardBordered
               search={false}
-              request={async () => {
-                return await fetchData();
+              request={async (params) => {
+                return await fetchData(params.current ?? 1, params.pageSize ?? 10);
               }}
               rowKey="id"
-              pagination={false}
+              pagination={{
+                defaultPageSize: 10,
+                showSizeChanger: true,
+              }}
               loading={loading}
             />
           </div>

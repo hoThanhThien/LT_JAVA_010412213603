@@ -623,4 +623,53 @@ class SecurityAndServiceRegressionTests {
       ReflectionTestUtils.setField(targetAuth, "firebaseAuth", null);
     }
   }
+
+  @Test
+  void serviceCategoryDtoFieldsAndCustomerBookServiceValidationWorkCorrectly() {
+    StoreOwner owner = createOwnerWithShop("0970000001", "Order Test Shop");
+    LaundryShop shop = laundryShopRepository.findByStoreOwner(owner);
+    assertNotNull(shop);
+
+    ServiceCategoryDTO catDto = new ServiceCategoryDTO();
+    catDto.setName("Giặt Hấp VIP");
+    catDto.setImageDesc("data:image/jpeg;base64,catimg");
+    catDto.setDescription("Mô tả nhóm dịch vụ");
+    ApiResponse<ServiceCategoryDTO> createdCat = storeOwnerService.createServiceCategory(owner, catDto);
+    assertNotNull(createdCat.getData());
+    assertEquals("data:image/jpeg;base64,catimg", createdCat.getData().getImageDesc());
+    assertEquals("Mô tả nhóm dịch vụ", createdCat.getData().getDescription());
+
+    ServiceDTO invalidPriceSvc = new ServiceDTO();
+    invalidPriceSvc.setCategoryId(createdCat.getData().getId());
+    invalidPriceSvc.setName("Invalid Price Svc");
+    invalidPriceSvc.setDescription("Desc");
+    invalidPriceSvc.setEstimatedTime("24h");
+    invalidPriceSvc.setPrice(0.0);
+    invalidPriceSvc.setImageDesc("img");
+    assertNull(storeOwnerService.createService(owner, invalidPriceSvc).getData());
+
+    ServiceDTO svcDto = new ServiceDTO();
+    svcDto.setCategoryId(createdCat.getData().getId());
+    svcDto.setName("Giặt Sấy Nhanh");
+    svcDto.setDescription("Trong ngày");
+    svcDto.setEstimatedTime("12h");
+    svcDto.setPrice(30000.0);
+    svcDto.setImageDesc("img");
+    ApiResponse<ServiceDTO> createdSvc = storeOwnerService.createService(owner, svcDto);
+    assertNotNull(createdSvc.getData());
+
+    Customer customer = new Customer("Order Customer", passwordEncoder.encode("secret123"), "ordercust@test.local", "0970000002", "123 Profile St", Roles.Customer);
+    Customer savedCustomer = customerRepository.save(customer);
+
+    // Omitted address falls back to customer's profile address & BigDecimal totalAmount avoids float noise
+    com.example.laundry.dto.OrderDTO orderDto = new com.example.laundry.dto.OrderDTO(
+        null, null, null, "",
+        shop.getId(), createdCat.getData().getId(), createdSvc.getData().getId(),
+        1.1, null, "Gọi trước khi giao"
+    );
+    ApiResponse<com.example.laundry.dto.OrderResponse> orderRes = customerService.bookService(savedCustomer, orderDto);
+    assertNotNull(orderRes.getData());
+    assertEquals(33000.0, orderRes.getData().getTotalAmount());
+    assertEquals("123 Profile St", orderRes.getData().getAddress());
+  }
 }

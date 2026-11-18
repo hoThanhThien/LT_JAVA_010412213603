@@ -7,8 +7,10 @@ import {
 import { NormalType } from "@/schemaValidations/pagination.schema";
 
 const orderApiRequests = {
-  customerListOrder: () =>
-    http.get<OrderListResType>(`customer/orders/history`),
+  customerListOrder: (page = 0, size = 10) =>
+    http.get<OrderListResType>(
+      `customer/orders/history?page=${page}&size=${size}`
+    ),
 
   sCustomerOrder: (body: OrderType, accessToken: string) =>
     http.post<OrderResType>("customer/orders/create", body, {

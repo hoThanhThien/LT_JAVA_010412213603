@@ -6,8 +6,8 @@ import com.example.laundry.models.order.PaymentStatus;
 import com.example.laundry.models.shop.LaundryShop;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,17 +15,24 @@ import java.util.UUID;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
+    @Override
+    @EntityGraph(attributePaths = {"customer", "laundryShop", "serviceCategory", "service"})
+    Page<Order> findAll(Pageable pageable);
+
+    @EntityGraph(attributePaths = {"customer", "laundryShop", "serviceCategory", "service"})
     Page<Order> findByOrderStatus(OrderStatus status, Pageable pageable);
 
-    @Query("SELECT o FROM Order o WHERE o.customer.id = :customerId ORDER BY o.createdAt DESC")
+    @EntityGraph(attributePaths = {"customer", "laundryShop", "serviceCategory", "service"})
     Page<Order> findByCustomer_Id(UUID customerId, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"customer", "laundryShop", "serviceCategory", "service"})
     Page<Order> findOrdersByLaundryShop(LaundryShop laundryShop, Pageable pageable);
 
     boolean existsByLaundryShop(LaundryShop laundryShop);
 
     boolean existsByService(com.example.laundry.models.shop.Service service);
 
+    @EntityGraph(attributePaths = {"customer", "laundryShop", "serviceCategory", "service"})
     Page<Order> findOrderByOrderStatus(OrderStatus orderStatus, Pageable pageable);
 
     List<Order> findByPaymentStatus(PaymentStatus paymentStatus);

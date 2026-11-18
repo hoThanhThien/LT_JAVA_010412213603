@@ -8,6 +8,7 @@ import { ServiceManageType } from "@/schemaValidations/category.schema";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Upload } from "lucide-react";
 import serviceApiRequests from "@/apiRequests/service";
+import { compressImageToBase64, handleErrorApi } from "@/lib/utils";
 
 export const CreateService = (props: {
   openModalCreate: boolean;
@@ -26,38 +27,29 @@ export const CreateService = (props: {
   // https://ant.design/components/form#components-form-demo-control-hooks
   const [form] = Form.useForm();
 
-  const convertToBase64 = (file: File) => {
-    return new Promise((resolve, reject) => {
-      const fileReader = new FileReader();
-      fileReader.readAsDataURL(file);
-
-      fileReader.onload = () => {
-        resolve(fileReader.result);
-      };
-
-      fileReader.onerror = (error) => {
-        reject(error);
-      };
-    });
-  };
-
   const handleFileChange = async (e: any) => {
     const file = e.target.files?.[0];
     if (file) {
       try {
-        const base64: any = await convertToBase64(file);
-        setPreviewAvatar(base64); // Lưu base64 vào state để hiển thị preview
-      } catch (error) {
-        console.error("Error converting image to base64:", error);
+        const base64 = await compressImageToBase64(file);
+        setPreviewAvatar(base64);
+      } catch (error: any) {
+        toast.error(error?.message || "Không thể xử lý hình ảnh");
       }
     }
   };
 
   const onFinish: FormProps<ServiceManageType>["onFinish"] = async (values) => {
+    const parsedPrice = Number(values.price);
+    if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+      toast.error("Giá dịch vụ phải là số lớn hơn 0");
+      return;
+    }
     setIsSubmit(true);
     try {
       const result = await serviceApiRequests.createService({
         ...values,
+        price: parsedPrice,
         categoryId: categoryId,
         imageDesc: previewAvatar,
       });
@@ -69,16 +61,15 @@ export const CreateService = (props: {
       });
       setIsSubmit(false);
       form.resetFields();
+      setPreviewAvatar("");
+      if (avatarInputRef.current) {
+        avatarInputRef.current.value = "";
+      }
       setOpenModalCreate(false);
       refreshAndClose();
     } catch (error: any) {
       setIsSubmit(false);
-      toast.error(error, {
-        position: "bottom-left",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: false,
-      });
+      handleErrorApi({ error });
     }
   };
 
@@ -90,6 +81,7 @@ export const CreateService = (props: {
         onCancel={() => {
           setOpenModalCreate(false);
           form.resetFields();
+          setPreviewAvatar("");
           setIsSubmit(false);
         }}
         confirmLoading={isSubmit}
@@ -100,6 +92,7 @@ export const CreateService = (props: {
             onClick={() => {
               setOpenModalCreate(false);
               form.resetFields();
+              setPreviewAvatar("");
               setIsSubmit(false);
             }}
           >
