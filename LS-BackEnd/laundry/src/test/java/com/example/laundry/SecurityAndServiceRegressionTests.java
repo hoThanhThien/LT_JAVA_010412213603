@@ -1097,7 +1097,7 @@ class SecurityAndServiceRegressionTests {
     tx.setDescription("Thanh toan LAUNDRY" + orderId + " test");
     tx.setTransactionTime(LocalDateTime.now().minusMinutes(3));
 
-    CassoClient.CassoData cassoData = new CassoClient.CassoData();
+    CassoClient.CassoTransactionData cassoData = new CassoClient.CassoTransactionData();
     cassoData.setRecords(java.util.List.of(tx));
 
     CassoClient.CassoTransactionResponse cassoResponse = new CassoClient.CassoTransactionResponse();
