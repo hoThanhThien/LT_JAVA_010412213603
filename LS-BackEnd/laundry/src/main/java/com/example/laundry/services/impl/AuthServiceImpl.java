@@ -58,7 +58,7 @@ public class AuthServiceImpl implements AuthService {
   @Autowired(required = false)
   private FirebaseAuth firebaseAuth;
 
-  @Value("${firebase.project-id:heramo-b5a4c}")
+  @Value("${firebase.project-id:fir-service-account-18466}")
   private String firebaseProjectId;
 
   @Override
