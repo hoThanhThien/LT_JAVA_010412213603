@@ -45,23 +45,27 @@ export default function DropdownAvatar() {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        {account && (
-          <Button
-            variant="outline"
-            size="icon"
-            className="overflow-hidden rounded-full cursor-pointer"
-          >
-            <Avatar>
-              <AvatarImage src={account?.avtUser ?? undefined} alt="avatar" />
-              <AvatarFallback>
-                {account?.username?.slice(0, 1).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-          </Button>
-        )}
+        <Button
+          variant="outline"
+          size="icon"
+          aria-label="Menu tài khoản"
+          className="overflow-hidden rounded-full cursor-pointer border-main/50"
+        >
+          <Avatar>
+            <AvatarImage
+              src={account?.avtUser ?? undefined}
+              alt={account?.username ?? "avatar"}
+            />
+            <AvatarFallback>
+              {account?.username?.slice(0, 1).toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>{account?.username}</DropdownMenuLabel>
+        <DropdownMenuLabel>
+          {account?.username || "Tài khoản"}
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
         {decodedAccessToken && decodedAccessToken.role === "Customer" && (

@@ -30,13 +30,10 @@ export default function Auth() {
         }}
       >
         <DialogContent
-          className="border-none"
+          className="border-none w-[calc(100vw-1.5rem)] sm:max-w-md max-h-[90dvh] overflow-y-auto p-5 sm:p-7 rounded-2xl sm:rounded-[24px]"
           aria-describedby={undefined}
-          onInteractOutside={(e) => {
-            e.preventDefault();
-          }}
         >
-          <div className=" flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+          <div className="flex flex-col justify-center py-1 sm:py-2">
             <DialogTitle className="z-500 sm:mx-auto sm:w-full sm:max-w-sm">
               <Image
                 src="/heramo-logo.png"

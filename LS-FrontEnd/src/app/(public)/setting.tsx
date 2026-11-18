@@ -123,6 +123,11 @@ export default function Setting() {
     setPreviewAvatar("");
   };
 
+  const handleClose = () => {
+    setOpenSetting(false);
+    reset();
+  };
+
   const onSubmit = async (values: UpdateMeType) => {
     if (updateMeMutation.isPending) return;
     try {
@@ -133,7 +138,7 @@ export default function Setting() {
         hideProgressBar: false,
         closeOnClick: false,
       });
-      setOpenSetting(false);
+      handleClose();
     } catch (error) {
       handleErrorApi({
         error,
@@ -154,23 +159,25 @@ export default function Setting() {
         }}
       >
         <DialogContent
-          className="border-none w-full max-w-lg sm:max-w-xl md:max-w-2xl"
+          className="border-none w-[calc(100vw-1.5rem)] sm:w-full max-w-lg sm:max-w-xl p-0 flex flex-col max-h-[min(90dvh,740px)] overflow-hidden rounded-2xl sm:rounded-[24px]"
           aria-describedby={undefined}
           onInteractOutside={(e) => {
-            e.preventDefault();
+            if (updateMeMutation.isPending || changePasswordMutation.isPending) {
+              e.preventDefault();
+            }
           }}
         >
-          <div className="flex min-h-full flex-col justify-center px-5 py-6 sm:px-7">
-            <DialogTitle className="z-500 w-full">
-              <div className="mb-4 rounded-xl bg-[#111111] px-4 py-3.5 text-center shadow-sm">
-                <span className="inline-block rounded-full border border-[#ffbb00]/40 bg-[#ffbb00]/15 px-2.5 py-0.5 text-[10px] font-bold tracking-[0.2em] text-[#ffbb00] uppercase">
-                  HERAMO Account
-                </span>
-                <div className="mt-1 text-xl font-bold tracking-tight text-white">
-                  Thông tin tài khoản
-                </div>
+          <DialogTitle className="shrink-0 w-full">
+            <div className="bg-[#111111] px-4 py-3.5 pr-14 sm:px-6 sm:py-4 text-left sm:text-center">
+              <span className="inline-block rounded-full border border-[#ffbb00]/40 bg-[#ffbb00]/15 px-2.5 py-0.5 text-[10px] font-bold tracking-[0.2em] text-[#ffbb00] uppercase">
+                HERAMO Account
+              </span>
+              <div className="mt-1 text-lg sm:text-xl font-bold tracking-tight text-white">
+                Thông tin tài khoản
               </div>
-            </DialogTitle>
+            </div>
+          </DialogTitle>
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
             <Tabs defaultValue="account" className="mx-auto w-full">
               <TabsList className="grid w-full grid-cols-2 rounded-xl bg-zinc-100 p-1">
                 <TabsTrigger
@@ -318,12 +325,22 @@ export default function Setting() {
                       )}
                     />
 
-                    <div>
+                    <div className="flex flex-col-reverse sm:flex-row gap-2.5 pt-2">
                       <button
-                        disabled={updateMeMutation.isPending}
-                        className="cursor-pointer flex w-full justify-center rounded-md bg-main px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-main disabled:opacity-50 disabled:cursor-not-allowed"
+                        type="button"
+                        onClick={handleClose}
+                        className="w-full sm:w-auto sm:min-w-[110px] cursor-pointer rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors"
                       >
-                        Cập nhập thông tin
+                        Đóng
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={updateMeMutation.isPending}
+                        className="w-full flex-1 cursor-pointer flex justify-center rounded-lg bg-main px-4 py-2 text-sm font-bold text-black shadow-xs hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-main disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {updateMeMutation.isPending
+                          ? "Đang cập nhật..."
+                          : "Cập nhật thông tin"}
                       </button>
                     </div>
                   </form>
@@ -502,15 +519,24 @@ export default function Setting() {
                         )}
                       />
 
-                      <button
-                        type="submit"
-                        disabled={changePasswordMutation.isPending}
-                        className="flex w-full cursor-pointer justify-center rounded-lg bg-[#111111] px-4 py-2.5 text-sm font-semibold text-[#ffbb00] shadow-xs transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {changePasswordMutation.isPending
-                          ? "Đang cập nhật mật khẩu..."
-                          : "Cập nhật mật khẩu"}
-                      </button>
+                      <div className="flex flex-col-reverse sm:flex-row gap-2.5 pt-1">
+                        <button
+                          type="button"
+                          onClick={handleClose}
+                          className="w-full sm:w-auto sm:min-w-[110px] cursor-pointer rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors"
+                        >
+                          Đóng
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={changePasswordMutation.isPending}
+                          className="w-full flex-1 flex cursor-pointer justify-center rounded-lg bg-[#111111] px-4 py-2.5 text-sm font-semibold text-[#ffbb00] shadow-xs transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {changePasswordMutation.isPending
+                            ? "Đang cập nhật mật khẩu..."
+                            : "Cập nhật mật khẩu"}
+                        </button>
+                      </div>
                     </form>
                   </Form>
                 ) : (

@@ -60,7 +60,6 @@ export default function Order() {
   const [categoryId, setCategoryId] = useState<number>(0);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [previewAvatar, setPreviewAvatar] = useState("");
-  const [selectedPrice, setSelectedPrice] = useState<number>(0);
 
   const router = useRouter();
 
@@ -68,13 +67,25 @@ export default function Order() {
     isAuth && openOrder
   );
   const allShops = shopsData?.payload.data ?? [];
+  const effectiveShopId = shopId > 0 ? shopId : (allShops[0]?.id ?? 0);
 
   const { data: categoriesData, isFetching: isFetchingCategories } =
-    useShopCategories(shopId);
+    useShopCategories(effectiveShopId);
   const categories = categoriesData?.payload.data ?? [];
 
+  const hasValidSelectedCategory =
+    categoryId > 0 && categories.some((c) => c.id === categoryId);
+  const matchedCategory = hasValidSelectedCategory
+    ? categories.find((c) => c.id === categoryId)
+    : !isFetchingCategories && categories.length > 0
+      ? (preferredCategory &&
+          categories.find((c) => matchesPreference(c.name, preferredCategory))) ||
+        categories[0]
+      : undefined;
+  const effectiveCategoryId = matchedCategory?.id ?? 0;
+
   const { data: servicesData, isFetching: isFetchingServices } =
-    useShopServices(shopId, categoryId);
+    useShopServices(effectiveShopId, effectiveCategoryId);
   const services = servicesData?.payload.data ?? [];
 
   const { data: meData } = useAccountMe(isAuth && openOrder);
@@ -97,83 +108,49 @@ export default function Order() {
     },
   });
 
-  // Tự động chọn cửa hàng đầu tiên khi mở popup mà chưa có cửa hàng nào được chọn
-  useEffect(() => {
-    if (openOrder && allShops.length > 0 && shopId === 0) {
-      const firstShopId = allShops[0].id;
-      setShopId(firstShopId);
-      form.setValue("laundryShop.id", firstShopId);
-    }
-  }, [openOrder, allShops, shopId, form]);
+  const watchedVolume = useWatch({
+    control: form.control,
+    name: "orderVolume",
+  });
+  const watchedServiceId = useWatch({
+    control: form.control,
+    name: "service.id",
+  });
 
-  // Tự động chọn loại dịch vụ theo preset (nếu đi từ trang /dich-vu/*) hoặc phần tử đầu tiên
-  useEffect(() => {
-    if (
-      !openOrder ||
-      shopId === 0 ||
-      isFetchingCategories ||
-      categories.length === 0
-    ) {
-      return;
-    }
-    const currentCatId = form.getValues("serviceCategory.id");
-    const existsInShop = categories.some((c) => c.id === currentCatId);
-    if (currentCatId > 0 && existsInShop) {
-      return;
-    }
-    const matched =
-      (preferredCategory &&
-        categories.find((c) =>
-          matchesPreference(c.name, preferredCategory)
-        )) ||
-      categories[0];
-    if (matched) {
-      setCategoryId(matched.id);
-      setSelectedPrice(0);
-      form.setValue("serviceCategory.id", matched.id);
-      form.setValue("service.id", 0);
-    }
-  }, [
-    openOrder,
-    shopId,
-    isFetchingCategories,
-    categories,
-    preferredCategory,
-    form,
-  ]);
+  const currentSvc =
+    watchedServiceId > 0
+      ? services.find((s) => s.id === watchedServiceId)
+      : undefined;
+  const effectiveService =
+    currentSvc ||
+    (!isFetchingServices && services.length > 0
+      ? (preferredService &&
+          services.find((s) => matchesPreference(s.name, preferredService))) ||
+        services[0]
+      : undefined);
+  const selectedPrice = effectiveService?.price ?? 0;
 
-  // Tự động chọn dịch vụ cụ thể theo preset hoặc dịch vụ đầu tiên
+  // Đồng bộ giá trị mặc định vào react-hook-form mà không gọi setState đồng bộ trong effect
   useEffect(() => {
-    if (
-      !openOrder ||
-      categoryId === 0 ||
-      isFetchingServices ||
-      services.length === 0
-    ) {
-      return;
+    if (!openOrder || effectiveShopId <= 0) return;
+    if (form.getValues("laundryShop.id") !== effectiveShopId) {
+      form.setValue("laundryShop.id", effectiveShopId);
     }
-    const currentSvcId = form.getValues("service.id");
-    const currentSvc = services.find((s) => s.id === currentSvcId);
-    if (currentSvc) {
-      setSelectedPrice(currentSvc.price);
-      return;
+  }, [openOrder, effectiveShopId, form]);
+
+  useEffect(() => {
+    if (!openOrder || effectiveCategoryId <= 0) return;
+    if (form.getValues("serviceCategory.id") !== effectiveCategoryId) {
+      form.setValue("serviceCategory.id", effectiveCategoryId);
     }
-    const matched =
-      (preferredService &&
-        services.find((s) => matchesPreference(s.name, preferredService))) ||
-      services[0];
-    if (matched) {
-      form.setValue("service.id", matched.id);
-      setSelectedPrice(matched.price);
+  }, [openOrder, effectiveCategoryId, form]);
+
+  useEffect(() => {
+    if (!openOrder || !effectiveService) return;
+    if (form.getValues("service.id") !== effectiveService.id) {
+      form.setValue("service.id", effectiveService.id);
     }
-  }, [
-    openOrder,
-    categoryId,
-    isFetchingServices,
-    services,
-    preferredService,
-    form,
-  ]);
+  }, [openOrder, effectiveService, form]);
 
   // Điền sẵn số điện thoại & địa chỉ từ form nhanh hoặc hồ sơ tài khoản
   useEffect(() => {
@@ -187,15 +164,7 @@ export default function Order() {
     }
   }, [openOrder, draftPhone, account?.phone, account?.address, form]);
 
-  const watchedVolume = useWatch({
-    control: form.control,
-    name: "orderVolume",
-  });
-  const watchedServiceId = useWatch({
-    control: form.control,
-    name: "service.id",
-  });
-  const selectedServiceObj = services.find((s) => s.id === watchedServiceId);
+  const selectedServiceObj = effectiveService;
   const volume = watchedVolume || 0;
   const totalAmount = Number.isFinite(selectedPrice * volume)
     ? Math.round(selectedPrice * volume * 100) / 100
@@ -208,8 +177,18 @@ export default function Order() {
       const base64 = await compressImageToBase64(file);
       setPreviewAvatar(base64);
       form.setValue("imgProduct", base64);
-    } catch (error: any) {
-      toast.error(error?.message || "Không thể xử lý hình ảnh");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Không thể xử lý hình ảnh"
+      );
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setPreviewAvatar("");
+    form.setValue("imgProduct", "");
+    if (avatarInputRef.current) {
+      avatarInputRef.current.value = "";
     }
   };
 
@@ -226,17 +205,23 @@ export default function Order() {
     });
     setShopId(0);
     setCategoryId(0);
-    setSelectedPrice(0);
     setPreviewAvatar("");
+  };
+
+  const handleClose = () => {
+    clearBookingPreset();
+    reset();
+    if (avatarInputRef.current) {
+      avatarInputRef.current.value = "";
+    }
+    setOpenOrder(false);
   };
 
   const onSubmit = async (values: OrderType) => {
     if (orderMutation.isPending || isNonCustomer) return;
     try {
       const result = await orderMutation.mutateAsync(values);
-      setOpenOrder(false);
-      clearBookingPreset();
-      reset();
+      handleClose();
       toast.success(result.payload.message, {
         position: "bottom-left",
         autoClose: 3000,
@@ -254,40 +239,37 @@ export default function Order() {
       open={openOrder}
       onOpenChange={(open: boolean) => {
         if (!open) {
-          clearBookingPreset();
-          reset();
-          if (avatarInputRef.current) {
-            avatarInputRef.current.value = "";
-          }
+          handleClose();
+          return;
         }
-        setOpenOrder(open);
+        setOpenOrder(true);
       }}
     >
       <DialogContent
-        className="border-none w-full max-w-lg sm:max-w-xl md:max-w-2xl p-0 overflow-hidden max-h-[90vh] overflow-y-auto rounded-[28px]"
+        className="border-none w-[calc(100vw-1.5rem)] sm:w-full max-w-lg sm:max-w-xl md:max-w-2xl p-0 flex flex-col max-h-[min(90dvh,760px)] overflow-hidden rounded-2xl sm:rounded-[24px]"
         aria-describedby={undefined}
         onInteractOutside={(e) => {
-          e.preventDefault();
+          if (orderMutation.isPending) e.preventDefault();
         }}
       >
-        <div className="bg-black px-6 py-5 text-white">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-main px-3 py-1 text-xs font-bold text-black mb-2">
+        <div className="shrink-0 bg-black px-4 py-3.5 pr-14 sm:px-6 sm:py-4 text-white">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-main px-2.5 py-0.5 text-[11px] sm:text-xs font-bold text-black mb-1.5">
             <Sparkles className="h-3.5 w-3.5" />
             HERAMO • ĐẶT DỊCH VỤ 4.0
           </div>
-          <DialogTitle className="text-2xl font-bold text-white">
+          <DialogTitle className="text-lg sm:text-2xl font-bold text-white leading-snug">
             Đặt lịch giặt ủi & vệ sinh
           </DialogTitle>
-          <p className="mt-1 text-sm text-gray-300">
+          <p className="mt-0.5 text-xs sm:text-sm text-gray-300">
             Chọn cửa hàng, dịch vụ và địa chỉ giao nhận — thanh toán nhanh bằng
             VietQR.
           </p>
         </div>
 
-        <div className="px-6 py-6">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
           <Form {...form}>
             <form
-              className="space-y-4"
+              className="space-y-3.5"
               noValidate
               onSubmit={form.handleSubmit(onSubmit)}
               onReset={reset}
@@ -299,13 +281,16 @@ export default function Order() {
                   <FormItem>
                     <Label className="font-semibold">Chọn cửa hàng</Label>
                     <Select
-                      value={field.value ? String(field.value) : ""}
+                      value={
+                        field.value || effectiveShopId
+                          ? String(field.value || effectiveShopId)
+                          : ""
+                      }
                       onValueChange={(value) => {
                         const nextShopId = parseInt(value, 10);
                         field.onChange(nextShopId);
                         setShopId(nextShopId);
                         setCategoryId(0);
-                        setSelectedPrice(0);
                         form.setValue("serviceCategory.id", 0);
                         form.setValue("service.id", 0);
                       }}
@@ -338,7 +323,7 @@ export default function Order() {
                 )}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <FormField
                   control={form.control}
                   name="serviceCategory.id"
@@ -346,14 +331,17 @@ export default function Order() {
                     <FormItem>
                       <Label className="font-semibold">Loại hình dịch vụ</Label>
                       <Select
-                        key={`category-${shopId}`}
-                        disabled={!shopId || isFetchingCategories}
-                        value={field.value ? String(field.value) : ""}
+                        key={`category-${effectiveShopId}`}
+                        disabled={!effectiveShopId || isFetchingCategories}
+                        value={
+                          field.value || effectiveCategoryId
+                            ? String(field.value || effectiveCategoryId)
+                            : ""
+                        }
                         onValueChange={(value) => {
                           const nextCategoryId = parseInt(value, 10);
                           field.onChange(nextCategoryId);
                           setCategoryId(nextCategoryId);
-                          setSelectedPrice(0);
                           form.setValue("service.id", 0);
                         }}
                       >
@@ -361,7 +349,7 @@ export default function Order() {
                           <SelectTrigger className="w-full">
                             <SelectValue
                               placeholder={
-                                !shopId
+                                !effectiveShopId
                                   ? "Chọn cửa hàng trước"
                                   : isFetchingCategories
                                     ? "Đang tải..."
@@ -372,7 +360,7 @@ export default function Order() {
                         </FormControl>
                         <SelectContent>
                           {categories.length === 0 &&
-                            shopId > 0 &&
+                            effectiveShopId > 0 &&
                             !isFetchingCategories && (
                               <SelectItem value="__empty" disabled>
                                 Cửa hàng chưa có loại dịch vụ
@@ -401,23 +389,23 @@ export default function Order() {
                     <FormItem>
                       <Label className="font-semibold">Dịch vụ</Label>
                       <Select
-                        key={`service-${shopId}-${categoryId}`}
-                        disabled={!categoryId || isFetchingServices}
-                        value={field.value ? String(field.value) : ""}
+                        key={`service-${effectiveShopId}-${effectiveCategoryId}`}
+                        disabled={!effectiveCategoryId || isFetchingServices}
+                        value={
+                          field.value || effectiveService?.id
+                            ? String(field.value || effectiveService?.id)
+                            : ""
+                        }
                         onValueChange={(value) => {
                           const nextServiceId = parseInt(value, 10);
                           field.onChange(nextServiceId);
-                          const selectedService = services.find(
-                            (service) => service.id === nextServiceId
-                          );
-                          setSelectedPrice(selectedService?.price ?? 0);
                         }}
                       >
                         <FormControl>
                           <SelectTrigger className="w-full">
                             <SelectValue
                               placeholder={
-                                !categoryId
+                                !effectiveCategoryId
                                   ? "Chọn loại dịch vụ trước"
                                   : isFetchingServices
                                     ? "Đang tải..."
@@ -428,7 +416,7 @@ export default function Order() {
                         </FormControl>
                         <SelectContent>
                           {services.length === 0 &&
-                            categoryId > 0 &&
+                            effectiveCategoryId > 0 &&
                             !isFetchingServices && (
                               <SelectItem value="__empty" disabled>
                                 Chưa có dịch vụ trong mục này
@@ -575,10 +563,10 @@ export default function Order() {
                     <Label className="font-semibold">
                       Hình ảnh món đồ (tùy chọn)
                     </Label>
-                    <div className="flex gap-3 items-center justify-start">
-                      <Avatar className="aspect-square w-[84px] h-[84px] rounded-xl object-cover border">
+                    <div className="flex flex-wrap gap-3 items-center justify-start">
+                      <Avatar className="aspect-square w-[68px] h-[68px] rounded-xl object-cover border">
                         <AvatarImage src={previewAvatar} />
-                        <AvatarFallback className="rounded-xl text-xs">
+                        <AvatarFallback className="rounded-xl text-[11px]">
                           Hình ảnh
                         </AvatarFallback>
                       </Avatar>
@@ -590,13 +578,22 @@ export default function Order() {
                         onChange={handleFileChange}
                       />
                       <button
-                        className="flex aspect-square w-[84px] flex-col gap-1 items-center justify-center rounded-xl border border-dashed border-gray-300 hover:border-main cursor-pointer text-xs text-gray-500"
+                        className="flex aspect-square w-[68px] flex-col gap-1 items-center justify-center rounded-xl border border-dashed border-gray-300 hover:border-main cursor-pointer text-[11px] text-gray-500"
                         type="button"
                         onClick={() => avatarInputRef.current?.click()}
                       >
                         <Upload className="h-4 w-4 text-muted-foreground" />
                         <span>Tải ảnh</span>
                       </button>
+                      {previewAvatar && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          className="cursor-pointer rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-100"
+                        >
+                          Xóa ảnh
+                        </button>
+                      )}
                     </div>
                   </FormItem>
                 )}
@@ -608,10 +605,18 @@ export default function Order() {
                 </p>
               )}
 
-              <div className="pt-2">
+              <div className="flex flex-col-reverse sm:flex-row items-center gap-2.5 pt-2">
                 <button
+                  type="button"
+                  onClick={handleClose}
+                  className="w-full sm:w-auto sm:min-w-[120px] cursor-pointer rounded-[28px] border border-zinc-300 bg-white px-5 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors"
+                >
+                  Đóng
+                </button>
+                <button
+                  type="submit"
                   disabled={orderMutation.isPending || isNonCustomer}
-                  className="cursor-pointer flex w-full justify-center rounded-[28px] bg-main px-5 py-3 text-base font-bold text-black shadow-xs hover:bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex-1 cursor-pointer flex justify-center rounded-[28px] bg-main px-5 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-black shadow-xs hover:bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {orderMutation.isPending
                     ? "Đang tạo đơn hàng..."

@@ -139,19 +139,16 @@ export default function CustomerListOrder() {
       }}
     >
       <DialogContent
-        className="sm:max-w-[650px] md:max-w-[820px] lg:max-w-[1060px] w-[92vw] max-h-[90vh] overflow-y-auto p-0 rounded-[28px] border-none"
+        className="sm:max-w-[650px] md:max-w-[860px] lg:max-w-[1060px] w-[calc(100vw-1.5rem)] max-h-[90dvh] flex flex-col overflow-hidden p-0 rounded-2xl sm:rounded-[24px] border-none"
         aria-describedby={undefined}
-        onInteractOutside={(e) => {
-          e.preventDefault();
-        }}
       >
-        <div className="bg-black px-6 py-5 text-white flex flex-wrap items-center justify-between gap-4 pr-12">
+        <div className="shrink-0 bg-black px-4 py-3.5 pr-14 sm:px-6 sm:py-4 text-white flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-main text-black">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-main text-black">
               <ReceiptText className="h-5 w-5" />
             </span>
             <div>
-              <DialogTitle className="text-xl font-bold text-white">
+              <DialogTitle className="text-lg sm:text-xl font-bold text-white">
                 Đơn hàng & Thanh toán
               </DialogTitle>
               <p className="text-xs text-gray-300">
@@ -165,20 +162,21 @@ export default function CustomerListOrder() {
               setOpenPay(false);
               setOpenOrder(true);
             }}
-            className="inline-flex items-center gap-1.5 rounded-full bg-main hover:bg-hover px-4 py-2 text-sm font-bold text-black cursor-pointer transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-full bg-main hover:bg-hover px-4 py-2 text-xs sm:text-sm font-bold text-black cursor-pointer transition-colors"
           >
             <Plus className="h-4 w-4" />
             Đặt dịch vụ mới
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-5">
           {openPay && (
             <ProTable<OrderListType>
               columns={columns}
               actionRef={actionRef}
               cardBordered
               search={false}
+              scroll={{ x: 720 }}
               request={async (params) => {
                 return await fetchData(
                   params.current ?? 1,
@@ -193,6 +191,15 @@ export default function CustomerListOrder() {
               loading={loading}
             />
           )}
+        </div>
+        <div className="shrink-0 border-t border-zinc-100 bg-zinc-50/80 px-4 py-3 sm:px-6 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setOpenPay(false)}
+            className="cursor-pointer rounded-[28px] border border-zinc-300 bg-white px-5 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors"
+          >
+            Đóng
+          </button>
         </div>
       </DialogContent>
     </Dialog>
