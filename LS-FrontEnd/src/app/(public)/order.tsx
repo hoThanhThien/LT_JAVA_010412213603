@@ -211,11 +211,14 @@ export default function Order() {
   const handleClose = () => {
     clearBookingPreset();
     reset();
-    if (avatarInputRef.current) {
-      avatarInputRef.current.value = "";
-    }
     setOpenOrder(false);
   };
+
+  useEffect(() => {
+    if (!openOrder && avatarInputRef.current) {
+      avatarInputRef.current.value = "";
+    }
+  }, [openOrder]);
 
   const onSubmit = async (values: OrderType) => {
     if (orderMutation.isPending || isNonCustomer) return;
