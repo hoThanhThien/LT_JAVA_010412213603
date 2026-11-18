@@ -54,13 +54,34 @@ export default function Order() {
     preferredCategory,
     preferredService,
     draftPhone,
-    setBookingPreset,
     clearBookingPreset,
   } = useAuthStore();
+  const [shopId, setShopId] = useState<number>(0);
+  const [categoryId, setCategoryId] = useState<number>(0);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [previewAvatar, setPreviewAvatar] = useState("");
+  const [selectedPrice, setSelectedPrice] = useState<number>(0);
 
   const router = useRouter();
+
+  const { data: shopsData, isLoading: isLoadingShops } = useShops(
+    isAuth && openOrder
+  );
+  const allShops = shopsData?.payload.data ?? [];
+
+  const { data: categoriesData, isFetching: isFetchingCategories } =
+    useShopCategories(shopId);
+  const categories = categoriesData?.payload.data ?? [];
+
+  const { data: servicesData, isFetching: isFetchingServices } =
+    useShopServices(shopId, categoryId);
+  const services = servicesData?.payload.data ?? [];
+
+  const { data: meData } = useAccountMe(isAuth && openOrder);
+  const account = meData?.payload?.data?.account;
+  const isNonCustomer = Boolean(account?.role && account.role !== "Customer");
+
+  const orderMutation = useOrderMutation();
 
   const form = useForm<OrderType>({
     resolver: zodResolver(OrderSchema),
@@ -76,85 +97,81 @@ export default function Order() {
     },
   });
 
-  const watchedShopId =
-    useWatch({ control: form.control, name: "laundryShop.id" }) || 0;
-  const watchedCategoryId =
-    useWatch({ control: form.control, name: "serviceCategory.id" }) || 0;
-  const watchedServiceId =
-    useWatch({ control: form.control, name: "service.id" }) || 0;
-  const watchedVolume =
-    useWatch({ control: form.control, name: "orderVolume" }) || 0;
-
-  const { data: shopsData, isLoading: isLoadingShops } = useShops(
-    isAuth && openOrder
-  );
-  const allShops = shopsData?.payload.data ?? [];
-
-  const effectiveShopId =
-    watchedShopId > 0 ? watchedShopId : allShops[0]?.id ?? 0;
-
-  const { data: categoriesData, isFetching: isFetchingCategories } =
-    useShopCategories(openOrder ? effectiveShopId : 0);
-  const categories = categoriesData?.payload.data ?? [];
-
-  const effectiveCategoryId = (() => {
-    if (
-      watchedCategoryId > 0 &&
-      categories.some((c) => c.id === watchedCategoryId)
-    ) {
-      return watchedCategoryId;
-    }
-    if (categories.length === 0) return 0;
-    const matched = preferredCategory
-      ? categories.find((c) => matchesPreference(c.name, preferredCategory))
-      : undefined;
-    return (matched ?? categories[0]).id;
-  })();
-
-  const { data: servicesData, isFetching: isFetchingServices } =
-    useShopServices(openOrder ? effectiveShopId : 0, effectiveCategoryId);
-  const services = servicesData?.payload.data ?? [];
-
-  const selectedServiceObj = (() => {
-    if (watchedServiceId > 0) {
-      const existing = services.find((s) => s.id === watchedServiceId);
-      if (existing) return existing;
-    }
-    if (services.length === 0) return undefined;
-    const matched = preferredService
-      ? services.find((s) => matchesPreference(s.name, preferredService))
-      : undefined;
-    return matched ?? services[0];
-  })();
-  const effectiveServiceId = selectedServiceObj?.id ?? 0;
-  const selectedPrice = selectedServiceObj?.price ?? 0;
-
-  const { data: meData } = useAccountMe(isAuth && openOrder);
-  const account = meData?.payload?.data?.account;
-  const isNonCustomer = Boolean(account?.role && account.role !== "Customer");
-
-  const orderMutation = useOrderMutation();
-
-  // Đồng bộ lựa chọn tự động (cửa hàng, loại dịch vụ, dịch vụ) vào React Hook Form
+  // Tự động chọn cửa hàng đầu tiên khi mở popup mà chưa có cửa hàng nào được chọn
   useEffect(() => {
-    if (!openOrder) return;
-    if (effectiveShopId > 0 && watchedShopId !== effectiveShopId) {
-      form.setValue("laundryShop.id", effectiveShopId);
+    if (openOrder && allShops.length > 0 && shopId === 0) {
+      const firstShopId = allShops[0].id;
+      setShopId(firstShopId);
+      form.setValue("laundryShop.id", firstShopId);
     }
-    if (effectiveCategoryId > 0 && watchedCategoryId !== effectiveCategoryId) {
-      form.setValue("serviceCategory.id", effectiveCategoryId);
+  }, [openOrder, allShops, shopId, form]);
+
+  // Tự động chọn loại dịch vụ theo preset (nếu đi từ trang /dich-vu/*) hoặc phần tử đầu tiên
+  useEffect(() => {
+    if (
+      !openOrder ||
+      shopId === 0 ||
+      isFetchingCategories ||
+      categories.length === 0
+    ) {
+      return;
     }
-    if (effectiveServiceId > 0 && watchedServiceId !== effectiveServiceId) {
-      form.setValue("service.id", effectiveServiceId);
+    const currentCatId = form.getValues("serviceCategory.id");
+    const existsInShop = categories.some((c) => c.id === currentCatId);
+    if (currentCatId > 0 && existsInShop) {
+      return;
+    }
+    const matched =
+      (preferredCategory &&
+        categories.find((c) =>
+          matchesPreference(c.name, preferredCategory)
+        )) ||
+      categories[0];
+    if (matched) {
+      setCategoryId(matched.id);
+      setSelectedPrice(0);
+      form.setValue("serviceCategory.id", matched.id);
+      form.setValue("service.id", 0);
     }
   }, [
     openOrder,
-    effectiveShopId,
-    effectiveCategoryId,
-    effectiveServiceId,
-    watchedShopId,
-    watchedCategoryId,
-    watchedServiceId,
+    shopId,
+    isFetchingCategories,
+    categories,
+    preferredCategory,
+    form,
+  ]);
+
+  // Tự động chọn dịch vụ cụ thể theo preset hoặc dịch vụ đầu tiên
+  useEffect(() => {
+    if (
+      !openOrder ||
+      categoryId === 0 ||
+      isFetchingServices ||
+      services.length === 0
+    ) {
+      return;
+    }
+    const currentSvcId = form.getValues("service.id");
+    const currentSvc = services.find((s) => s.id === currentSvcId);
+    if (currentSvc) {
+      setSelectedPrice(currentSvc.price);
+      return;
+    }
+    const matched =
+      (preferredService &&
+        services.find((s) => matchesPreference(s.name, preferredService))) ||
+      services[0];
+    if (matched) {
+      form.setValue("service.id", matched.id);
+      setSelectedPrice(matched.price);
+    }
+  }, [
+    openOrder,
+    categoryId,
+    isFetchingServices,
+    services,
+    preferredService,
     form,
   ]);
 
@@ -170,6 +187,15 @@ export default function Order() {
     }
   }, [openOrder, draftPhone, account?.phone, account?.address, form]);
 
+  const watchedVolume = useWatch({
+    control: form.control,
+    name: "orderVolume",
+  });
+  const watchedServiceId = useWatch({
+    control: form.control,
+    name: "service.id",
+  });
+  const selectedServiceObj = services.find((s) => s.id === watchedServiceId);
   const volume = watchedVolume || 0;
   const totalAmount = Number.isFinite(selectedPrice * volume)
     ? Math.round(selectedPrice * volume * 100) / 100
@@ -198,6 +224,9 @@ export default function Order() {
       instructions: "",
       imgProduct: "",
     });
+    setShopId(0);
+    setCategoryId(0);
+    setSelectedPrice(0);
     setPreviewAvatar("");
   };
 
@@ -270,11 +299,13 @@ export default function Order() {
                   <FormItem>
                     <Label className="font-semibold">Chọn cửa hàng</Label>
                     <Select
-                      value={effectiveShopId ? String(effectiveShopId) : ""}
+                      value={field.value ? String(field.value) : ""}
                       onValueChange={(value) => {
                         const nextShopId = parseInt(value, 10);
                         field.onChange(nextShopId);
-                        setBookingPreset({ category: "", service: "" });
+                        setShopId(nextShopId);
+                        setCategoryId(0);
+                        setSelectedPrice(0);
                         form.setValue("serviceCategory.id", 0);
                         form.setValue("service.id", 0);
                       }}
@@ -315,17 +346,14 @@ export default function Order() {
                     <FormItem>
                       <Label className="font-semibold">Loại hình dịch vụ</Label>
                       <Select
-                        key={`category-${effectiveShopId}`}
-                        disabled={!effectiveShopId || isFetchingCategories}
-                        value={
-                          effectiveCategoryId
-                            ? String(effectiveCategoryId)
-                            : ""
-                        }
+                        key={`category-${shopId}`}
+                        disabled={!shopId || isFetchingCategories}
+                        value={field.value ? String(field.value) : ""}
                         onValueChange={(value) => {
                           const nextCategoryId = parseInt(value, 10);
                           field.onChange(nextCategoryId);
-                          setBookingPreset({ service: "" });
+                          setCategoryId(nextCategoryId);
+                          setSelectedPrice(0);
                           form.setValue("service.id", 0);
                         }}
                       >
@@ -333,18 +361,18 @@ export default function Order() {
                           <SelectTrigger className="w-full">
                             <SelectValue
                               placeholder={
-                                !effectiveShopId
+                                !shopId
                                   ? "Chọn cửa hàng trước"
                                   : isFetchingCategories
-                                  ? "Đang tải..."
-                                  : "Chọn loại dịch vụ"
+                                    ? "Đang tải..."
+                                    : "Chọn loại dịch vụ"
                               }
                             />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {categories.length === 0 &&
-                            effectiveShopId > 0 &&
+                            shopId > 0 &&
                             !isFetchingCategories && (
                               <SelectItem value="__empty" disabled>
                                 Cửa hàng chưa có loại dịch vụ
@@ -373,32 +401,34 @@ export default function Order() {
                     <FormItem>
                       <Label className="font-semibold">Dịch vụ</Label>
                       <Select
-                        key={`service-${effectiveShopId}-${effectiveCategoryId}`}
-                        disabled={!effectiveCategoryId || isFetchingServices}
-                        value={
-                          effectiveServiceId ? String(effectiveServiceId) : ""
-                        }
+                        key={`service-${shopId}-${categoryId}`}
+                        disabled={!categoryId || isFetchingServices}
+                        value={field.value ? String(field.value) : ""}
                         onValueChange={(value) => {
                           const nextServiceId = parseInt(value, 10);
                           field.onChange(nextServiceId);
+                          const selectedService = services.find(
+                            (service) => service.id === nextServiceId
+                          );
+                          setSelectedPrice(selectedService?.price ?? 0);
                         }}
                       >
                         <FormControl>
                           <SelectTrigger className="w-full">
                             <SelectValue
                               placeholder={
-                                !effectiveCategoryId
+                                !categoryId
                                   ? "Chọn loại dịch vụ trước"
                                   : isFetchingServices
-                                  ? "Đang tải..."
-                                  : "Chọn dịch vụ"
+                                    ? "Đang tải..."
+                                    : "Chọn dịch vụ"
                               }
                             />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {services.length === 0 &&
-                            effectiveCategoryId > 0 &&
+                            categoryId > 0 &&
                             !isFetchingServices && (
                               <SelectItem value="__empty" disabled>
                                 Chưa có dịch vụ trong mục này
@@ -525,9 +555,7 @@ export default function Order() {
                 name="instructions"
                 render={({ field }) => (
                   <FormItem>
-                    <Label className="font-semibold">
-                      Ghi chú cho nhân viên
-                    </Label>
+                    <Label className="font-semibold">Ghi chú cho nhân viên</Label>
                     <input
                       type="text"
                       placeholder="Ví dụ: Giao buổi tối sau 18h, không dùng nước xả..."
