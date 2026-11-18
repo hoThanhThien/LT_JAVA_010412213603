@@ -1,9 +1,12 @@
 import authApiRequests from "@/apiRequests/auth";
 import { LoginBodyType } from "@/schemaValidations/auth.schema";
 import { HttpError } from "@/lib/http";
-import { setAuthCookies } from "@/lib/server-auth";
+import { setAuthCookies, verifyCsrfOrigin } from "@/lib/server-auth";
 
 export async function POST(request: Request) {
+  const csrfError = verifyCsrfOrigin(request);
+  if (csrfError) return csrfError;
+
   const body = (await request.json()) as LoginBodyType;
   try {
     const { payload } = await authApiRequests.sLogin(body);

@@ -114,10 +114,20 @@ class SecurityAndServiceRegressionTests {
   @Autowired
   private VietQRCode vietQRCode;
 
+  @Autowired
+  private com.example.laundry.security.LoginRateLimiter loginRateLimiter;
+
+  @Autowired
+  private com.example.laundry.repository.PaymentRepository paymentRepository;
+
+  @Autowired
+  private com.example.laundry.repository.OrderRepository orderRepository;
+
   private MockMvc mockMvc;
 
   @BeforeEach
   void setUpMockMvc() {
+    loginRateLimiter.resetAll();
     this.mockMvc = MockMvcBuilders.webAppContextSetup(context)
         .addFilters(springSecurityFilterChain)
         .build();
@@ -922,5 +932,285 @@ class SecurityAndServiceRegressionTests {
         .andExpect(jsonPath("$.orderId").value(createdOrderId.longValue()))
         .andExpect(jsonPath("$.totalAmount").value(50000.0))
         .andExpect(jsonPath("$.qrCode").isNotEmpty());
+  }
+
+  @Test
+  void refreshTokenRotationPreventsReplayAndSupportsMultiDeviceSessions() throws Exception {
+    String phone = "0981000001";
+    Customer customer = new Customer(
+        "MultiDevice User",
+        passwordEncoder.encode("secret123"),
+        "multidevice@test.local",
+        phone,
+        "HCMC",
+        Roles.Customer
+    );
+    customerRepository.save(customer);
+
+    MvcResult login1 = mockMvc.perform(post("/auth/login")
+            .header(HttpHeaders.USER_AGENT, "Chrome-Desktop/1.0")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"phone\":\"" + phone + "\",\"password\":\"secret123\"}"))
+        .andExpect(status().isOk())
+        .andReturn();
+    String refresh1 = JsonPath.read(login1.getResponse().getContentAsString(), "$.data.refreshToken");
+
+    MvcResult login2 = mockMvc.perform(post("/auth/login")
+            .header(HttpHeaders.USER_AGENT, "iPhone-App/2.0")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"phone\":\"" + phone + "\",\"password\":\"secret123\"}"))
+        .andExpect(status().isOk())
+        .andReturn();
+    String access2 = JsonPath.read(login2.getResponse().getContentAsString(), "$.data.accessToken");
+    String refresh2 = JsonPath.read(login2.getResponse().getContentAsString(), "$.data.refreshToken");
+
+    MvcResult sessionsRes = mockMvc.perform(get("/auth/sessions")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + access2))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.length()").value(2))
+        .andReturn();
+    String sessionsJson = sessionsRes.getResponse().getContentAsString();
+    Number sessionIdToRevoke = null;
+    java.util.List<java.util.Map<String, Object>> sessionList = JsonPath.read(sessionsJson, "$.data");
+    for (java.util.Map<String, Object> item : sessionList) {
+      if ("iPhone-App/2.0".equals(item.get("deviceInfo"))) {
+        sessionIdToRevoke = (Number) item.get("id");
+        break;
+      }
+    }
+    assertNotNull(sessionIdToRevoke);
+
+    MvcResult rotateRes = mockMvc.perform(post("/auth/refresh-token")
+            .header(HttpHeaders.USER_AGENT, "Chrome-Desktop/1.0")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"refreshToken\":\"" + refresh1 + "\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+        .andExpect(jsonPath("$.data.refreshToken").isNotEmpty())
+        .andReturn();
+    String rotatedRefresh1 = JsonPath.read(rotateRes.getResponse().getContentAsString(), "$.data.refreshToken");
+    assertNotEquals(refresh1, rotatedRefresh1);
+
+    // Replaying consumed refresh token must be rejected
+    mockMvc.perform(post("/auth/refresh-token")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"refreshToken\":\"" + refresh1 + "\"}"))
+        .andExpect(status().isForbidden());
+
+    // Revoke device 2 session explicitly
+    mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+            .delete("/auth/sessions/" + sessionIdToRevoke.longValue())
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + access2))
+        .andExpect(status().isOk());
+
+    mockMvc.perform(post("/auth/refresh-token")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"refreshToken\":\"" + refresh2 + "\"}"))
+        .andExpect(status().isForbidden());
+
+    mockMvc.perform(get("/auth/sessions")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + access2))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.length()").value(1));
+  }
+
+  @Test
+  void loginRateLimiterBlocksAfterFiveFailedAttempts() throws Exception {
+    String phone = "0982000001";
+    Customer customer = new Customer(
+        "RateLimit User",
+        passwordEncoder.encode("Correct@123"),
+        "ratelimit@test.local",
+        phone,
+        "HCMC",
+        Roles.Customer
+    );
+    customerRepository.save(customer);
+
+    for (int i = 0; i < 5; i++) {
+      mockMvc.perform(post("/auth/login")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"phone\":\"" + phone + "\",\"password\":\"wrong-pass\"}"))
+          .andExpect(status().isUnauthorized());
+    }
+
+    // 6th attempt must trigger 429 Too Many Requests even with the right password
+    mockMvc.perform(post("/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"phone\":\"" + phone + "\",\"password\":\"Correct@123\"}"))
+        .andExpect(status().isTooManyRequests());
+
+    loginRateLimiter.resetAll();
+    mockMvc.perform(post("/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"phone\":\"" + phone + "\",\"password\":\"Correct@123\"}"))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void paymentPollingPersistsPaidStatusAndPaymentRecordTransactionally() throws Exception {
+    StoreOwner owner = createOwnerWithShop("0984000001", "Polling Tx Shop");
+    LaundryShop shop = laundryShopRepository.findByStoreOwner(owner);
+    assertNotNull(shop);
+
+    ServiceCategoryDTO catDto = new ServiceCategoryDTO();
+    catDto.setName("Giặt Sấy Tx");
+    catDto.setImageDesc("img");
+    catDto.setDescription("Desc");
+    Long categoryId = storeOwnerService.createServiceCategory(owner, catDto).getData().getId();
+
+    ServiceDTO svcDto = new ServiceDTO();
+    svcDto.setCategoryId(categoryId);
+    svcDto.setName("Giặt Nhanh Tx");
+    svcDto.setDescription("Desc");
+    svcDto.setEstimatedTime("12h");
+    svcDto.setPrice(40000.0);
+    svcDto.setImageDesc("img");
+    Long serviceId = storeOwnerService.createService(owner, svcDto).getData().getId();
+
+    String custPhone = "0984000002";
+    Customer customer = new Customer(
+        "Tx Customer",
+        passwordEncoder.encode("TxPass@123"),
+        "txcust@test.local",
+        custPhone,
+        "HCMC",
+        Roles.Customer
+    );
+    customerRepository.save(customer);
+    String token = loginAndExtractToken(custPhone, "TxPass@123", "accessToken");
+
+    String orderBody = String.format(
+        "{\"laundryShop\":{\"id\":%d},\"serviceCategory\":{\"id\":%d},\"service\":{\"id\":%d},\"orderVolume\":1.0,\"phone\":\"%s\",\"address\":\"10 Nguyen Hue\",\"instructions\":\"\",\"imgProduct\":\"\"}",
+        shop.getId(), categoryId, serviceId, custPhone);
+
+    MvcResult createRes = mockMvc.perform(post("/customer/orders/create")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(orderBody))
+        .andExpect(status().isOk())
+        .andReturn();
+    Long orderId = ((Number) JsonPath.read(createRes.getResponse().getContentAsString(), "$.data.id")).longValue();
+
+    CassoClient.CassoTransaction tx = new CassoClient.CassoTransaction();
+    tx.setAmount(40000.0);
+    tx.setDescription("Thanh toan LAUNDRY" + orderId + " test");
+    tx.setTransactionTime(LocalDateTime.now().minusMinutes(3));
+
+    CassoClient.CassoData cassoData = new CassoClient.CassoData();
+    cassoData.setRecords(java.util.List.of(tx));
+
+    CassoClient.CassoTransactionResponse cassoResponse = new CassoClient.CassoTransactionResponse();
+    cassoResponse.setData(cassoData);
+
+    CassoClient mockCasso = Mockito.mock(CassoClient.class);
+    Mockito.when(mockCasso.getTransactions(Mockito.eq(1), Mockito.anyInt())).thenReturn(cassoResponse);
+
+    Object targetPaymentService = AopTestUtils.getUltimateTargetObject(paymentService);
+    Object originalCasso = ReflectionTestUtils.getField(targetPaymentService, "cassoClient");
+    ReflectionTestUtils.setField(targetPaymentService, "cassoClient", mockCasso);
+
+    try {
+      paymentService.pollBankTransactions();
+
+      var updatedOrder = orderRepository.findById(orderId).orElseThrow();
+      assertEquals(com.example.laundry.models.order.PaymentStatus.PAID, updatedOrder.getPaymentStatus());
+
+      var persistedPayment = paymentRepository.findByOrderId(orderId).orElse(null);
+      assertNotNull(persistedPayment);
+      assertEquals("PAID", persistedPayment.getStatus());
+      assertEquals(40000.0, persistedPayment.getAmount());
+      assertEquals("VIETQR_BANK_TRANSFER", persistedPayment.getPaymentMethod());
+    } finally {
+      ReflectionTestUtils.setField(targetPaymentService, "cassoClient", originalCasso);
+    }
+  }
+
+  @Test
+  void healthCheckReturnsUpAndUnknownRouteReturnsNotFound() throws Exception {
+    mockMvc.perform(get("/health"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.status").value("UP"))
+        .andExpect(jsonPath("$.data.database").value("UP"));
+
+    mockMvc.perform(get("/actuator/health"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.status").value("UP"));
+
+    String custPhone = "0985000001";
+    Customer customer = new Customer(
+        "Health Route Customer",
+        passwordEncoder.encode("secret123"),
+        "healthcust@test.local",
+        custPhone,
+        "HCMC",
+        Roles.Customer
+    );
+    customerRepository.save(customer);
+    String custToken = loginAndExtractToken(custPhone, "secret123", "accessToken");
+
+    mockMvc.perform(get("/api/nonexistent-endpoint-check")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + custToken))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.message").value("Không tìm thấy tài nguyên yêu cầu"));
+
+    mockMvc.perform(get("/admin/all")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + custToken))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void concurrentRefreshTokenRotationOnlyAllowsSingleWinner() throws Exception {
+    String phone = "0983000001";
+    Customer customer = new Customer(
+        "Concurrent User",
+        passwordEncoder.encode("secret123"),
+        "concurrent@test.local",
+        phone,
+        "HCMC",
+        Roles.Customer
+    );
+    customerRepository.save(customer);
+
+    String refreshToken = loginAndExtractToken(phone, "secret123", "refreshToken");
+
+    int threadCount = 5;
+    java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(threadCount);
+    java.util.concurrent.CountDownLatch readyLatch = new java.util.concurrent.CountDownLatch(threadCount);
+    java.util.concurrent.CountDownLatch startLatch = new java.util.concurrent.CountDownLatch(1);
+    java.util.List<java.util.concurrent.Future<Integer>> futures = new java.util.ArrayList<>();
+
+    try {
+      for (int i = 0; i < threadCount; i++) {
+        futures.add(executor.submit(() -> {
+          readyLatch.countDown();
+          startLatch.await(5, java.util.concurrent.TimeUnit.SECONDS);
+          MvcResult res = mockMvc.perform(post("/auth/refresh-token")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
+              .andReturn();
+          return res.getResponse().getStatus();
+        }));
+      }
+
+      assertTrue(readyLatch.await(5, java.util.concurrent.TimeUnit.SECONDS));
+      startLatch.countDown();
+
+      int okCount = 0;
+      int forbiddenCount = 0;
+      for (java.util.concurrent.Future<Integer> future : futures) {
+        int status = future.get(15, java.util.concurrent.TimeUnit.SECONDS);
+        if (status == 200) {
+          okCount++;
+        } else if (status == 403) {
+          forbiddenCount++;
+        }
+      }
+
+      assertEquals(1, okCount, "Exactly 1 concurrent refresh request may succeed");
+      assertEquals(threadCount - 1, forbiddenCount, "All competing refresh requests must be rejected");
+    } finally {
+      executor.shutdownNow();
+    }
   }
 }

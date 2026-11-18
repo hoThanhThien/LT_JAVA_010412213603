@@ -27,8 +27,43 @@ export async function setAuthCookies(accessToken: string, refreshToken: string) 
 
 export async function clearAuthCookies() {
   const store = await cookies();
-  store.delete(ACCESS_COOKIE);
-  store.delete(REFRESH_COOKIE);
+  store.delete({ name: ACCESS_COOKIE, path: "/" });
+  store.delete({ name: REFRESH_COOKIE, path: "/" });
+}
+
+const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+export function verifyCsrfOrigin(request: Request): Response | null {
+  if (!STATE_CHANGING_METHODS.has(request.method.toUpperCase())) {
+    return null;
+  }
+  const origin = request.headers.get("origin");
+  if (!origin) {
+    return null;
+  }
+  try {
+    const originHost = new URL(origin).host;
+    const forwardedHost = request.headers
+      .get("x-forwarded-host")
+      ?.split(",")[0]
+      ?.trim();
+    const expectedHost =
+      forwardedHost ||
+      request.headers.get("host") ||
+      new URL(request.url).host;
+    if (originHost !== expectedHost) {
+      return Response.json(
+        { message: "Yêu cầu không hợp lệ (CSRF Origin mismatch)" },
+        { status: 403 }
+      );
+    }
+    return null;
+  } catch {
+    return Response.json(
+      { message: "Origin header không hợp lệ" },
+      { status: 403 }
+    );
+  }
 }
 
 /**

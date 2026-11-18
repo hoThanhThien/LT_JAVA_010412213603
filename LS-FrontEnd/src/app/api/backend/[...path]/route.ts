@@ -4,6 +4,7 @@ import {
   ACCESS_COOKIE,
   REFRESH_COOKIE,
   refreshAuthCookies,
+  verifyCsrfOrigin,
 } from "@/lib/server-auth";
 
 /**
@@ -15,6 +16,9 @@ async function handler(
   request: Request,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
+  const csrfError = verifyCsrfOrigin(request);
+  if (csrfError) return csrfError;
+
   const { path } = await params;
   if (path.some((segment) => segment === ".." || segment === ".")) {
     return Response.json({ message: "Đường dẫn không hợp lệ" }, { status: 400 });

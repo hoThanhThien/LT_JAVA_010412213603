@@ -77,6 +77,9 @@ public class AuthServiceImpl implements AuthService {
   @Autowired
   private RefreshTokenService refreshTokenService;
 
+  @Autowired
+  private com.example.laundry.security.LoginRateLimiter loginRateLimiter;
+
   @Autowired(required = false)
   private FirebaseAuth firebaseAuth;
 
@@ -94,18 +97,24 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public LoginResponse login(LoginRequest loginRequest) {
-    try {
-      if (loginRequest == null || loginRequest.getPhone() == null || loginRequest.getPhone().isBlank()
-              || loginRequest.getPassword() == null || loginRequest.getPassword().isBlank()) {
-        return new LoginResponse(null, "Số điện thoại hoặc mật khẩu không được để trống!");
-      }
+    if (loginRequest == null || loginRequest.getPhone() == null || loginRequest.getPhone().isBlank()
+            || loginRequest.getPassword() == null || loginRequest.getPassword().isBlank()) {
+      return new LoginResponse(null, "Số điện thoại hoặc mật khẩu không được để trống!");
+    }
 
-      User user = userRepository.findByPhone(loginRequest.getPhone());
+    String phone = loginRequest.getPhone().trim();
+    String rateLimitKey = resolveClientIp() + ":" + phone;
+    loginRateLimiter.checkAllowed(rateLimitKey);
+
+    try {
+      User user = userRepository.findByPhone(phone);
       if (user == null) {
+        loginRateLimiter.recordFailure(rateLimitKey);
         return new LoginResponse(null, "Số điện thoại sai. Vui lòng nhập lại!!!!");
       }
 
       if (!isPasswordValid(user, loginRequest.getPassword())) {
+        loginRateLimiter.recordFailure(rateLimitKey);
         return new LoginResponse(null, "Mật khẩu không đúng. Vui lòng nhập lại!!!");
       }
 
@@ -117,11 +126,29 @@ public class AuthServiceImpl implements AuthService {
         updatePasswordWithEncryption(user, loginRequest.getPassword());
       }
 
+      loginRateLimiter.recordSuccess(rateLimitKey);
       return buildLoginResponse(user, "Đăng nhập thành công!!!");
+    } catch (ResponseStatusException ex) {
+      throw ex;
     } catch (Exception e) {
       log.error("Đăng nhập lỗi: {}", e.getMessage(), e);
       throw new RuntimeException("Đăng nhập thất bại: " + e.getMessage(), e);
     }
+  }
+
+  private String resolveClientIp() {
+    var attrs = org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+    if (attrs instanceof org.springframework.web.context.request.ServletRequestAttributes servletAttrs) {
+      jakarta.servlet.http.HttpServletRequest request = servletAttrs.getRequest();
+      String forwardedFor = request.getHeader("X-Forwarded-For");
+      if (forwardedFor != null && !forwardedFor.isBlank()) {
+        return forwardedFor.split(",")[0].trim();
+      }
+      if (request.getRemoteAddr() != null && !request.getRemoteAddr().isBlank()) {
+        return request.getRemoteAddr();
+      }
+    }
+    return "local";
   }
 
   @Override

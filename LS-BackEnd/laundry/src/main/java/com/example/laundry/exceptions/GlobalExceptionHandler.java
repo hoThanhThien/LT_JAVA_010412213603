@@ -23,11 +23,22 @@ public class GlobalExceptionHandler {
     String message = ex.getReason() != null && !ex.getReason().isBlank()
             ? ex.getReason()
             : ex.getStatusCode().toString();
+    log.warn("Request failed with status {}: {}", ex.getStatusCode(), message);
     return ResponseEntity.status(ex.getStatusCode()).body(new ApiResponse<>(message));
+  }
+
+  @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+  public ResponseEntity<ApiResponse<Object>> handleNotFoundException(
+          org.springframework.web.servlet.resource.NoResourceFoundException ex
+  ) {
+    log.warn("Resource not found: {}", ex.getResourcePath());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new ApiResponse<>("Không tìm thấy tài nguyên yêu cầu"));
   }
 
   @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
   public ResponseEntity<ApiResponse<Object>> handleAccessDeniedException(Exception ex) {
+    log.warn("Access denied: {}", ex.getMessage());
     return ResponseEntity.status(HttpStatus.FORBIDDEN)
             .body(new ApiResponse<>("Không có quyền truy cập tài nguyên này"));
   }
@@ -42,6 +53,7 @@ public class GlobalExceptionHandler {
     String message = ex.getMessage() != null && !ex.getMessage().isBlank()
             ? ex.getMessage()
             : "Yêu cầu không hợp lệ";
+    log.warn("Bad request: {}", message);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(message));
   }
 
@@ -51,6 +63,7 @@ public class GlobalExceptionHandler {
             .findFirst()
             .map(err -> err.getField() + ": " + err.getDefaultMessage())
             .orElse("Dữ liệu đầu vào không hợp lệ");
+    log.warn("Validation failed: {}", message);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(message));
   }
 
