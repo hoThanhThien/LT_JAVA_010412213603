@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@/components/ui/label";
 import { Upload } from "lucide-react";
@@ -86,7 +86,11 @@ export default function Order() {
     }
   }, [openOrder, account?.address, form]);
 
-  const volume = form.watch("orderVolume") || 0;
+  const watchedVolume = useWatch({
+    control: form.control,
+    name: "orderVolume",
+  });
+  const volume = watchedVolume || 0;
   const totalAmount = Number.isFinite(selectedPrice * volume)
     ? Math.round(selectedPrice * volume * 100) / 100
     : 0;
