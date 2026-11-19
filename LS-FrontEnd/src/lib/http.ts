@@ -26,13 +26,18 @@ export class HttpError extends Error {
   constructor({
     status,
     payload,
-    message = "Lỗi HTTP",
+    message,
   }: {
     status: number;
     payload: any;
     message?: string;
   }) {
-    super(message);
+    super(
+      message ??
+        (typeof payload?.message === "string" && payload.message
+          ? payload.message
+          : "Lỗi HTTP")
+    );
     this.status = status;
     this.payload = payload;
   }
@@ -99,7 +104,18 @@ const request = async <Response>(
     body,
     method,
   });
-  const payload: Response = await res.json();
+  const rawText = await res.text();
+  let parsedPayload: any = null;
+  if (rawText) {
+    try {
+      parsedPayload = JSON.parse(rawText);
+    } catch {
+      parsedPayload = { message: rawText };
+    }
+  }
+  const payload = (parsedPayload ?? {
+    message: res.statusText || "Lỗi HTTP",
+  }) as Response;
   const data = {
     status: res.status,
     payload,

@@ -1,6 +1,7 @@
 "use client";
 
 import paymentApiRequests from "@/apiRequests/payment";
+import { HttpError } from "@/lib/http";
 import { formatCurrency } from "@/lib/utils";
 import { PaymentType } from "@/schemaValidations/payment.schema";
 import {
@@ -22,6 +23,7 @@ function ThanhToan() {
   const [paymentData, setPaymentData] = useState<PaymentType | null>(null);
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const params = useSearchParams();
 
   const orderIdParam = params.get("orderId");
@@ -49,6 +51,7 @@ function ThanhToan() {
         }
         const result = await paymentApiRequests.get(parsedId);
         if (cancelled) return false;
+        setErrorMessage(null);
         setPaymentData(result.payload);
         hasLoaded = true;
         if (result.payload.paymentStatus === "PAID") {
@@ -56,7 +59,20 @@ function ThanhToan() {
           return true;
         }
       } catch (error) {
-        console.error("Error fetching payment data:", error);
+        if (!cancelled) {
+          const status = error instanceof HttpError ? error.status : 0;
+          const msg =
+            error instanceof HttpError &&
+            typeof error.payload?.message === "string" &&
+            error.payload.message
+              ? error.payload.message
+              : "Không thể tải thông tin thanh toán đơn hàng lúc này.";
+          setErrorMessage(msg);
+          if (status === 400 || status === 403 || status === 404) {
+            isPaid = true;
+            return true;
+          }
+        }
       } finally {
         inFlight = false;
         if (!cancelled) {
@@ -91,6 +107,7 @@ function ThanhToan() {
     setChecking(true);
     try {
       const result = await paymentApiRequests.get(parsedId);
+      setErrorMessage(null);
       setPaymentData(result.payload);
       if (result.payload.paymentStatus === "PAID") {
         toast.success("Đơn hàng đã được xác nhận thanh toán thành công!");
@@ -99,8 +116,15 @@ function ThanhToan() {
           "Hệ thống chưa ghi nhận giao dịch mới, vui lòng đợi vài giây rồi kiểm tra lại."
         );
       }
-    } catch {
-      toast.error("Không thể kiểm tra trạng thái thanh toán lúc này.");
+    } catch (error) {
+      const msg =
+        error instanceof HttpError &&
+        typeof error.payload?.message === "string" &&
+        error.payload.message
+          ? error.payload.message
+          : "Không thể kiểm tra trạng thái thanh toán lúc này.";
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setChecking(false);
     }
@@ -194,15 +218,30 @@ function ThanhToan() {
               Không thể tải thông tin thanh toán
             </h1>
             <p className="mt-2 text-sm text-gray-500">
-              Đơn hàng không tồn tại hoặc bạn không có quyền truy cập thông tin
-              thanh toán này.
+              {errorMessage ||
+                "Đơn hàng không tồn tại hoặc bạn không có quyền truy cập thông tin thanh toán này."}
             </p>
-            <Link
-              href="/"
-              className="mt-6 inline-flex items-center justify-center rounded-[28px] bg-main hover:bg-hover px-8 py-3 text-base font-bold text-black transition-colors"
-            >
-              Về trang chủ
-            </Link>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              {isValidOrderId && (
+                <button
+                  type="button"
+                  onClick={() => void handleManualCheck()}
+                  disabled={checking}
+                  className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-[28px] border border-zinc-300 bg-white px-6 py-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-100 disabled:opacity-60 transition-colors"
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${checking ? "animate-spin" : ""}`}
+                  />
+                  {checking ? "Đang tải lại..." : "Thử tải lại"}
+                </button>
+              )}
+              <Link
+                href="/"
+                className="inline-flex items-center justify-center rounded-[28px] bg-main hover:bg-hover px-8 py-3 text-base font-bold text-black transition-colors"
+              >
+                Về trang chủ
+              </Link>
+            </div>
           </div>
         ) : isPaid ? (
           <div className="rounded-[32px] bg-white shadow-xl border border-gray-100 p-10 text-center max-w-xl mx-auto">

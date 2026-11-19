@@ -1,8 +1,6 @@
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
-import authApiRequests from "@/apiRequests/auth";
 import envConfig from "@/config";
-import { HttpError } from "@/lib/http";
 
 export const ACCESS_COOKIE = "accessToken";
 export const REFRESH_COOKIE = "refreshToken";
@@ -66,14 +64,50 @@ export function verifyCsrfOrigin(request: Request): Response | null {
   }
 }
 
+type ServerHttpErrorLike = {
+  status?: number;
+  payload?: unknown;
+};
+
+function isHttpErrorLike(error: unknown): error is { status: number; payload: unknown } {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    typeof (error as ServerHttpErrorLike).status === "number" &&
+    "payload" in error
+  );
+}
+
 /**
  * Đổi refresh token lấy cặp token mới, ghi lại cookie.
- * Trả về access token mới (chỉ dùng trong server).
+ * Trả về access token mới (chỉ dùng trong server, không phụ thuộc client http/utils).
  */
 export async function refreshAuthCookies(refreshToken: string) {
-  const { payload } = await authApiRequests.sRefreshToken({ refreshToken });
-  await setAuthCookies(payload.data.accessToken, payload.data.refreshToken);
-  return payload.data.accessToken;
+  const res = await fetch(`${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/refresh-token`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${refreshToken}`,
+    },
+    body: JSON.stringify({ refreshToken }),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error("Không thể làm mới phiên đăng nhập");
+  }
+
+  const body = (await res.json()) as {
+    data?: { accessToken?: string; refreshToken?: string };
+  };
+  const accessToken = body?.data?.accessToken;
+  const nextRefreshToken = body?.data?.refreshToken;
+  if (!accessToken || !nextRefreshToken) {
+    throw new Error("Phản hồi refresh token không hợp lệ");
+  }
+
+  await setAuthCookies(accessToken, nextRefreshToken);
+  return accessToken;
 }
 
 /**
@@ -106,13 +140,13 @@ export async function forwardAuthenticatedRequest<T>(
     const { payload } = await caller(accessToken);
     return Response.json(payload);
   } catch (error) {
-    if (error instanceof HttpError && error.status === 401 && refreshToken) {
+    if (isHttpErrorLike(error) && error.status === 401 && refreshToken) {
       try {
         const freshToken = await refreshAuthCookies(refreshToken);
         const { payload } = await caller(freshToken);
         return Response.json(payload);
       } catch (retryError) {
-        if (retryError instanceof HttpError) {
+        if (isHttpErrorLike(retryError)) {
           return Response.json(retryError.payload, {
             status: retryError.status,
           });
@@ -124,7 +158,7 @@ export async function forwardAuthenticatedRequest<T>(
       }
     }
 
-    if (error instanceof HttpError) {
+    if (isHttpErrorLike(error)) {
       return Response.json(error.payload, { status: error.status });
     }
     return Response.json({ message: "Có lỗi xảy ra" }, { status: 500 });
