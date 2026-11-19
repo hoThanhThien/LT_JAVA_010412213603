@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
     String message = ex.getReason() != null && !ex.getReason().isBlank()
             ? ex.getReason()
             : ex.getStatusCode().toString();
-    log.warn("Request failed with status {}: {}", ex.getStatusCode(), message);
+    log.warn("[requestId={}] Request failed with status {}: {}", org.slf4j.MDC.get("requestId"), ex.getStatusCode(), message);
     return ResponseEntity.status(ex.getStatusCode()).body(new ApiResponse<>(message));
   }
 
@@ -31,14 +31,14 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ApiResponse<Object>> handleNotFoundException(
           org.springframework.web.servlet.resource.NoResourceFoundException ex
   ) {
-    log.warn("Resource not found: {}", ex.getResourcePath());
+    log.warn("[requestId={}] Resource not found: {}", org.slf4j.MDC.get("requestId"), ex.getResourcePath());
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(new ApiResponse<>("Không tìm thấy tài nguyên yêu cầu"));
   }
 
   @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
   public ResponseEntity<ApiResponse<Object>> handleAccessDeniedException(Exception ex) {
-    log.warn("Access denied: {}", ex.getMessage());
+    log.warn("[requestId={}] Access denied: {}", org.slf4j.MDC.get("requestId"), ex.getMessage());
     return ResponseEntity.status(HttpStatus.FORBIDDEN)
             .body(new ApiResponse<>("Không có quyền truy cập tài nguyên này"));
   }
@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
     String message = ex.getMessage() != null && !ex.getMessage().isBlank()
             ? ex.getMessage()
             : "Yêu cầu không hợp lệ";
-    log.warn("Bad request: {}", message);
+    log.warn("[requestId={}] Bad request: {}", org.slf4j.MDC.get("requestId"), message);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(message));
   }
 
@@ -63,13 +63,13 @@ public class GlobalExceptionHandler {
             .findFirst()
             .map(err -> err.getField() + ": " + err.getDefaultMessage())
             .orElse("Dữ liệu đầu vào không hợp lệ");
-    log.warn("Validation failed: {}", message);
+    log.warn("[requestId={}] Validation failed: {}", org.slf4j.MDC.get("requestId"), message);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(message));
   }
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiResponse<Object>> handleUnhandledException(Exception ex) {
-    log.error("Unhandled exception processed by GlobalExceptionHandler", ex);
+    log.error("[requestId={}] Unhandled exception processed by GlobalExceptionHandler", org.slf4j.MDC.get("requestId"), ex);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(new ApiResponse<>("Đã xảy ra lỗi hệ thống"));
   }

@@ -5,9 +5,11 @@ import jakarta.persistence.*;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 
+@Slf4j
 @Data
 @EqualsAndHashCode(callSuper = true, exclude = {"shop", "storeOwner"})
 @ToString(exclude = {"shop", "storeOwner"})
@@ -52,6 +54,6 @@ public class Employee extends User {
 
   @Override
     public void displayRole() {
-        System.out.println("Role: Employee at ");
+        log.debug("Role: Employee");
     }
 }

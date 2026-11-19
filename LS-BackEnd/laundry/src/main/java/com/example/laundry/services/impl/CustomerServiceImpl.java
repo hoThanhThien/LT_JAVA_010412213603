@@ -20,6 +20,7 @@ import com.example.laundry.utils.UserValidator;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @org.springframework.stereotype.Service
 public class CustomerServiceImpl implements CustomerService {
     @Autowired
@@ -75,78 +77,73 @@ public class CustomerServiceImpl implements CustomerService {
         if (firebaseAuth == null) {
             return new CustomerResponseDTO("Chưa cấu hình Firebase Admin (thiếu firebase-service-account.json)", null);
         }
-        // Xác minh idToken từ firebase để lấy số điện thoại
-        try {
-            FirebaseToken decodedToken = firebaseAuth.verifyIdToken(registerRequest.getIdToken());
-            String verifiedPhone = null;
-
-            Map<String, Object> claims = decodedToken.getClaims();
-
-            if (claims.containsKey("phone_number")) {
-                verifiedPhone = (String) claims.get("phone_number");
-
-                //Chuyển +84 thành 0
-                if (verifiedPhone.startsWith("+84")) {
-                    verifiedPhone = "0" + verifiedPhone.substring(3);
-                }
-            }
-
-            //Kiểm tra xem có dữ liệu chưa
-            if (verifiedPhone == null || verifiedPhone.isEmpty()) {
-                return new CustomerResponseDTO("Số điện thoại không tồn tại", null);
-            }
-
-            // Kiểm tra tồn tại trên toàn hệ thống (mọi bảng role của User)
-            if (userRepository.existsByPhone(verifiedPhone) || customerRepository.findByPhone(verifiedPhone).isPresent()) {
-                return new CustomerResponseDTO("Số điện thoại đã được đăng ký trong hệ thống", null);
-            }
-
-            //Tạo người dùng
-            Customer customer = new Customer();
-            if (!UserValidator.isValidPhone(verifiedPhone)) {
-                return new CustomerResponseDTO("Số điện thoại không hợp lệ! Phải có đúng 10 chữ số.", null);
-            }
-            customer.setPhone(verifiedPhone);
-            if (!UserValidator.isValidPassword(registerRequest.getPassword())) {
-                return new CustomerResponseDTO("Mật khẩu không hợp lệ! Phải có ít nhất 8 ký tự, bao gồm chữ, số và ký tự đặc biệt.", null);
-            }
-            customer.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-            customer.setUsername(registerRequest.getUsername());
-            customer.setRoles(Roles.Customer);
-
-            Customer savedCustomer = customerRepository.save(customer);
-            //Tạo access token (gắn userId bất biến)
-            String accessToken = jwtUtil.generateAccessToken(savedCustomer.getId(), savedCustomer.getUsername(), savedCustomer.getRoles());
-
-            //Tạo refresh token
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedCustomer);
-            String refreshTokenString = refreshToken.getToken();
-
-            CustomerResponseDTO.AccountInfo accountInfor = new CustomerResponseDTO.AccountInfo(
-                    savedCustomer.getId(),
-                    savedCustomer.getUsername(),
-                    savedCustomer.getEmail(),
-                    savedCustomer.getPhone(),
-                    savedCustomer.getAddress(),
-                    Roles.Customer
-            );
-
-            CustomerResponseDTO.DataInfo dataInfo = new CustomerResponseDTO.DataInfo(
-                    accessToken,
-                    refreshTokenString,
-                    accountInfor
-            );
-
-            return new CustomerResponseDTO("Đăng ký thành công!!!", dataInfo);
-        } catch (FirebaseAuthException e) {
-            System.err.println("Firebase authentication error: " + e.getMessage());
-            return new CustomerResponseDTO("Xác minh Firebase thất bại: " + e.getMessage(), null);
-        } catch (Exception e) {
-            System.err.println("Registration error: " + e.getMessage());
-            e.printStackTrace();
-            return new CustomerResponseDTO("Đăng ký thất bại: " + e.getMessage(), null);
+        if (registerRequest == null || registerRequest.getIdToken() == null || registerRequest.getIdToken().isBlank()) {
+            return new CustomerResponseDTO("Thiếu token xác thực Firebase", null);
         }
 
+        // Xác minh idToken từ Firebase trước khi thực hiện bất kỳ thao tác ghi DB nào
+        FirebaseToken decodedToken;
+        try {
+            decodedToken = firebaseAuth.verifyIdToken(registerRequest.getIdToken());
+        } catch (FirebaseAuthException | IllegalArgumentException e) {
+            log.warn("Firebase authentication error during registration: {}", e.getMessage());
+            return new CustomerResponseDTO("Xác minh Firebase thất bại", null);
+        }
+
+        String verifiedPhone = null;
+        Map<String, Object> claims = decodedToken.getClaims();
+        if (claims != null && claims.containsKey("phone_number")) {
+            verifiedPhone = (String) claims.get("phone_number");
+            if (verifiedPhone != null && verifiedPhone.startsWith("+84")) {
+                verifiedPhone = "0" + verifiedPhone.substring(3);
+            }
+        }
+
+        if (verifiedPhone == null || verifiedPhone.isEmpty()) {
+            return new CustomerResponseDTO("Số điện thoại không tồn tại", null);
+        }
+
+        if (!UserValidator.isValidPhone(verifiedPhone)) {
+            return new CustomerResponseDTO("Số điện thoại không hợp lệ! Phải có đúng 10 chữ số.", null);
+        }
+
+        if (!UserValidator.isValidPassword(registerRequest.getPassword())) {
+            return new CustomerResponseDTO("Mật khẩu không hợp lệ! Phải có ít nhất 8 ký tự, bao gồm chữ, số và ký tự đặc biệt.", null);
+        }
+
+        // Kiểm tra tồn tại trên toàn hệ thống (mọi bảng role của User)
+        if (userRepository.existsByPhone(verifiedPhone) || customerRepository.findByPhone(verifiedPhone).isPresent()) {
+            return new CustomerResponseDTO("Số điện thoại đã được đăng ký trong hệ thống", null);
+        }
+
+        // Không nuốt RuntimeException sau khi ghi DB để Spring tự rollback transaction nếu bước sau lỗi
+        Customer customer = new Customer();
+        customer.setPhone(verifiedPhone);
+        customer.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        customer.setUsername(registerRequest.getUsername());
+        customer.setRoles(Roles.Customer);
+
+        Customer savedCustomer = customerRepository.save(customer);
+        String accessToken = jwtUtil.generateAccessToken(savedCustomer.getId(), savedCustomer.getUsername(), savedCustomer.getRoles());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedCustomer);
+        String refreshTokenString = refreshToken.getToken();
+
+        CustomerResponseDTO.AccountInfo accountInfor = new CustomerResponseDTO.AccountInfo(
+                savedCustomer.getId(),
+                savedCustomer.getUsername(),
+                savedCustomer.getEmail(),
+                savedCustomer.getPhone(),
+                savedCustomer.getAddress(),
+                Roles.Customer
+        );
+
+        CustomerResponseDTO.DataInfo dataInfo = new CustomerResponseDTO.DataInfo(
+                accessToken,
+                refreshTokenString,
+                accountInfor
+        );
+
+        return new CustomerResponseDTO("Đăng ký thành công!!!", dataInfo);
     }
 
     @Override
@@ -284,77 +281,81 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional
     public ApiResponse<CustomerDTO> updateCustomer(Customer customer, CustomerDTO customerDTO) {
-        try {
-            // Validate email if provided
-            if (customerDTO.getEmail() != null && !customerDTO.getEmail().isEmpty()) {
-                if (!UserValidator.isValidEmail(customerDTO.getEmail())) {
-                    return new ApiResponse<>("Email không hợp lệ!", null);
-                }
-
-                if (!customerDTO.getEmail().equals(customer.getEmail()) &&
-                        (userRepository.existsByEmail(customerDTO.getEmail()) ||
-                                customerRepository.existsByEmail(customerDTO.getEmail()))) {
-                    return new ApiResponse<>("Email đã tồn tại trong hệ thống", null);
-                }
-
-                customer.setEmail(customerDTO.getEmail());
-            }
-
-            // Validate phone if provided
-            if (customerDTO.getPhone() != null && !customerDTO.getPhone().isEmpty()) {
-                if (!UserValidator.isValidPhone(customerDTO.getPhone())) {
-                    return new ApiResponse<>("Số điện thoại không hợp lệ! Phải có đúng 10 chữ số.", null);
-                }
-
-                if (!customerDTO.getPhone().equals(customer.getPhone()) &&
-                        (userRepository.existsByPhone(customerDTO.getPhone()) ||
-                                customerRepository.existsByPhone(customerDTO.getPhone()))) {
-                    return new ApiResponse<>("Số điện thoại đã tồn tại trong hệ thống", null);
-                }
-
-                customer.setPhone(customerDTO.getPhone());
-            }
-
-            // Update other fields
-            if (customerDTO.getUsername() != null && !customerDTO.getUsername().isEmpty()) {
-                customer.setUsername(customerDTO.getUsername());
-            }
-
-            if (customerDTO.getAddress() != null) {
-                customer.setAddress(customerDTO.getAddress());
-            }
-
-            if (customerDTO.getPassword() != null && !customerDTO.getPassword().isEmpty()) {
-                if (!UserValidator.isValidPassword(customerDTO.getPassword())) {
-                    return new ApiResponse<>("Mật khẩu không hợp lệ! Phải có ít nhất 8 ký tự, bao gồm chữ, số và ký tự đặc biệt.", null);
-                }
-                customer.setPassword(passwordEncoder.encode(customerDTO.getPassword()));
-            }
-
-            if (customerDTO.getAvtUser() != null && !customerDTO.getAvtUser().isEmpty()) {
-                customer.setAvtUser(customerDTO.getAvtUser());
-            }
-
-            // Save the updated customer
-            Customer updatedCustomer = customerRepository.save(customer);
-
-            // Build response (không trả hash mật khẩu ra ngoài)
-            CustomerDTO responseDTO = new CustomerDTO();
-            responseDTO.setId(updatedCustomer.getId());
-            responseDTO.setUsername(updatedCustomer.getUsername());
-            responseDTO.setEmail(updatedCustomer.getEmail());
-            responseDTO.setPhone(updatedCustomer.getPhone());
-            responseDTO.setAddress(updatedCustomer.getAddress());
-            responseDTO.setRole(updatedCustomer.getRoles());
-            responseDTO.setAvtUser(updatedCustomer.getAvtUser());
-            responseDTO.setCreatedAt(updatedCustomer.getCreatedAt());
-            responseDTO.setUpdatedAt(updatedCustomer.getUpdatedAt());
-            // Set other fields as needed
-
-            return new ApiResponse<>("Cập nhật thông tin thành công", responseDTO);
-        } catch (Exception e) {
-            return new ApiResponse<>("Cập nhật thông tin thất bại: " + e.getMessage(), null);
+        if (customerDTO == null) {
+            return new ApiResponse<>("Thiếu thông tin cần cập nhật", null);
         }
+
+        // Validate email if provided
+        if (customerDTO.getEmail() != null && !customerDTO.getEmail().isEmpty()) {
+            if (!UserValidator.isValidEmail(customerDTO.getEmail())) {
+                return new ApiResponse<>("Email không hợp lệ!", null);
+            }
+
+            if (!customerDTO.getEmail().equals(customer.getEmail()) &&
+                    (userRepository.existsByEmail(customerDTO.getEmail()) ||
+                            customerRepository.existsByEmail(customerDTO.getEmail()))) {
+                return new ApiResponse<>("Email đã tồn tại trong hệ thống", null);
+            }
+
+            customer.setEmail(customerDTO.getEmail());
+        }
+
+        // Validate phone if provided
+        if (customerDTO.getPhone() != null && !customerDTO.getPhone().isEmpty()) {
+            if (!UserValidator.isValidPhone(customerDTO.getPhone())) {
+                return new ApiResponse<>("Số điện thoại không hợp lệ! Phải có đúng 10 chữ số.", null);
+            }
+
+            if (!customerDTO.getPhone().equals(customer.getPhone()) &&
+                    (userRepository.existsByPhone(customerDTO.getPhone()) ||
+                            customerRepository.existsByPhone(customerDTO.getPhone()))) {
+                return new ApiResponse<>("Số điện thoại đã tồn tại trong hệ thống", null);
+            }
+
+            customer.setPhone(customerDTO.getPhone());
+        }
+
+        // Update other fields
+        if (customerDTO.getUsername() != null && !customerDTO.getUsername().isEmpty()) {
+            customer.setUsername(customerDTO.getUsername());
+        }
+
+        if (customerDTO.getAddress() != null) {
+            customer.setAddress(customerDTO.getAddress());
+        }
+
+        boolean passwordChanged = false;
+        if (customerDTO.getPassword() != null && !customerDTO.getPassword().isEmpty()) {
+            if (!UserValidator.isValidPassword(customerDTO.getPassword())) {
+                return new ApiResponse<>("Mật khẩu không hợp lệ! Phải có ít nhất 8 ký tự, bao gồm chữ, số và ký tự đặc biệt.", null);
+            }
+            customer.setPassword(passwordEncoder.encode(customerDTO.getPassword()));
+            passwordChanged = true;
+        }
+
+        if (customerDTO.getAvtUser() != null && !customerDTO.getAvtUser().isEmpty()) {
+            customer.setAvtUser(customerDTO.getAvtUser());
+        }
+
+        // Save the updated customer
+        Customer updatedCustomer = customerRepository.save(customer);
+        if (passwordChanged) {
+            refreshTokenService.deleteByUser(updatedCustomer);
+        }
+
+        // Build response (không trả hash mật khẩu ra ngoài)
+        CustomerDTO responseDTO = new CustomerDTO();
+        responseDTO.setId(updatedCustomer.getId());
+        responseDTO.setUsername(updatedCustomer.getUsername());
+        responseDTO.setEmail(updatedCustomer.getEmail());
+        responseDTO.setPhone(updatedCustomer.getPhone());
+        responseDTO.setAddress(updatedCustomer.getAddress());
+        responseDTO.setRole(updatedCustomer.getRoles());
+        responseDTO.setAvtUser(updatedCustomer.getAvtUser());
+        responseDTO.setCreatedAt(updatedCustomer.getCreatedAt());
+        responseDTO.setUpdatedAt(updatedCustomer.getUpdatedAt());
+
+        return new ApiResponse<>("Cập nhật thông tin thành công", responseDTO);
     }
 }
 

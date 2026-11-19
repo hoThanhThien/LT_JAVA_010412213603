@@ -5,10 +5,12 @@ import jakarta.persistence.*;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.ArrayList;
 
+@Slf4j
 @Data
 @EqualsAndHashCode(callSuper = true, exclude = "orderHistory")
 @ToString(exclude = "orderHistory")
@@ -35,6 +37,6 @@ public class Customer extends User {
 
     @Override
     public void displayRole() {
-        System.out.println("Role: Customer");
+        log.debug("Role: Customer");
     }
 }

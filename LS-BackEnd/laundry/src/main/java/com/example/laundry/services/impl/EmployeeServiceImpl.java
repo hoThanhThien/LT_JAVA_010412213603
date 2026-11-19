@@ -3,11 +3,13 @@ package com.example.laundry.services.impl;
 import com.example.laundry.dto.*;
 import com.example.laundry.models.order.Order;
 import com.example.laundry.models.order.OrderStatus;
+import com.example.laundry.models.order.OrderStatusHistory;
 import com.example.laundry.models.shop.LaundryShop;
 import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.StoreOwner;
 import com.example.laundry.repository.EmployeeRepository;
 import com.example.laundry.repository.OrderRepository;
+import com.example.laundry.repository.OrderStatusHistoryRepository;
 import com.example.laundry.services.EmployeeService;
 import com.example.laundry.utils.ApiResponse;
 import com.example.laundry.utils.PaginationUtils;
@@ -29,6 +31,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     private EmployeeRepository employeeRepository;
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private OrderStatusHistoryRepository orderStatusHistoryRepository;
 
     @Override
     public Employee addEmployee(Employee employee) {
@@ -61,15 +65,37 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     Order order = orderOptional.get();
 
+    if (status == null) {
+      return new ApiResponse<>("Thiếu trạng thái đơn hàng đích", null);
+    }
+
     if (order.getLaundryShop() == null || !order.getLaundryShop().getId().equals(employee.getShop().getId())) {
       return new ApiResponse<>("Nhân viên này không có quyền!!!", null);
     }
 
-    // Cập nhật trạng thái
+    OrderStatus currentStatus = order.getOrderStatus();
+    if (currentStatus != null && !currentStatus.canTransitionTo(status)) {
+      return new ApiResponse<>(
+              "Không thể chuyển trạng thái đơn hàng từ " + currentStatus.name() + " sang " + status.name(),
+              null
+      );
+    }
+
+    // Cập nhật trạng thái và lưu lịch sử kiểm toán
+    Date now = new Date();
     order.setOrderStatus(status);
-    order.setUpdatedAt(new Date());
+    order.setUpdatedAt(now);
 
     Order savedOrder = orderRepository.save(order);
+    orderStatusHistoryRepository.save(OrderStatusHistory.builder()
+            .orderId(savedOrder.getId())
+            .fromStatus(currentStatus)
+            .toStatus(status)
+            .changedByUserId(employee.getId())
+            .changedByUsername(employee.getUsername())
+            .note("Employee updated order status")
+            .changedAt(now)
+            .build());
 
     String message = "Đơn hàng #" + orderId + " đã được cập nhật thành " + status.name();
 

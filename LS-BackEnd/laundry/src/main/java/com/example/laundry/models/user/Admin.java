@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
@@ -22,10 +24,10 @@ public class Admin extends User {
 
     @Override
     public void displayRole() {
-        System.out.println("I am a ADMIN");
+        log.debug("Role: ADMIN");
     }
 
     public void createStoreOwner(StoreOwner storeOwner) {
-        System.out.println("Creating new store owner");
+        log.debug("Creating new store owner");
     }
 }

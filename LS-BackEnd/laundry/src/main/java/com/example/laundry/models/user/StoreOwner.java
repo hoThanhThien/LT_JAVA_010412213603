@@ -7,10 +7,12 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.ArrayList;
 
+@Slf4j
 @Entity
 @Table(name="store_owners")
 @DiscriminatorValue("STORE_OWNER")
@@ -32,6 +34,6 @@ public class StoreOwner extends User {
 
     @Override
     public void displayRole() {
-        System.out.println("Role: Store Owner");
+        log.debug("Role: Store Owner");
     }
 }

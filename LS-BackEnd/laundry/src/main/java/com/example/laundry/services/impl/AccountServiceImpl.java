@@ -25,6 +25,9 @@ public class AccountServiceImpl implements AccountService {
   @Autowired
   private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
+  @Autowired
+  private com.example.laundry.services.RefreshTokenService refreshTokenService;
+
   @Override
   public GetInfoResponse getInfo(GetInfoRequest getInfoRequest) {
     try {
@@ -118,6 +121,7 @@ public class AccountServiceImpl implements AccountService {
 
     user.setPassword(passwordEncoder.encode(request.getNewPassword()));
     userRepository.save(user);
+    refreshTokenService.deleteByUser(user);
     return new com.example.laundry.utils.ApiResponse<>("Đổi mật khẩu thành công");
   }
 

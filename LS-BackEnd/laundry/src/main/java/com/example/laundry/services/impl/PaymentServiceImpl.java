@@ -49,6 +49,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     private PaymentRepository paymentRepository;
 
+    @Autowired
+    private org.springframework.transaction.support.TransactionTemplate transactionTemplate;
+
     private final OrderRepository orderRepository;
     private final CassoClient cassoClient;
     private final VietQRCode vietQRCode;
@@ -160,7 +163,6 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @org.springframework.transaction.annotation.Transactional
     public void pollBankTransactions() {
         if (cassoApiKey == null || cassoApiKey.isBlank()) {
             log.debug("Skipping bank transaction polling because casso.api-key is not configured");
@@ -174,11 +176,14 @@ public class PaymentServiceImpl implements PaymentService {
             return;
         }
 
+        // Gọi API Casso NGOÀI database transaction để tránh giữ lock/connection lâu
         List<CassoClient.CassoTransaction> transactions = fetchRecentTransactions();
         if (transactions.isEmpty()) {
             return;
         }
         log.info("Fetched {} transactions from Casso API", transactions.size());
+
+        java.util.Set<String> claimedTransactionIds = new java.util.HashSet<>();
 
         for (Order order : pendingOrders) {
             String transferContent = "LAUNDRY" + order.getId();
@@ -186,19 +191,24 @@ public class PaymentServiceImpl implements PaymentService {
 
             boolean found = false;
             for (CassoClient.CassoTransaction transaction : transactions) {
-                if (isMatchingTransaction(transaction, transferContent, requiredAmount)) {
-                    order.setPaymentStatus(PaymentStatus.PAID);
-                    orderRepository.save(order);
+                if (!isMatchingTransaction(transaction, transferContent, requiredAmount)) {
+                    continue;
+                }
 
-                    Payment payment = paymentRepository.findByOrderId(order.getId())
-                            .orElseGet(Payment::new);
-                    payment.setOrder(order);
-                    payment.setPaymentMethod("VIETQR_BANK_TRANSFER");
-                    payment.setAmount(order.getTotalAmount() != null ? order.getTotalAmount() : 0.0);
-                    payment.setStatus(PaymentStatus.PAID.name());
-                    payment.setPaymentDate(new java.util.Date());
-                    paymentRepository.save(payment);
+                String externalTxId = extractExternalTransactionId(transaction);
+                if (externalTxId != null
+                        && (claimedTransactionIds.contains(externalTxId)
+                        || paymentRepository.existsByExternalTransactionId(externalTxId))) {
+                    log.debug("Skipping already used externalTransactionId={} for order={}", externalTxId, order.getId());
+                    continue;
+                }
 
+                Boolean settled = transactionTemplate.execute(status -> settleOrderPayment(order, externalTxId));
+                if (Boolean.TRUE.equals(settled)) {
+                    if (externalTxId != null) {
+                        claimedTransactionIds.add(externalTxId);
+                    }
+                    log.info("Reconciled payment for orderId={} externalTxId={}", order.getId(), externalTxId);
                     found = true;
                     break;
                 }
@@ -208,6 +218,46 @@ public class PaymentServiceImpl implements PaymentService {
                 log.debug("No matching transaction found for order: {}", order.getId());
             }
         }
+    }
+
+    private boolean settleOrderPayment(Order order, String externalTxId) {
+        if (externalTxId != null && paymentRepository.existsByExternalTransactionId(externalTxId)) {
+            return false;
+        }
+        java.util.Date now = new java.util.Date();
+        int updated = orderRepository.updatePaymentStatusIfMatches(
+                order.getId(),
+                PaymentStatus.PENDING,
+                PaymentStatus.PAID,
+                now
+        );
+        if (updated != 1) {
+            return false;
+        }
+
+        Payment payment = paymentRepository.findByOrderId(order.getId())
+                .orElseGet(Payment::new);
+        payment.setOrder(orderRepository.getReferenceById(order.getId()));
+        payment.setPaymentMethod("VIETQR_BANK_TRANSFER");
+        payment.setAmount(order.getTotalAmount() != null ? order.getTotalAmount() : 0.0);
+        payment.setStatus(PaymentStatus.PAID.name());
+        payment.setExternalTransactionId(externalTxId);
+        payment.setPaymentDate(now);
+        paymentRepository.save(payment);
+        return true;
+    }
+
+    private String extractExternalTransactionId(CassoClient.CassoTransaction transaction) {
+        if (transaction == null) {
+            return null;
+        }
+        if (transaction.getTransactionId() != null && !transaction.getTransactionId().isBlank()) {
+            return transaction.getTransactionId().trim();
+        }
+        if (transaction.getId() != null && !transaction.getId().isBlank()) {
+            return transaction.getId().trim();
+        }
+        return null;
     }
 
     private List<CassoClient.CassoTransaction> fetchRecentTransactions() {
@@ -239,19 +289,22 @@ public class PaymentServiceImpl implements PaymentService {
             return false;
         }
 
-        // Kiểm tra mã đơn hàng với ranh giới rõ ràng để tránh khớp nhầm (VD: LAUNDRY1
-        // vs LAUNDRY10)
+        // Kiểm tra mã đơn hàng với ranh giới chữ-số chặt ở cả hai đầu (tránh LAUNDRY1 khớp LAUNDRY10 hoặc LAUNDRY1A)
         String description = transaction.getDescription();
         if (description == null) {
             return false;
         }
-        Pattern codePattern = Pattern.compile("(?i)(?<![a-z0-9])" + Pattern.quote(transferContent.trim()) + "(?!\\d)");
+        Pattern codePattern = Pattern.compile("(?i)(?<![a-z0-9])" + Pattern.quote(transferContent.trim()) + "(?![a-z0-9])");
         if (!codePattern.matcher(description).find()) {
             return false;
         }
 
-        // Kiểm tra số tiền
-        if (transaction.getAmount() < requiredAmount) {
+        // Kiểm tra số tiền bằng BigDecimal để tránh sai số dấu phẩy động
+        java.math.BigDecimal paidAmount = java.math.BigDecimal.valueOf(transaction.getAmount())
+                .setScale(2, java.math.RoundingMode.HALF_UP);
+        java.math.BigDecimal expectedAmount = java.math.BigDecimal.valueOf(requiredAmount)
+                .setScale(2, java.math.RoundingMode.HALF_UP);
+        if (paidAmount.compareTo(expectedAmount) < 0) {
             return false;
         }
 

@@ -132,7 +132,7 @@ public class AuthServiceImpl implements AuthService {
       throw ex;
     } catch (Exception e) {
       log.error("Đăng nhập lỗi: {}", e.getMessage(), e);
-      throw new RuntimeException("Đăng nhập thất bại: " + e.getMessage(), e);
+      throw new RuntimeException("Đăng nhập thất bại", e);
     }
   }
 
@@ -206,7 +206,7 @@ public class AuthServiceImpl implements AuthService {
       return buildLoginResponse(user, message);
     } catch (Exception e) {
       log.error("Đăng nhập Google thất bại: {}", e.getMessage(), e);
-      return new LoginResponse(null, "Đăng nhập Google thất bại: " + e.getMessage());
+      return new LoginResponse(null, "Đăng nhập Google thất bại");
     }
   }
 
@@ -350,7 +350,7 @@ public class AuthServiceImpl implements AuthService {
       return new LogoutResponse("Refresh token không tìm thấy");
     } catch (Exception e) {
       log.error("Logout thất bại: {}", e.getMessage(), e);
-      return new LogoutResponse("Logout thất bại: " + e.getMessage());
+      return new LogoutResponse("Logout thất bại");
     }
   }
 
@@ -466,6 +466,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     updatePasswordWithEncryption(user, request.getNewPassword());
+    refreshTokenService.deleteByUser(user);
     resetOtpStore.remove(user.getId());
     return new ApiResponse<>("Đặt lại mật khẩu thành công");
   }

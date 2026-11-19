@@ -63,7 +63,8 @@ public class LaundryShopServiceImpl implements LaundryShopService {
 
     @Override
     public ApiResponse<List<LaundryShopDTO>> getAllShop() {
-        List<LaundryShop> laundryShops = laundryShopRepository.findAll();
+        Pageable bounded = org.springframework.data.domain.PageRequest.of(0, 100, Sort.by("createdAt").descending());
+        List<LaundryShop> laundryShops = laundryShopRepository.findAll(bounded).getContent();
 
         List<LaundryShopDTO> laundryShopDTOs = laundryShops.stream()
                 .map(this::convertToDTO)

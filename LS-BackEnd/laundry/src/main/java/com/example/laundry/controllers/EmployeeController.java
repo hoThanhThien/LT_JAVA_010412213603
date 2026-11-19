@@ -53,17 +53,12 @@ public class EmployeeController {
   public ResponseEntity<PagedResponse<OrderResponse>> getOrders(
           @RequestParam(defaultValue = "0") int page,
           @RequestParam(defaultValue = "10") int size) {
-    try {
-      Employee employee = getCurrentEmployee();
-      if (employee == null) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new PagedResponse<>("Không tìm thấy thông tin Employee", null));
-      }
-      PagedResponse<OrderResponse> response = employeeService.getOrders(employee, page, size);
-      return ResponseEntity.ok(response);
-    } catch (Exception e) {
-      return ResponseEntity.badRequest()
-              .body(new PagedResponse<>("Lấy danh sách đơn hàng thất bại: " + e.getMessage(), null));
+    Employee employee = getCurrentEmployee();
+    if (employee == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+              .body(new PagedResponse<>("Không tìm thấy thông tin Employee", null));
     }
+    PagedResponse<OrderResponse> response = employeeService.getOrders(employee, page, size);
+    return ResponseEntity.ok(response);
   }
 }

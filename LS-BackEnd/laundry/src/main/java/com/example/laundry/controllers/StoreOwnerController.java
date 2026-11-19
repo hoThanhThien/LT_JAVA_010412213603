@@ -102,18 +102,13 @@ public class StoreOwnerController {
     public ResponseEntity<PagedResponse<EmployeeDTO>> getMyEmployees(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        try {
-            StoreOwner storeOwner = getCurrentStoreOwner();
-            if (storeOwner == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new PagedResponse<>("Không tìm thấy thông tin StoreOwner", null));
-            }
-            PagedResponse<EmployeeDTO> response = employeeService.getAllEmployeesByStoreOwner(storeOwner, page, size);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(new PagedResponse<>("Lấy danh sách nhân viên thất bại: " + e.getMessage(), null));
+        StoreOwner storeOwner = getCurrentStoreOwner();
+        if (storeOwner == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new PagedResponse<>("Không tìm thấy thông tin StoreOwner", null));
         }
+        PagedResponse<EmployeeDTO> response = employeeService.getAllEmployeesByStoreOwner(storeOwner, page, size);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/shop/create")
@@ -304,18 +299,13 @@ public class StoreOwnerController {
     public ResponseEntity<PagedResponse<CategoryWithServiceDTO>> getAllCategoriesWithServicesByStore(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-      try {
-        StoreOwner storeOwner = getCurrentStoreOwner();
-        if (storeOwner == null) {
-          return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                  .body(new PagedResponse<>("Không tìm thấy thông tin storeowner", null));
-        }
-        PagedResponse<CategoryWithServiceDTO> response = storeOwnerService.getAllCategoriesWithServicesByStore(storeOwner, page, size);
-        return ResponseEntity.ok(response);
-      } catch (Exception e) {
-        return ResponseEntity.badRequest()
-                .body(new PagedResponse<>("Lấy danh sách dịch vụ thất bại: " + e.getMessage(), null));
+      StoreOwner storeOwner = getCurrentStoreOwner();
+      if (storeOwner == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new PagedResponse<>("Không tìm thấy thông tin storeowner", null));
       }
+      PagedResponse<CategoryWithServiceDTO> response = storeOwnerService.getAllCategoriesWithServicesByStore(storeOwner, page, size);
+      return ResponseEntity.ok(response);
     }
 
     @GetMapping("/manager/order")
@@ -323,18 +313,13 @@ public class StoreOwnerController {
     public ResponseEntity<PagedResponse<OrderResponse>> getAllOrdersByStoreOwner(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-      try {
-        StoreOwner storeOwner = getCurrentStoreOwner();
-        if (storeOwner == null) {
-          return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                  .body(new PagedResponse<>("Không tìm thấy thông tin storeowner", null));
-        }
-        PagedResponse<OrderResponse> response = storeOwnerService.getAllOrdersByStoreOwner(storeOwner, page, size);
-        return ResponseEntity.ok(response);
-      } catch (Exception e) {
-        return ResponseEntity.badRequest()
-                .body(new PagedResponse<>("Lấy danh sách đơn hàng thất bại: " + e.getMessage(), null));
+      StoreOwner storeOwner = getCurrentStoreOwner();
+      if (storeOwner == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new PagedResponse<>("Không tìm thấy thông tin storeowner", null));
       }
+      PagedResponse<OrderResponse> response = storeOwnerService.getAllOrdersByStoreOwner(storeOwner, page, size);
+      return ResponseEntity.ok(response);
     }
 
     @GetMapping("/shop")

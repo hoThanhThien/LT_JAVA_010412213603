@@ -58,6 +58,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -122,6 +123,9 @@ class SecurityAndServiceRegressionTests {
 
   @Autowired
   private com.example.laundry.repository.OrderRepository orderRepository;
+
+  @Autowired
+  private com.example.laundry.repository.OrderStatusHistoryRepository orderStatusHistoryRepository;
 
   private MockMvc mockMvc;
 
@@ -1212,5 +1216,292 @@ class SecurityAndServiceRegressionTests {
     } finally {
       executor.shutdownNow();
     }
+  }
+
+  @Test
+  void registerRollsBackCustomerWhenRefreshTokenCreationFails() throws Exception {
+    String phone = "0986000001";
+    FirebaseToken fakeToken = Mockito.mock(FirebaseToken.class);
+    Mockito.when(fakeToken.getClaims()).thenReturn(java.util.Map.of("phone_number", "+84" + phone.substring(1)));
+
+    FirebaseAuth mockFirebaseAuth = Mockito.mock(FirebaseAuth.class);
+    Mockito.when(mockFirebaseAuth.verifyIdToken("fake-register-token")).thenReturn(fakeToken);
+
+    com.example.laundry.services.RefreshTokenService mockRefreshTokenService =
+        Mockito.mock(com.example.laundry.services.RefreshTokenService.class);
+    Mockito.when(mockRefreshTokenService.createRefreshToken(Mockito.any()))
+        .thenThrow(new RuntimeException("Simulated refresh token failure"));
+
+    Object targetCustomerService = AopTestUtils.getUltimateTargetObject(customerService);
+    Object originalFirebaseAuth = ReflectionTestUtils.getField(targetCustomerService, "firebaseAuth");
+    Object originalRefreshTokenService = ReflectionTestUtils.getField(targetCustomerService, "refreshTokenService");
+    ReflectionTestUtils.setField(targetCustomerService, "firebaseAuth", mockFirebaseAuth);
+    ReflectionTestUtils.setField(targetCustomerService, "refreshTokenService", mockRefreshTokenService);
+
+    try {
+      String payload = "{\"idToken\":\"fake-register-token\",\"username\":\"Rollback User\",\"password\":\"ValidPass@123\"}";
+      mockMvc.perform(post("/auth/register")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(payload))
+          .andExpect(status().isInternalServerError())
+          .andExpect(header().exists("X-Request-Id"))
+          .andExpect(jsonPath("$.message").value("Đã xảy ra lỗi hệ thống"));
+
+      assertTrue(customerRepository.findByPhone(phone).isEmpty(),
+          "Customer insert must roll back when downstream refresh token creation throws RuntimeException");
+    } finally {
+      ReflectionTestUtils.setField(targetCustomerService, "firebaseAuth", originalFirebaseAuth);
+      ReflectionTestUtils.setField(targetCustomerService, "refreshTokenService", originalRefreshTokenService);
+    }
+  }
+
+  @Test
+  void paymentReconciliationRejectsAlphanumericSuffixCollisionAndDuplicateTransactionId() throws Exception {
+    StoreOwner owner = createOwnerWithShop("0987000001", "Reconciliation Hardening Shop");
+    LaundryShop shop = laundryShopRepository.findByStoreOwner(owner);
+    assertNotNull(shop);
+
+    ServiceCategoryDTO catDto = new ServiceCategoryDTO();
+    catDto.setName("Giặt Sấy Hardened");
+    catDto.setImageDesc("img");
+    catDto.setDescription("Desc");
+    Long categoryId = storeOwnerService.createServiceCategory(owner, catDto).getData().getId();
+
+    ServiceDTO svcDto = new ServiceDTO();
+    svcDto.setCategoryId(categoryId);
+    svcDto.setName("Giặt Tiêu Chuẩn Hardened");
+    svcDto.setDescription("Desc");
+    svcDto.setEstimatedTime("24h");
+    svcDto.setPrice(50000.0);
+    svcDto.setImageDesc("img");
+    Long serviceId = storeOwnerService.createService(owner, svcDto).getData().getId();
+
+    String custPhone = "0987000002";
+    Customer customer = new Customer(
+        "Reconcile Customer",
+        passwordEncoder.encode("ReconPass@123"),
+        "reconcile@test.local",
+        custPhone,
+        "HCMC",
+        Roles.Customer
+    );
+    customerRepository.save(customer);
+    String token = loginAndExtractToken(custPhone, "ReconPass@123", "accessToken");
+
+    String orderBody = String.format(
+        "{\"laundryShop\":{\"id\":%d},\"serviceCategory\":{\"id\":%d},\"service\":{\"id\":%d},\"orderVolume\":1.0,\"phone\":\"%s\",\"address\":\"10 Le Loi\",\"instructions\":\"\",\"imgProduct\":\"\"}",
+        shop.getId(), categoryId, serviceId, custPhone);
+
+    MvcResult res1 = mockMvc.perform(post("/customer/orders/create")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(orderBody))
+        .andExpect(status().isOk())
+        .andReturn();
+    Long order1Id = ((Number) JsonPath.read(res1.getResponse().getContentAsString(), "$.data.id")).longValue();
+
+    MvcResult res2 = mockMvc.perform(post("/customer/orders/create")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(orderBody))
+        .andExpect(status().isOk())
+        .andReturn();
+    Long order2Id = ((Number) JsonPath.read(res2.getResponse().getContentAsString(), "$.data.id")).longValue();
+
+    CassoClient mockCasso = Mockito.mock(CassoClient.class);
+    Object targetPaymentService = AopTestUtils.getUltimateTargetObject(paymentService);
+    Object originalCasso = ReflectionTestUtils.getField(targetPaymentService, "cassoClient");
+    ReflectionTestUtils.setField(targetPaymentService, "cassoClient", mockCasso);
+
+    try {
+      // Phase A: Alphanumeric suffix collision ("LAUNDRY<id>A") must NOT settle order1
+      CassoClient.CassoTransaction suffixTx = new CassoClient.CassoTransaction();
+      suffixTx.setTransactionId("TX-SUFFIX-001");
+      suffixTx.setAmount(50000.0);
+      suffixTx.setDescription("CK LAUNDRY" + order1Id + "A");
+      suffixTx.setTransactionTime(LocalDateTime.now().minusMinutes(2));
+
+      CassoClient.CassoTransactionData suffixData = new CassoClient.CassoTransactionData();
+      suffixData.setRecords(java.util.List.of(suffixTx));
+      CassoClient.CassoTransactionResponse suffixResp = new CassoClient.CassoTransactionResponse();
+      suffixResp.setData(suffixData);
+      Mockito.when(mockCasso.getTransactions(Mockito.eq(1), Mockito.anyInt())).thenReturn(suffixResp);
+
+      paymentService.pollBankTransactions();
+      assertEquals(
+          com.example.laundry.models.order.PaymentStatus.PENDING,
+          orderRepository.findById(order1Id).orElseThrow().getPaymentStatus(),
+          "Alphanumeric suffix LAUNDRY<id>A must not match LAUNDRY<id>"
+      );
+
+      // Phase B: Duplicate external transactionId must settle only order1 and NOT order2
+      CassoClient.CassoTransaction tx1 = new CassoClient.CassoTransaction();
+      tx1.setTransactionId("TX-UNIQUE-001");
+      tx1.setAmount(50000.0);
+      tx1.setDescription("CK LAUNDRY" + order1Id + " thanh toan");
+      tx1.setTransactionTime(LocalDateTime.now().minusMinutes(2));
+
+      CassoClient.CassoTransaction tx2Duplicate = new CassoClient.CassoTransaction();
+      tx2Duplicate.setTransactionId("TX-UNIQUE-001");
+      tx2Duplicate.setAmount(50000.0);
+      tx2Duplicate.setDescription("CK LAUNDRY" + order2Id + " thanh toan");
+      tx2Duplicate.setTransactionTime(LocalDateTime.now().minusMinutes(1));
+
+      CassoClient.CassoTransactionData dupData = new CassoClient.CassoTransactionData();
+      dupData.setRecords(java.util.List.of(tx1, tx2Duplicate));
+      CassoClient.CassoTransactionResponse dupResp = new CassoClient.CassoTransactionResponse();
+      dupResp.setData(dupData);
+      Mockito.when(mockCasso.getTransactions(Mockito.eq(1), Mockito.anyInt())).thenReturn(dupResp);
+
+      paymentService.pollBankTransactions();
+
+      assertEquals(
+          com.example.laundry.models.order.PaymentStatus.PAID,
+          orderRepository.findById(order1Id).orElseThrow().getPaymentStatus()
+      );
+      var payment1 = paymentRepository.findByOrderId(order1Id).orElseThrow();
+      assertEquals("TX-UNIQUE-001", payment1.getExternalTransactionId());
+
+      assertEquals(
+          com.example.laundry.models.order.PaymentStatus.PENDING,
+          orderRepository.findById(order2Id).orElseThrow().getPaymentStatus(),
+          "Reused external transactionId must not settle a second order"
+      );
+      assertTrue(paymentRepository.findByOrderId(order2Id).isEmpty());
+    } finally {
+      ReflectionTestUtils.setField(targetPaymentService, "cassoClient", originalCasso);
+    }
+  }
+
+  @Test
+  void employeeOrderStatusEnforcesStateTransitionGuardAndRecordsAuditHistory() throws Exception {
+    StoreOwner owner = createOwnerWithShop("0988000001", "Order Audit Shop");
+    LaundryShop shop = laundryShopRepository.findByStoreOwner(owner);
+    assertNotNull(shop);
+
+    ServiceCategoryDTO catDto = new ServiceCategoryDTO();
+    catDto.setName("Giặt Audit");
+    catDto.setImageDesc("img");
+    catDto.setDescription("Desc");
+    Long categoryId = storeOwnerService.createServiceCategory(owner, catDto).getData().getId();
+
+    ServiceDTO svcDto = new ServiceDTO();
+    svcDto.setCategoryId(categoryId);
+    svcDto.setName("Giặt Sấy Audit");
+    svcDto.setDescription("Desc");
+    svcDto.setEstimatedTime("24h");
+    svcDto.setPrice(30000.0);
+    svcDto.setImageDesc("img");
+    Long serviceId = storeOwnerService.createService(owner, svcDto).getData().getId();
+
+    String custPhone = "0988000002";
+    Customer customer = new Customer(
+        "Audit Customer",
+        passwordEncoder.encode("AuditPass@123"),
+        "auditcust@test.local",
+        custPhone,
+        "HCMC",
+        Roles.Customer
+    );
+    customerRepository.save(customer);
+
+    String empPhone = "0988000003";
+    Employee employee = new Employee(
+        "Audit Employee",
+        passwordEncoder.encode("EmpPass@123"),
+        "auditemp@test.local",
+        empPhone,
+        "HCMC",
+        Roles.Employee,
+        shop
+    );
+    employee.setStoreOwner(owner);
+    employeeRepository.save(employee);
+
+    String custToken = loginAndExtractToken(custPhone, "AuditPass@123", "accessToken");
+    String empToken = loginAndExtractToken(empPhone, "EmpPass@123", "accessToken");
+
+    String orderBody = String.format(
+        "{\"laundryShop\":{\"id\":%d},\"serviceCategory\":{\"id\":%d},\"service\":{\"id\":%d},\"orderVolume\":1.0,\"phone\":\"%s\",\"address\":\"15 Hai Ba Trung\",\"instructions\":\"\",\"imgProduct\":\"\"}",
+        shop.getId(), categoryId, serviceId, custPhone);
+
+    MvcResult createRes = mockMvc.perform(post("/customer/orders/create")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + custToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(orderBody))
+        .andExpect(status().isOk())
+        .andReturn();
+    Long orderId = ((Number) JsonPath.read(createRes.getResponse().getContentAsString(), "$.data.id")).longValue();
+
+    // Valid forward transition: IN_PROGRESS -> DONE
+    mockMvc.perform(put("/employee/" + orderId + "/status")
+            .param("status", "DONE")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + empToken))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.orderStatus").value("DONE"));
+
+    var history = orderStatusHistoryRepository.findByOrderIdOrderByChangedAtDesc(orderId);
+    assertEquals(1, history.size());
+    assertEquals(com.example.laundry.models.order.OrderStatus.IN_PROGRESS, history.get(0).getFromStatus());
+    assertEquals(com.example.laundry.models.order.OrderStatus.DONE, history.get(0).getToStatus());
+    assertEquals(employee.getId(), history.get(0).getChangedByUserId());
+
+    // Invalid backward transition: DONE -> IN_PROGRESS must be rejected
+    mockMvc.perform(put("/employee/" + orderId + "/status")
+            .param("status", "IN_PROGRESS")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + empToken))
+        .andExpect(status().isBadRequest());
+
+    assertEquals(
+        com.example.laundry.models.order.OrderStatus.DONE,
+        orderRepository.findById(orderId).orElseThrow().getOrderStatus()
+    );
+    assertEquals(1, orderStatusHistoryRepository.findByOrderIdOrderByChangedAtDesc(orderId).size());
+  }
+
+  @Test
+  void passwordChangeRevokesExistingRefreshTokensAndResponseIncludesRequestId() throws Exception {
+    String phone = "0989000001";
+    Customer customer = new Customer(
+        "PwdRevoke Customer",
+        passwordEncoder.encode("OldPass@123"),
+        "pwdrevoke@test.local",
+        phone,
+        "HCMC",
+        Roles.Customer
+    );
+    customerRepository.save(customer);
+
+    MvcResult loginRes = mockMvc.perform(post("/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"phone\":\"" + phone + "\",\"password\":\"OldPass@123\"}"))
+        .andExpect(status().isOk())
+        .andExpect(header().exists("X-Request-Id"))
+        .andReturn();
+    String loginBody = loginRes.getResponse().getContentAsString();
+    String accessToken = JsonPath.read(loginBody, "$.data.accessToken");
+    String refreshToken = JsonPath.read(loginBody, "$.data.refreshToken");
+
+    MvcResult changeRes = mockMvc.perform(post("/accounts/change-password")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"currentPassword\":\"OldPass@123\",\"newPassword\":\"NewPass@456\",\"confirmPassword\":\"NewPass@456\"}"))
+        .andExpect(status().isOk())
+        .andExpect(header().exists("X-Request-Id"))
+        .andReturn();
+    String requestId = changeRes.getResponse().getHeader("X-Request-Id");
+    assertNotNull(requestId);
+    assertFalse(requestId.isBlank());
+
+    // Client-supplied X-Request-Id should be echoed for distributed tracing
+    mockMvc.perform(get("/health").header("X-Request-Id", "trace-req-12345"))
+        .andExpect(status().isOk())
+        .andExpect(header().string("X-Request-Id", "trace-req-12345"));
+
+    // Existing refresh token must be revoked after password change
+    mockMvc.perform(post("/auth/refresh-token")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
+        .andExpect(status().isForbidden());
   }
 }

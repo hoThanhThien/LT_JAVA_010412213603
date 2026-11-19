@@ -92,13 +92,7 @@ public class AdminController {
     public ResponseEntity<PagedResponse<EmployeeDTO>> getAllEmployees(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        try {
-            PagedResponse<EmployeeDTO> response = employeeService.getAllEmployees(page, size);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(new PagedResponse<>("Lấy danh sách nhân viên thất bại: " + e.getMessage(), null));
-        }
+        return ResponseEntity.ok(employeeService.getAllEmployees(page, size));
     }
 
     @GetMapping("/storeowners")
@@ -106,13 +100,7 @@ public class AdminController {
     public ResponseEntity<PagedResponse<StoreOwnerWithEmployeeDTO>> getAllEmployee(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        try {
-            PagedResponse<StoreOwnerWithEmployeeDTO> response = adminService.getAllEmployeesBelongToStoreOwner(page, size);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(new PagedResponse<>("Lấy danh sách chủ cửa hàng thất bại: " + e.getMessage(), null));
-        }
+        return ResponseEntity.ok(adminService.getAllEmployeesBelongToStoreOwner(page, size));
     }
 
     @GetMapping("/customers")
@@ -128,13 +116,7 @@ public class AdminController {
     public ResponseEntity<PagedResponse<OrderResponse>> getAllOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        try {
-            PagedResponse<OrderResponse> response = adminService.getAllOrders(page, size);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(new PagedResponse<>("Lấy danh sách đơn hàng thất bại: " + e.getMessage(), null));
-        }
+        return ResponseEntity.ok(adminService.getAllOrders(page, size));
     }
 
     @GetMapping("/orders/customer/{customerId}")
@@ -143,13 +125,7 @@ public class AdminController {
             @PathVariable UUID customerId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
-        try {
-            PagedResponse<OrderResponse> response = adminService.getOrdersByCustomer(customerId, page, size);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(new PagedResponse<>("Lấy danh sách đơn hàng của khách hàng thất bại: " + e.getMessage(), null));
-        }
+        return ResponseEntity.ok(adminService.getOrdersByCustomer(customerId, page, size));
     }
 
     @GetMapping("/orders/status/{status}")
@@ -158,13 +134,7 @@ public class AdminController {
             @PathVariable String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        try {
-            PagedResponse<OrderResponse> response = adminService.getOrdersByStatus(status, page, size);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(new PagedResponse<>("Lấy danh sách đơn hàng theo trạng thái thất bại: " + e.getMessage(), null));
-        }
+        return ResponseEntity.ok(adminService.getOrdersByStatus(status, page, size));
     }
 
     @GetMapping("/shops")
@@ -172,12 +142,6 @@ public class AdminController {
     public ResponseEntity<PagedResponse<LaundryShopDTO>> getAllShops(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        try {
-            PagedResponse<LaundryShopDTO> response = laundryShopService.getAllShops(page, size);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(new PagedResponse<>("Lấy danh sách cửa hàng thất bại: " + e.getMessage(), null));
-        }
+        return ResponseEntity.ok(laundryShopService.getAllShops(page, size));
     }
 }

@@ -40,25 +40,18 @@ public class CustomerController {
     @PutMapping("/update")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<CustomerDTO>> update(@RequestBody CustomerDTO customerDTO) {
-        try {
-            Customer customer = getCurrentCustomer();
-            if (customer == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new ApiResponse<>("Không tìm thấy thông tin customer"));
-            }
-
-            ApiResponse<CustomerDTO> response = customerService.updateCustomer(customer, customerDTO);
-            if (response.getData() == null) {
-                return ResponseEntity.badRequest().body(response);
-            }
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>("Cập nhật thông tin thất bại: " + e.getMessage(), null));
+        Customer customer = getCurrentCustomer();
+        if (customer == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>("Không tìm thấy thông tin customer"));
         }
+
+        ApiResponse<CustomerDTO> response = customerService.updateCustomer(customer, customerDTO);
+        if (response.getData() == null) {
+            return ResponseEntity.badRequest().body(response);
+        }
+        return ResponseEntity.ok(response);
     }
-
-
 
     @GetMapping("/orders/history")
     @PreAuthorize("hasRole('CUSTOMER')")
@@ -67,41 +60,30 @@ public class CustomerController {
             @RequestParam(required = false, name = "page") Integer page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        try {
-            Customer customer = getCurrentCustomer();
-            if (customer == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new PagedResponse<>("Không tìm thấy thông tin khách hàng", null));
-            }
-
-            int effectivePage = page != null ? page : paged;
-            PagedResponse<OrderResponse> response = customerService.historyOrder(customer, effectivePage, size);
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(new PagedResponse<>("Lấy lịch sử đơn hàng thất bại: " + e.getMessage(), null));
+        Customer customer = getCurrentCustomer();
+        if (customer == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new PagedResponse<>("Không tìm thấy thông tin khách hàng", null));
         }
+
+        int effectivePage = page != null ? page : paged;
+        PagedResponse<OrderResponse> response = customerService.historyOrder(customer, effectivePage, size);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/orders/create")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<OrderResponse>> createOrder(@RequestBody OrderDTO orderDTO) {
-        try {
-            Customer customer = getCurrentCustomer();
-            if (customer == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new ApiResponse<>("Không tìm thấy thông tin customer"));
-            }
-
-            ApiResponse<OrderResponse> response = customerService.bookService(customer, orderDTO);
-            if (response.getData() == null) {
-                return ResponseEntity.badRequest().body(response);
-            }
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>("Tạo đơn hàng thất bại: " + e.getMessage(), null));
+        Customer customer = getCurrentCustomer();
+        if (customer == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>("Không tìm thấy thông tin customer"));
         }
+
+        ApiResponse<OrderResponse> response = customerService.bookService(customer, orderDTO);
+        if (response.getData() == null) {
+            return ResponseEntity.badRequest().body(response);
+        }
+        return ResponseEntity.ok(response);
     }
 }

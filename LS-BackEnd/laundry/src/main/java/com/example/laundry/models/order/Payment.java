@@ -33,6 +33,9 @@ public class Payment {
     @Column(nullable = false)
     private String status;
 
+    @Column(name = "external_transaction_id", unique = true, length = 128)
+    private String externalTransactionId;
+
     @CreationTimestamp
     @Column(name="payment_date", nullable = false)
     private Date paymentDate;
