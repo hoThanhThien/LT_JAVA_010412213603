@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import {
   REFRESH_COOKIE,
+  RefreshAuthError,
   refreshAuthCookies,
   verifyCsrfOrigin,
 } from "@/lib/server-auth";
@@ -26,13 +27,16 @@ export async function POST(request: Request) {
     await refreshAuthCookies(refreshToken);
     // Không trả token về client, token mới đã nằm trong cookie HttpOnly
     return Response.json({ message: "Làm mới token thành công" });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const status = error instanceof RefreshAuthError ? error.status : 401;
+    const message =
+      error instanceof Error ? error.message : "Có lỗi xảy ra";
     return Response.json(
       {
-        message: error.message ?? "Có lỗi xảy ra",
+        message,
       },
       {
-        status: 401,
+        status,
       }
     );
   }

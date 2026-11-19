@@ -31,7 +31,7 @@ function LogoutHandler() {
 
 export default function Logout() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<Loading />}>
       <LogoutHandler />
     </Suspense>
   );

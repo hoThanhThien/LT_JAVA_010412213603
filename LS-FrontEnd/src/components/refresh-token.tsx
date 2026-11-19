@@ -1,30 +1,38 @@
 "use client";
 
 import { checkAndRefreshToken } from "@/lib/utils";
+import { useAuthStore } from "@/lib/zustand";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-const UNAUTHENTICATED_PATH = ["/logout", "refresh-token"];
+const UNAUTHENTICATED_PATH = ["/logout", "/refresh-token"];
 
 export default function RefreshToken() {
   const pathname = usePathname();
+  const { isAuth, setIsAuth } = useAuthStore();
+
   useEffect(() => {
     if (UNAUTHENTICATED_PATH.includes(pathname)) return;
 
-    let interval: any = null;
-    // Phải gọi lần đầu tiên vì interval sẽ chạy sau thời gian TIMEOUT
-    checkAndRefreshToken({
-      onError: () => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+    const handleRefreshError = () => {
+      if (interval) {
         clearInterval(interval);
-      },
-    });
-    //TIMEOUT phải bé hơn thời gian hết hạn của access token
-    //VD access token hết hạn sau 10s thì mỗi 1s check 1 lần
-    const TIMEOUT = 1000;
-    interval = setInterval(checkAndRefreshToken, TIMEOUT);
-    return () => {
-      clearInterval(interval);
+        interval = null;
+      }
+      setIsAuth(false);
     };
-  }, [pathname]);
+
+    void checkAndRefreshToken({ onError: handleRefreshError });
+
+    const TIMEOUT = 10000;
+    interval = setInterval(() => {
+      void checkAndRefreshToken({ onError: handleRefreshError });
+    }, TIMEOUT);
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [pathname, isAuth, setIsAuth]);
   return null;
 }

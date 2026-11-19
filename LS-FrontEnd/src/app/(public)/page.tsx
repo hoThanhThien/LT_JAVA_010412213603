@@ -11,7 +11,7 @@ import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import ButtonOrder from "@/components/ui/buttonOrder";
 
-function Home() {
+function LoginPromptFromQuery() {
   const { setOpenAuth } = useAuthStore();
   const searchParams = useSearchParams();
   const reqLogin = searchParams.get("login");
@@ -20,8 +20,15 @@ function Home() {
       setOpenAuth(true);
     }
   }, [reqLogin, setOpenAuth]);
+  return null;
+}
+
+export default function Home() {
   return (
     <main className="relative">
+      <Suspense fallback={null}>
+        <LoginPromptFromQuery />
+      </Suspense>
       <div className="bg-[url('/home/bg-1.png')] bg-no-repeat min-h-[960px] px-4 bg-[length:100%_1060px]">
         <div className="max-w-7xl mx-auto px-4 flex justify-between pt-15">
           <div className="w-[41%] text-left">
@@ -193,13 +200,5 @@ function Home() {
         </div>
       </div>
     </main>
-  );
-}
-
-export default function page() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <Home />
-    </Suspense>
   );
 }

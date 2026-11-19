@@ -4,6 +4,7 @@ import {
   ACCESS_COOKIE,
   REFRESH_COOKIE,
   clearAuthCookies,
+  clearRefreshCache,
   verifyCsrfOrigin,
 } from "@/lib/server-auth";
 
@@ -14,6 +15,7 @@ export async function POST(request: Request) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get(ACCESS_COOKIE)?.value;
   const refreshToken = cookieStore.get(REFRESH_COOKIE)?.value;
+  clearRefreshCache(refreshToken);
   await clearAuthCookies();
 
   if (!accessToken || !refreshToken) {

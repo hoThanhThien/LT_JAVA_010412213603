@@ -45,6 +45,9 @@ export const handleErrorApi = ({
 // Ở client chỉ giữ cache "thông tin phiên" (hạn token, role) lấy từ /api/auth/session.
 let sessionCache: SessionResType | null = null;
 let sessionRequest: Promise<SessionResType> | null = null;
+let refreshCheckPromise: Promise<void> | null = null;
+const REFRESH_COOLDOWN_KEY = "heramo_rt_last_attempt";
+const REFRESH_COOLDOWN_MS = 5000;
 
 export const resetSessionCache = () => {
   sessionCache = null;
@@ -68,32 +71,69 @@ export const checkAndRefreshToken = async (param?: {
   onError?: () => void;
   onSuccess?: () => void;
 }) => {
-  const session = await getSession();
-  //Chưa đăng nhập cx k cho chạy
-  if (!session.authenticated) return;
+  if (refreshCheckPromise) return refreshCheckPromise;
 
-  const now = Math.round(new Date().getTime() / 1000); // current time in seconds
-  const accessExp = session.accessExp ?? 0;
-  const accessIat = session.accessIat ?? 0;
+  refreshCheckPromise = (async () => {
+    let session: SessionResType;
+    try {
+      session = await getSession();
+    } catch {
+      return;
+    }
+    // Chưa đăng nhập thì không cần làm mới token
+    if (!session.authenticated) return;
 
-  //trường hợp refresh token hết hạn thì không xử lý (cookie cũng đã tự hết hạn)
-  if ((session.refreshExp ?? 0) < now) {
-    resetSessionCache();
-    return param?.onError && param.onError();
-  }
+    const now = Math.round(Date.now() / 1000);
+    const accessExp = session.accessExp ?? 0;
+    const accessIat = session.accessIat ?? 0;
 
-  // accessExp = 0 nghĩa là cookie access token đã hết hạn => cần refresh ngay
-  if (accessExp - now < (accessExp - accessIat) / 3) {
+    // Trường hợp refresh token hết hạn thì xóa cache phiên cục bộ
+    if ((session.refreshExp ?? 0) > 0 && (session.refreshExp ?? 0) < now) {
+      resetSessionCache();
+      param?.onError?.();
+      return;
+    }
+
+    const needsRefresh =
+      accessExp <= 0 ||
+      accessExp <= accessIat ||
+      accessExp - now < (accessExp - accessIat) / 3;
+
+    if (!needsRefresh) return;
+
+    // Tránh nhiều tab cùng gọi rotate refresh token trong vài giây
+    try {
+      const lastAttempt = Number(
+        typeof window !== "undefined"
+          ? window.localStorage.getItem(REFRESH_COOLDOWN_KEY) ?? "0"
+          : "0"
+      );
+      if (Date.now() - lastAttempt < REFRESH_COOLDOWN_MS) {
+        resetSessionCache();
+        await getSession();
+        return;
+      }
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(REFRESH_COOLDOWN_KEY, String(Date.now()));
+      }
+    } catch {
+      // Bỏ qua nếu trình duyệt chặn localStorage
+    }
+
     try {
       await authApiRequests.refreshToken();
       resetSessionCache();
       await getSession();
-      param?.onSuccess && param.onSuccess();
-    } catch (error) {
+      param?.onSuccess?.();
+    } catch {
       resetSessionCache();
-      param?.onError && param.onError();
+      param?.onError?.();
     }
-  }
+  })().finally(() => {
+    refreshCheckPromise = null;
+  });
+
+  return refreshCheckPromise;
 };
 export const formatDate = (day: any) => {
   return dayjs(day).format("DD-MM-YYYY");

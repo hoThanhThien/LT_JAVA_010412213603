@@ -3,6 +3,7 @@ import envConfig from "@/config";
 import {
   ACCESS_COOKIE,
   REFRESH_COOKIE,
+  RefreshAuthError,
   refreshAuthCookies,
   verifyCsrfOrigin,
 } from "@/lib/server-auth";
@@ -32,11 +33,13 @@ async function handler(
   if (!accessToken && refreshToken) {
     try {
       accessToken = await refreshAuthCookies(refreshToken);
-    } catch {
-      return Response.json(
-        { message: "Phiên đăng nhập đã hết hạn" },
-        { status: 401 }
-      );
+    } catch (err) {
+      const status = err instanceof RefreshAuthError ? err.status : 401;
+      const message =
+        status >= 500
+          ? "Không kết nối được tới server backend"
+          : "Phiên đăng nhập đã hết hạn";
+      return Response.json({ message }, { status });
     }
   }
 

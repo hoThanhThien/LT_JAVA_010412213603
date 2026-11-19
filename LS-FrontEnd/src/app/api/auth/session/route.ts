@@ -23,15 +23,22 @@ export async function GET() {
     return Response.json({ authenticated: false }, { headers });
   }
 
+  const now = Math.floor(Date.now() / 1000);
   const access = accessToken ? (jwt.decode(accessToken) as Claims) : null;
   const refresh = jwt.decode(refreshToken) as Claims;
 
-  if (refresh?.tokenType && refresh.tokenType !== "refresh") {
+  if (
+    !refresh ||
+    (refresh.tokenType && refresh.tokenType !== "refresh") ||
+    (typeof refresh.exp === "number" && refresh.exp <= now)
+  ) {
     return Response.json({ authenticated: false }, { headers });
   }
 
   const validAccess =
-    access && (!access.tokenType || access.tokenType === "access")
+    access &&
+    (!access.tokenType || access.tokenType === "access") &&
+    (typeof access.exp !== "number" || access.exp > now)
       ? access
       : null;
 

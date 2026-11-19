@@ -1,5 +1,6 @@
 import envConfig from "@/config";
 import { normalizePath, resetSessionCache } from "@/lib/utils";
+import { useAuthStore } from "@/lib/zustand";
 import { redirect } from "next/navigation";
 
 type CustomOptions = Omit<RequestInit, "method"> & {
@@ -126,9 +127,13 @@ const request = async <Response>(
     "api/auth/login",
     "api/auth/google",
     "api/auth/register",
+    "api/auth/refresh-token",
+    "api/auth/logout",
     "auth/login",
     "auth/google",
     "auth/register",
+    "auth/refresh-token",
+    "auth/logout",
   ].includes(normalizeUrl);
 
   if (!res.ok) {
@@ -144,27 +149,33 @@ const request = async <Response>(
         throw new HttpError(data);
       }
       if (isClient) {
+        resetSessionCache();
+        useAuthStore.getState().setIsAuth(false);
         if (!clientLogoutRequest) {
           clientLogoutRequest = fetch("/api/auth/logout", {
             method: "POST",
-            body: null, // Logout mình sẽ cho phép luôn luôn thành công
+            body: null,
             headers: {
               ...baseHeaders,
             } as any,
           });
           try {
             await clientLogoutRequest;
-          } catch (error) {
+          } catch {
           } finally {
             resetSessionCache();
             clientLogoutRequest = null;
-            // Redirect về trang login có thể dẫn đến loop vô hạn
-            // Nếu không không được xử lý đúng cách
-            // Vì nếu rơi vào trường hợp tại trang Login, chúng ta có gọi các API cần access token
-            // Mà access token đã bị xóa thì nó lại nhảy vào đây, và cứ thế nó sẽ bị lặp
-            window.location.assign("/");
+            const currentPath = window.location.pathname;
+            // Chỉ chuyển hướng khi đang ở trang bắt buộc đăng nhập; tránh reload loop trên trang công khai
+            if (
+              currentPath.startsWith("/manage") ||
+              currentPath.startsWith("/thanh-toan")
+            ) {
+              window.location.assign("/?login=true");
+            }
           }
         }
+        throw new HttpError(data);
       } else {
         redirect("/logout");
       }
