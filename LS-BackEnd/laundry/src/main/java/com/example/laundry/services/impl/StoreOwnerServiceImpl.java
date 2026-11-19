@@ -373,8 +373,8 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         ServiceCategoryDTO responseDTO = new ServiceCategoryDTO(
                 savedCategory.getId(),
                 savedCategory.getName(),
-                savedCategory.getDescription(),
-                savedCategory.getImageDesc()
+                savedCategory.getImageDesc(),
+                savedCategory.getDescription()
         );
 
         return new ApiResponse<>("Thêm mục dịch vụ thành công!!!", responseDTO);
@@ -472,12 +472,12 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         }
 
         // Kiểm tra dữ liệu cơ bản
-        if (serviceDTO.getName() == null || serviceDTO.getName().isEmpty()) {
+        if (serviceDTO.getName() == null || serviceDTO.getName().isBlank()) {
             return new ApiResponse<>("Tên dịch vụ không được để trống!!!", null);
         }
 
-        if (serviceDTO.getPrice() == null) {
-            return new ApiResponse<>("Giá không được để trống!!!", null);
+        if (serviceDTO.getPrice() == null || !Double.isFinite(serviceDTO.getPrice()) || serviceDTO.getPrice() <= 0) {
+            return new ApiResponse<>("Giá dịch vụ phải lớn hơn 0!!!", null);
         }
 
         if (serviceDTO.getImageDesc() == null) {
@@ -544,6 +544,10 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
             return new ApiResponse<>("Tên dịch vụ đã tồn tại trong cửa hàng!", null);
         }
 
+        if (serviceDTO.getPrice() != null && (!Double.isFinite(serviceDTO.getPrice()) || serviceDTO.getPrice() <= 0)) {
+            return new ApiResponse<>("Giá dịch vụ phải lớn hơn 0!", null);
+        }
+
         if (serviceDTO.getName() != null) existingService.setName(serviceDTO.getName());
         if (serviceDTO.getDescription() != null) existingService.setDescription(serviceDTO.getDescription());
         if (serviceDTO.getPrice() != null) existingService.setPrice(serviceDTO.getPrice());
@@ -600,7 +604,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         Page<ServiceCategory> categoryPage = serviceCategoryRepository.findServiceCategoryByShop(shop, pageable);
 
         List<ServiceCategory> categories = categoryPage.getContent();
-        List<Long> categoryIds = categories.stream().map(ServiceCategory::getId).toList();
+        List<Long> categoryIds = categories.stream().map(category -> category.getId()).toList();
         Map<Long, List<Service>> servicesByCategoryId = categoryIds.isEmpty()
                 ? Collections.emptyMap()
                 : serviceRepository.findByCategory_IdIn(categoryIds).stream()
@@ -723,6 +727,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService {
         dto.setPrice(service.getPrice());
         dto.setImageDesc(service.getImageDesc());
         dto.setEstimatedTime(service.getEstimatedTime());
+        dto.setCategoryId(service.getCategory() != null ? service.getCategory().getId() : null);
 
         return dto;
     }

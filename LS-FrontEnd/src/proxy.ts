@@ -9,17 +9,21 @@ const privatePaths = ["/manage"];
  * Xác thực chữ ký + hạn + issuer của access token (trước đây chỉ decode nên cookie giả vẫn qua được).
  * Trả về null nếu token thiếu/sai/hết hạn (hoặc thiếu JWT_SECRET: từ chối luôn cho an toàn).
  */
-function verifyAccessToken(token: string | undefined): { role?: string } | null {
+function verifyAccessToken(token: string | undefined): { role?: string; tokenType?: string } | null {
   if (!token) return null;
   const secret = getJwtSecret();
   if (!secret) {
     return null;
   }
   try {
-    return jwt.verify(token, secret, {
+    const payload = jwt.verify(token, secret, {
       algorithms: ["HS256"],
       issuer: "LAUNDRY",
-    }) as { role?: string };
+    }) as { role?: string; tokenType?: string };
+    if (payload.tokenType !== "access") {
+      return null;
+    }
+    return payload;
   } catch {
     return null;
   }

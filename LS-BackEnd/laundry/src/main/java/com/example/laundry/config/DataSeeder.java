@@ -71,6 +71,10 @@ public class DataSeeder implements CommandLineRunner {
   @Transactional
   public void run(String... args) {
     if (userRepository.count() > 0) {
+      laundryShopRepository.findAll().stream()
+          .filter(s -> "HERAMO Quận 1".equals(s.getName()))
+          .findFirst()
+          .ifPresent(this::ensureFullCategoriesForSampleShop);
       return;
     }
 
@@ -124,31 +128,77 @@ public class DataSeeder implements CommandLineRunner {
     shop.setCreatedAt(new Date());
     shop.setStoreOwner(savedOwner);
     LaundryShop savedShop = laundryShopRepository.save(shop);
-
-    ServiceCategory washDry = new ServiceCategory();
-    washDry.setName("Giặt sấy");
-    washDry.setDescription("Giặt sấy nhanh giao nhận tận nơi trong 24h");
-    washDry.setImageDesc("/service-2.png");
-    washDry.setShop(savedShop);
-    ServiceCategory savedWashDry = serviceCategoryRepository.save(washDry);
-
-    ServiceCategory dryClean = new ServiceCategory();
-    dryClean.setName("Giặt hấp - Giặt khô");
-    dryClean.setDescription("Chăm sóc đồ hiệu, vest, áo dài đúng chuẩn");
-    dryClean.setImageDesc("/service-1.png");
-    dryClean.setShop(savedShop);
-    ServiceCategory savedDryClean = serviceCategoryRepository.save(dryClean);
-
-    Service s1 = new Service("Giặt sấy tiêu chuẩn", 35000.0, "Giặt sạch thơm tính theo kg", "24 giờ");
-    s1.setImageDesc("/service-2.png");
-    s1.setCategory(savedWashDry);
-    serviceRepository.save(s1);
-
-    Service s2 = new Service("Giặt hấp Vest cao cấp", 95000.0, "Quy trình giặt khô dung môi chuyên dụng", "48 giờ");
-    s2.setImageDesc("/service-1.png");
-    s2.setCategory(savedDryClean);
-    serviceRepository.save(s2);
+    ensureFullCategoriesForSampleShop(savedShop);
 
     log.info("Seeded local sample accounts (phone 0900000001..0900000004 / pass 123456) and sample shop.");
+  }
+
+  private void ensureFullCategoriesForSampleShop(LaundryShop shop) {
+    java.util.List<ServiceCategory> existingCategories =
+        serviceCategoryRepository.findByShopId(Math.toIntExact(shop.getId()));
+
+    ServiceCategory washDry = findOrCreateCategory(
+        existingCategories, shop, "Giặt sấy",
+        "Giặt sấy nhanh giao nhận tận nơi trong 24h", "/service-2.png");
+    ensureService(washDry, "Giặt sấy tiêu chuẩn", 35000.0, "Giặt sạch thơm tính theo kg", "24 giờ", "/service-2.png");
+    ensureService(washDry, "Ủi xếp / Ủi treo", 30000.0, "Ủi thẳng đồ cao cấp tính theo kg/món", "24 giờ", "/service-2.png");
+
+    ServiceCategory dryClean = findOrCreateCategory(
+        existingCategories, shop, "Giặt hấp - Giặt khô",
+        "Chăm sóc đồ hiệu, vest, áo dài đúng chuẩn", "/service-1.png");
+    ensureService(dryClean, "Giặt hấp Vest cao cấp", 95000.0, "Quy trình giặt khô dung môi chuyên dụng", "48 giờ", "/service-1.png");
+    ensureService(dryClean, "Vệ sinh spa túi xách", 150000.0, "Chăm sóc phục hồi túi da cao cấp", "48 giờ", "/service-4.png");
+
+    ServiceCategory shoeCare = findOrCreateCategory(
+        existingCategories, shop, "Vệ sinh giày",
+        "Vệ sinh, hấp khử mùi UV và phục hồi giày chuyên sâu", "/service-3.png");
+    ensureService(shoeCare, "Vệ sinh giày toàn diện", 139000.0, "Vệ sinh thủ công dung dịch cao cấp", "48 giờ", "/service-3.png");
+    ensureService(shoeCare, "Vệ sinh giày da / da lộn", 209000.0, "Xử lý chuyên biệt cho chất liệu da", "48 giờ", "/service-3.png");
+
+    ServiceCategory homeCare = findOrCreateCategory(
+        existingCategories, shop, "Vệ sinh sofa, nệm, rèm, thảm",
+        "Vệ sinh tận nơi bằng dung dịch chuyên dụng an toàn", "/service-5.jpg");
+    ensureService(homeCare, "Vệ sinh sofa tiêu chuẩn", 350000.0, "Khử khuẩn sâu, nhanh khô 3-5 giờ", "Trong ngày", "/service-5.jpg");
+    ensureService(homeCare, "Vệ sinh nệm / thảm tận nơi", 300000.0, "Làm sạch bụi mịn và vết bẩn cứng đầu", "Trong ngày", "/service-5.jpg");
+
+    ServiceCategory acCare = findOrCreateCategory(
+        existingCategories, shop, "Vệ sinh máy lạnh",
+        "Vệ sinh dàn lạnh/dàn nóng và kiểm tra bơm ga", "/service-6.png");
+    ensureService(acCare, "Vệ sinh máy lạnh treo tường", 220000.0, "Bảo dưỡng sạch sâu giúp tiết kiệm điện", "1 giờ", "/service-6.png");
+    ensureService(acCare, "Vệ sinh máy lạnh âm trần / tủ đứng", 600000.0, "Quy trình kỹ thuật chuyên nghiệp tại nhà", "1-2 giờ", "/service-6.png");
+  }
+
+  private ServiceCategory findOrCreateCategory(
+      java.util.List<ServiceCategory> existingCategories,
+      LaundryShop shop,
+      String name,
+      String description,
+      String imageDesc) {
+    return existingCategories.stream()
+        .filter(c -> name.equals(c.getName()))
+        .findFirst()
+        .orElseGet(() -> {
+          ServiceCategory category = new ServiceCategory();
+          category.setName(name);
+          category.setDescription(description);
+          category.setImageDesc(imageDesc);
+          category.setShop(shop);
+          return serviceCategoryRepository.save(category);
+        });
+  }
+
+  private void ensureService(
+      ServiceCategory category,
+      String name,
+      double price,
+      String description,
+      String estimatedTime,
+      String imageDesc) {
+    if (!serviceRepository.existsByNameAndCategory(name, category)) {
+      Service service = new Service(name, price, description, estimatedTime);
+      service.setImageDesc(imageDesc);
+      service.setCategory(category);
+      serviceRepository.save(service);
+    }
   }
 }

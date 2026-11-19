@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { ProTable } from "@ant-design/pro-components";
 import { OrderListType } from "@/schemaValidations/order.schema";
@@ -8,6 +8,7 @@ import orderApiRequests from "@/apiRequests/order";
 import { Button, Divider, Tag } from "antd";
 import { Modal } from "antd/lib";
 import { useHydrated } from "@/hooks/use-hydrated";
+import { formatCurrency } from "@/lib/utils";
 
 export default function CustomerAllOrder(props: {
   idCustomer: string;
@@ -19,19 +20,7 @@ export default function CustomerAllOrder(props: {
 
   const mounted = useHydrated();
   const actionRef = useRef<ActionType>(null);
-  const [meta, setMeta] = useState({
-    page: 0,
-    size: 10,
-    totalElements: 0,
-    totalPages: 0,
-  });
-  const [currentPage, setCurrentPage] = useState(1); // Bắt đầu từ 1 cho UI
-  const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
-
-  const refreshTable = () => {
-    actionRef.current?.reload();
-  };
 
   // Hàm fetch data riêng để có thể gọi lại khi cần
   const fetchData = async (page: number, size: number, id: string) => {
@@ -50,7 +39,6 @@ export default function CustomerAllOrder(props: {
       const res = query.payload;
 
       if (res.data) {
-        setMeta(res.data.meta);
         return {
           data: res.data.result || [],
           success: true,
@@ -65,12 +53,6 @@ export default function CustomerAllOrder(props: {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (mounted && openOrder && idCustomer && actionRef.current) {
-      actionRef.current.reload();
-    }
-  }, [mounted, openOrder, idCustomer]);
 
   if (!mounted) {
     return null;
@@ -110,6 +92,7 @@ export default function CustomerAllOrder(props: {
       title: "Tổng tiền",
       dataIndex: "totalAmount",
       hideInSearch: true,
+      render: (_, entity) => <span>{formatCurrency(entity.totalAmount)}</span>,
     },
   ];
 
@@ -143,18 +126,18 @@ export default function CustomerAllOrder(props: {
           actionRef={actionRef}
           cardBordered
           search={false}
-          request={async () => {
-            return await fetchData(currentPage, pageSize, idCustomer);
+          params={{ idCustomer }}
+          request={async (params) => {
+            return await fetchData(
+              params.current ?? 1,
+              params.pageSize ?? 10,
+              params.idCustomer
+            );
           }}
           rowKey="id"
           pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: meta.totalElements,
-            onChange: (page, size) => {
-              setCurrentPage(page);
-              setPageSize(size);
-            },
+            defaultPageSize: 10,
+            showSizeChanger: true,
 
             showTotal: (total, range) => (
               <div>

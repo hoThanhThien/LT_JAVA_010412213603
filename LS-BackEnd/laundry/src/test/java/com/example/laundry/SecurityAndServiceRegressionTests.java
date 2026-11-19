@@ -21,22 +21,30 @@ import com.example.laundry.repository.ServiceCategoryRepository;
 import com.example.laundry.repository.ServiceRepository;
 import com.example.laundry.repository.StoreOwnerRepository;
 import com.example.laundry.services.AdminService;
+import com.example.laundry.services.AuthService;
 import com.example.laundry.services.CustomerService;
 import com.example.laundry.services.PaymentService;
 import com.example.laundry.services.StoreOwnerService;
 import com.example.laundry.utils.ApiResponse;
 import com.example.laundry.utils.UserValidator;
 import com.example.laundry.utils.VietQRCode;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseToken;
 import com.jayway.jsonpath.JsonPath;
 import jakarta.servlet.Filter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.AopTestUtils;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -101,15 +109,194 @@ class SecurityAndServiceRegressionTests {
   private PaymentService paymentService;
 
   @Autowired
+  private AuthService authService;
+
+  @Autowired
   private VietQRCode vietQRCode;
+
+  @Autowired
+  private com.example.laundry.security.LoginRateLimiter loginRateLimiter;
+
+  @Autowired
+  private com.example.laundry.repository.PaymentRepository paymentRepository;
+
+  @Autowired
+  private com.example.laundry.repository.OrderRepository orderRepository;
 
   private MockMvc mockMvc;
 
   @BeforeEach
   void setUpMockMvc() {
+    loginRateLimiter.resetAll();
     this.mockMvc = MockMvcBuilders.webAppContextSetup(context)
         .addFilters(springSecurityFilterChain)
         .build();
+  }
+
+  @Test
+  void forgotPasswordAndResetPasswordAllowLoginWithNewPassword() throws Exception {
+    long suffix = System.currentTimeMillis() % 10000000L;
+    String phone = "097" + String.format("%07d", suffix);
+    String email = "forgot" + suffix + "@test.local";
+
+    Customer customer = new Customer();
+    customer.setUsername("Forgot User " + suffix);
+    customer.setPhone(phone);
+    customer.setEmail(email);
+    customer.setPassword(passwordEncoder.encode("OldPass@123"));
+    customer.setRoles(Roles.Customer);
+    customerRepository.save(customer);
+
+    String phoneOnlyPhone = "096" + String.format("%07d", suffix);
+    Customer phoneOnlyCustomer = new Customer();
+    phoneOnlyCustomer.setUsername("PhoneOnly " + suffix);
+    phoneOnlyCustomer.setPhone(phoneOnlyPhone);
+    phoneOnlyCustomer.setEmail(null);
+    phoneOnlyCustomer.setPassword(passwordEncoder.encode("OldPass@123"));
+    phoneOnlyCustomer.setRoles(Roles.Customer);
+    customerRepository.save(phoneOnlyCustomer);
+
+    Object targetAuthService = AopTestUtils.getTargetObject(authService);
+    Object originalMailSender = ReflectionTestUtils.getField(targetAuthService, "mailSender");
+    Object originalMailUsername = ReflectionTestUtils.getField(targetAuthService, "mailUsername");
+
+    try {
+      JavaMailSender mockMailSender = Mockito.mock(JavaMailSender.class);
+      ReflectionTestUtils.setField(targetAuthService, "mailSender", mockMailSender);
+      ReflectionTestUtils.setField(targetAuthService, "mailUsername", "noreply@heramo.test");
+
+      mockMvc.perform(post("/auth/forgot-password")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"identifier\":\"" + email + "\"}"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.emailSent").value(true))
+          .andExpect(jsonPath("$.data.devOtp").doesNotExist());
+
+      ArgumentCaptor<SimpleMailMessage> mailCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+      Mockito.verify(mockMailSender).send(mailCaptor.capture());
+      String emailBody = mailCaptor.getValue().getText();
+      assertNotNull(emailBody);
+      java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\b(\\d{6})\\b").matcher(emailBody);
+      assertTrue(matcher.find(), "OTP 6 digits should be included in recovery email");
+      String otp = matcher.group(1);
+
+      mockMvc.perform(post("/auth/reset-password")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(String.format(
+                  "{\"identifier\":\"%s\",\"otp\":\"000000\",\"newPassword\":\"NewPass@123\",\"confirmPassword\":\"NewPass@123\"}",
+                  email
+              )))
+          .andExpect(status().isBadRequest());
+
+      mockMvc.perform(post("/auth/reset-password")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(String.format(
+                  "{\"identifier\":\"%s\",\"otp\":\"%s\",\"newPassword\":\"NewPass@123\",\"confirmPassword\":\"NewPass@123\"}",
+                  email, otp
+              )))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.message").value("Đặt lại mật khẩu thành công"));
+
+      String newToken = loginAndExtractToken(phone, "NewPass@123", "accessToken");
+      assertNotNull(newToken);
+      assertFalse(newToken.isBlank());
+
+      MvcResult fallbackResult = mockMvc.perform(post("/auth/forgot-password")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"identifier\":\"" + phoneOnlyPhone + "\"}"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.emailSent").value(false))
+          .andReturn();
+      String devOtp = JsonPath.read(fallbackResult.getResponse().getContentAsString(), "$.data.devOtp");
+      assertNotNull(devOtp);
+      assertEquals(6, devOtp.length());
+
+      mockMvc.perform(post("/auth/reset-password")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(String.format(
+                  "{\"identifier\":\"%s\",\"otp\":\"%s\",\"newPassword\":\"ResetOk@456\",\"confirmPassword\":\"ResetOk@456\"}",
+                  phoneOnlyPhone, devOtp
+              )))
+          .andExpect(status().isOk());
+
+      String phoneOnlyToken = loginAndExtractToken(phoneOnlyPhone, "ResetOk@456", "accessToken");
+      assertNotNull(phoneOnlyToken);
+    } finally {
+      ReflectionTestUtils.setField(targetAuthService, "mailSender", originalMailSender);
+      ReflectionTestUtils.setField(targetAuthService, "mailUsername", originalMailUsername);
+    }
+  }
+
+  @Test
+  void authenticatedCustomerAndGoogleUserCanChangePassword() throws Exception {
+    long suffix = System.currentTimeMillis() % 10000000L;
+    String phone = "095" + String.format("%07d", suffix);
+
+    Customer customer = new Customer();
+    customer.setUsername("ChangePass User " + suffix);
+    customer.setPhone(phone);
+    customer.setEmail("changepass" + suffix + "@test.local");
+    customer.setPassword(passwordEncoder.encode("InitPass@123"));
+    customer.setRoles(Roles.Customer);
+    customerRepository.save(customer);
+
+    String accessToken = loginAndExtractToken(phone, "InitPass@123", "accessToken");
+
+    mockMvc.perform(post("/accounts/change-password")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"currentPassword\":\"Wrong@123\",\"newPassword\":\"Changed@456\",\"confirmPassword\":\"Changed@456\"}"))
+        .andExpect(status().isBadRequest());
+
+    mockMvc.perform(post("/accounts/change-password")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"currentPassword\":\"\",\"newPassword\":\"Changed@456\",\"confirmPassword\":\"Changed@456\"}"))
+        .andExpect(status().isBadRequest());
+
+    mockMvc.perform(post("/accounts/change-password")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"currentPassword\":\"InitPass@123\",\"newPassword\":\"Changed@456\",\"confirmPassword\":\"Changed@456\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.message").value("Đổi mật khẩu thành công"));
+
+    String newToken = loginAndExtractToken(phone, "Changed@456", "accessToken");
+    assertNotNull(newToken);
+
+    Object targetAuthService = AopTestUtils.getTargetObject(authService);
+    Object originalFirebaseAuth = ReflectionTestUtils.getField(targetAuthService, "firebaseAuth");
+    String googleEmail = "googlecp" + suffix + "@gmail.com";
+
+    try {
+      FirebaseAuth mockFirebaseAuth = Mockito.mock(FirebaseAuth.class);
+      FirebaseToken mockToken = Mockito.mock(FirebaseToken.class);
+      Mockito.when(mockToken.getEmail()).thenReturn(googleEmail);
+      Mockito.when(mockToken.isEmailVerified()).thenReturn(true);
+      Mockito.when(mockToken.getName()).thenReturn("Google User");
+      Mockito.when(mockToken.getPicture()).thenReturn("https://example.com/avt.png");
+      Mockito.when(mockFirebaseAuth.verifyIdToken("mock-cp-google-token")).thenReturn(mockToken);
+      ReflectionTestUtils.setField(targetAuthService, "firebaseAuth", mockFirebaseAuth);
+
+      MvcResult googleLoginRes = mockMvc.perform(post("/auth/google")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"idToken\":\"mock-cp-google-token\"}"))
+          .andExpect(status().isOk())
+          .andReturn();
+      String googleAccessToken = JsonPath.read(googleLoginRes.getResponse().getContentAsString(), "$.data.accessToken");
+
+      mockMvc.perform(post("/accounts/change-password")
+              .header(HttpHeaders.AUTHORIZATION, "Bearer " + googleAccessToken)
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"currentPassword\":\"\",\"newPassword\":\"GoogleSet@789\",\"confirmPassword\":\"GoogleSet@789\"}"))
+          .andExpect(status().isOk());
+
+      Customer reloadedGoogleCustomer = customerRepository.findByEmail(googleEmail).orElse(null);
+      assertNotNull(reloadedGoogleCustomer);
+      assertTrue(passwordEncoder.matches("GoogleSet@789", reloadedGoogleCustomer.getPassword()));
+    } finally {
+      ReflectionTestUtils.setField(targetAuthService, "firebaseAuth", originalFirebaseAuth);
+    }
   }
 
   private String loginAndExtractToken(String phone, String rawPassword, String field) throws Exception {
@@ -542,5 +729,488 @@ class SecurityAndServiceRegressionTests {
 
     mockMvc.perform(get("/swagger-ui/index.html"))
         .andExpect(status().isOk());
+  }
+
+  @Test
+  void googleLoginRejectsMissingAndInvalidTokens() throws Exception {
+    mockMvc.perform(post("/auth/google")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{}"))
+        .andExpect(status().isUnauthorized());
+
+    mockMvc.perform(post("/auth/google")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"idToken\":\"invalid-google-token\"}"))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void googleLoginCreatesNewCustomerOnceReusesOnReloginAndBlocksEmptyPhoneLogin() throws Exception {
+    Object targetAuth = AopTestUtils.getUltimateTargetObject(authService);
+    FirebaseAuth mockFirebaseAuth = Mockito.mock(FirebaseAuth.class);
+    FirebaseToken mockToken = Mockito.mock(FirebaseToken.class);
+    Mockito.when(mockToken.getEmail()).thenReturn("newgoogleuser@gmail.com");
+    Mockito.when(mockToken.isEmailVerified()).thenReturn(true);
+    Mockito.when(mockToken.getName()).thenReturn("Google Test User");
+    Mockito.when(mockToken.getPicture()).thenReturn("https://example.com/avatar.png");
+    Mockito.when(mockFirebaseAuth.verifyIdToken("mock-firebase-id-token")).thenReturn(mockToken);
+
+    ReflectionTestUtils.setField(targetAuth, "firebaseAuth", mockFirebaseAuth);
+    try {
+      MvcResult firstResult = mockMvc.perform(post("/auth/google")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"idToken\":\"mock-firebase-id-token\"}"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+          .andExpect(jsonPath("$.data.refreshToken").isNotEmpty())
+          .andExpect(jsonPath("$.data.account.email").value("newgoogleuser@gmail.com"))
+          .andExpect(jsonPath("$.data.account.role").value("Customer"))
+          .andReturn();
+
+      String firstJson = firstResult.getResponse().getContentAsString();
+      assertNull(JsonPath.read(firstJson, "$.data.account.phone"));
+      String firstId = JsonPath.read(firstJson, "$.data.account.id");
+      String accessToken = JsonPath.read(firstJson, "$.data.accessToken");
+
+      Customer saved = customerRepository.findByEmail("newgoogleuser@gmail.com").orElseThrow();
+      assertNull(saved.getPhone());
+      assertEquals(firstId, saved.getId().toString());
+
+      mockMvc.perform(get("/accounts/me")
+              .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.account.email").value("newgoogleuser@gmail.com"));
+
+      MvcResult secondResult = mockMvc.perform(post("/auth/google")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"idToken\":\"mock-firebase-id-token\"}"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.account.id").value(firstId))
+          .andReturn();
+      assertEquals(firstId, JsonPath.read(secondResult.getResponse().getContentAsString(), "$.data.account.id"));
+
+      mockMvc.perform(post("/auth/login")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"phone\":null,\"password\":\"secret\"}"))
+          .andExpect(status().isUnauthorized());
+
+      mockMvc.perform(post("/auth/login")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"phone\":\"\",\"password\":\"secret\"}"))
+          .andExpect(status().isUnauthorized());
+    } finally {
+      ReflectionTestUtils.setField(targetAuth, "firebaseAuth", null);
+    }
+  }
+
+  @Test
+  void serviceCategoryDtoFieldsAndCustomerBookServiceValidationWorkCorrectly() {
+    StoreOwner owner = createOwnerWithShop("0970000001", "Order Test Shop");
+    LaundryShop shop = laundryShopRepository.findByStoreOwner(owner);
+    assertNotNull(shop);
+
+    ServiceCategoryDTO catDto = new ServiceCategoryDTO();
+    catDto.setName("Giặt Hấp VIP");
+    catDto.setImageDesc("data:image/jpeg;base64,catimg");
+    catDto.setDescription("Mô tả nhóm dịch vụ");
+    ApiResponse<ServiceCategoryDTO> createdCat = storeOwnerService.createServiceCategory(owner, catDto);
+    assertNotNull(createdCat.getData());
+    assertEquals("data:image/jpeg;base64,catimg", createdCat.getData().getImageDesc());
+    assertEquals("Mô tả nhóm dịch vụ", createdCat.getData().getDescription());
+
+    ServiceDTO invalidPriceSvc = new ServiceDTO();
+    invalidPriceSvc.setCategoryId(createdCat.getData().getId());
+    invalidPriceSvc.setName("Invalid Price Svc");
+    invalidPriceSvc.setDescription("Desc");
+    invalidPriceSvc.setEstimatedTime("24h");
+    invalidPriceSvc.setPrice(0.0);
+    invalidPriceSvc.setImageDesc("img");
+    assertNull(storeOwnerService.createService(owner, invalidPriceSvc).getData());
+
+    ServiceDTO svcDto = new ServiceDTO();
+    svcDto.setCategoryId(createdCat.getData().getId());
+    svcDto.setName("Giặt Sấy Nhanh");
+    svcDto.setDescription("Trong ngày");
+    svcDto.setEstimatedTime("12h");
+    svcDto.setPrice(30000.0);
+    svcDto.setImageDesc("img");
+    ApiResponse<ServiceDTO> createdSvc = storeOwnerService.createService(owner, svcDto);
+    assertNotNull(createdSvc.getData());
+
+    Customer customer = new Customer("Order Customer", passwordEncoder.encode("secret123"), "ordercust@test.local", "0970000002", "123 Profile St", Roles.Customer);
+    Customer savedCustomer = customerRepository.save(customer);
+
+    // Omitted address falls back to customer's profile address & BigDecimal totalAmount avoids float noise
+    com.example.laundry.dto.OrderDTO orderDto = new com.example.laundry.dto.OrderDTO(
+        null, null, null, "",
+        shop.getId(), createdCat.getData().getId(), createdSvc.getData().getId(),
+        1.1, null, "Gọi trước khi giao"
+    );
+    ApiResponse<com.example.laundry.dto.OrderResponse> orderRes = customerService.bookService(savedCustomer, orderDto);
+    assertNotNull(orderRes.getData());
+    assertEquals(33000.0, orderRes.getData().getTotalAmount());
+    assertEquals("123 Profile St", orderRes.getData().getAddress());
+  }
+
+  @Test
+  void googleCustomerCanBookOrderPersistInitialAddressViewHistoryAndGetPaymentQr() throws Exception {
+    StoreOwner owner = createOwnerWithShop("0971000001", "Google Booking Shop");
+    LaundryShop shop = laundryShopRepository.findByStoreOwner(owner);
+    assertNotNull(shop);
+
+    ServiceCategoryDTO catDto = new ServiceCategoryDTO();
+    catDto.setName("Giặt Sấy E2E");
+    catDto.setImageDesc("img");
+    catDto.setDescription("Desc");
+    Long categoryId = storeOwnerService.createServiceCategory(owner, catDto).getData().getId();
+
+    ServiceDTO svcDto = new ServiceDTO();
+    svcDto.setCategoryId(categoryId);
+    svcDto.setName("Giặt Sấy Thường");
+    svcDto.setDescription("Desc");
+    svcDto.setEstimatedTime("24h");
+    svcDto.setPrice(25000.0);
+    svcDto.setImageDesc("img");
+    Long serviceId = storeOwnerService.createService(owner, svcDto).getData().getId();
+
+    Object targetAuth = AopTestUtils.getUltimateTargetObject(authService);
+    FirebaseAuth mockFirebaseAuth = Mockito.mock(FirebaseAuth.class);
+    FirebaseToken mockToken = Mockito.mock(FirebaseToken.class);
+    Mockito.when(mockToken.getEmail()).thenReturn("googlebooking@gmail.com");
+    Mockito.when(mockToken.isEmailVerified()).thenReturn(true);
+    Mockito.when(mockToken.getName()).thenReturn("Google Booking User");
+    Mockito.when(mockToken.getPicture()).thenReturn("https://example.com/avt.png");
+    Mockito.when(mockFirebaseAuth.verifyIdToken("mock-google-booking-token")).thenReturn(mockToken);
+
+    ReflectionTestUtils.setField(targetAuth, "firebaseAuth", mockFirebaseAuth);
+    String accessToken;
+    String customerId;
+    try {
+      MvcResult loginRes = mockMvc.perform(post("/auth/google")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"idToken\":\"mock-google-booking-token\"}"))
+          .andExpect(status().isOk())
+          .andReturn();
+      String loginJson = loginRes.getResponse().getContentAsString();
+      accessToken = JsonPath.read(loginJson, "$.data.accessToken");
+      customerId = JsonPath.read(loginJson, "$.data.account.id");
+    } finally {
+      ReflectionTestUtils.setField(targetAuth, "firebaseAuth", null);
+    }
+
+    String orderBody = String.format(
+        "{\"laundryShop\":{\"id\":%d},\"serviceCategory\":{\"id\":%d},\"service\":{\"id\":%d},\"orderVolume\":2.0,\"phone\":\"0971234567\",\"address\":\"456 Le Loi, Q1\",\"instructions\":\"Nhan buoi sang\",\"imgProduct\":\"\"}",
+        shop.getId(), categoryId, serviceId);
+
+    MvcResult createRes = mockMvc.perform(post("/customer/orders/create")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(orderBody))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.totalAmount").value(50000.0))
+        .andExpect(jsonPath("$.data.phone").value("0971234567"))
+        .andExpect(jsonPath("$.data.address").value("456 Le Loi, Q1"))
+        .andExpect(jsonPath("$.data.orderStatus").value("IN_PROGRESS"))
+        .andReturn();
+
+    Number createdOrderId = JsonPath.read(createRes.getResponse().getContentAsString(), "$.data.id");
+
+    Customer reloaded = customerRepository.findById(java.util.UUID.fromString(customerId)).orElseThrow();
+    assertEquals("456 Le Loi, Q1", reloaded.getAddress());
+    assertEquals("0971234567", reloaded.getPhone());
+
+    mockMvc.perform(get("/customer/orders/history")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.result[0].id").value(createdOrderId.longValue()))
+        .andExpect(jsonPath("$.data.result[0].address").value("456 Le Loi, Q1"))
+        .andExpect(jsonPath("$.data.result[0].paymentStatus").value("PENDING"));
+
+    mockMvc.perform(get("/api/payments/info/" + createdOrderId.longValue())
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.orderId").value(createdOrderId.longValue()))
+        .andExpect(jsonPath("$.totalAmount").value(50000.0))
+        .andExpect(jsonPath("$.qrCode").isNotEmpty());
+  }
+
+  @Test
+  void refreshTokenRotationPreventsReplayAndSupportsMultiDeviceSessions() throws Exception {
+    String phone = "0981000001";
+    Customer customer = new Customer(
+        "MultiDevice User",
+        passwordEncoder.encode("secret123"),
+        "multidevice@test.local",
+        phone,
+        "HCMC",
+        Roles.Customer
+    );
+    customerRepository.save(customer);
+
+    MvcResult login1 = mockMvc.perform(post("/auth/login")
+            .header(HttpHeaders.USER_AGENT, "Chrome-Desktop/1.0")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"phone\":\"" + phone + "\",\"password\":\"secret123\"}"))
+        .andExpect(status().isOk())
+        .andReturn();
+    String refresh1 = JsonPath.read(login1.getResponse().getContentAsString(), "$.data.refreshToken");
+
+    MvcResult login2 = mockMvc.perform(post("/auth/login")
+            .header(HttpHeaders.USER_AGENT, "iPhone-App/2.0")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"phone\":\"" + phone + "\",\"password\":\"secret123\"}"))
+        .andExpect(status().isOk())
+        .andReturn();
+    String access2 = JsonPath.read(login2.getResponse().getContentAsString(), "$.data.accessToken");
+    String refresh2 = JsonPath.read(login2.getResponse().getContentAsString(), "$.data.refreshToken");
+
+    MvcResult sessionsRes = mockMvc.perform(get("/auth/sessions")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + access2))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.length()").value(2))
+        .andReturn();
+    String sessionsJson = sessionsRes.getResponse().getContentAsString();
+    Number sessionIdToRevoke = null;
+    java.util.List<java.util.Map<String, Object>> sessionList = JsonPath.read(sessionsJson, "$.data");
+    for (java.util.Map<String, Object> item : sessionList) {
+      if ("iPhone-App/2.0".equals(item.get("deviceInfo"))) {
+        sessionIdToRevoke = (Number) item.get("id");
+        break;
+      }
+    }
+    assertNotNull(sessionIdToRevoke);
+
+    MvcResult rotateRes = mockMvc.perform(post("/auth/refresh-token")
+            .header(HttpHeaders.USER_AGENT, "Chrome-Desktop/1.0")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"refreshToken\":\"" + refresh1 + "\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+        .andExpect(jsonPath("$.data.refreshToken").isNotEmpty())
+        .andReturn();
+    String rotatedRefresh1 = JsonPath.read(rotateRes.getResponse().getContentAsString(), "$.data.refreshToken");
+    assertNotEquals(refresh1, rotatedRefresh1);
+
+    // Replaying consumed refresh token must be rejected
+    mockMvc.perform(post("/auth/refresh-token")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"refreshToken\":\"" + refresh1 + "\"}"))
+        .andExpect(status().isForbidden());
+
+    // Revoke device 2 session explicitly
+    mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+            .delete("/auth/sessions/" + sessionIdToRevoke.longValue())
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + access2))
+        .andExpect(status().isOk());
+
+    mockMvc.perform(post("/auth/refresh-token")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"refreshToken\":\"" + refresh2 + "\"}"))
+        .andExpect(status().isForbidden());
+
+    mockMvc.perform(get("/auth/sessions")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + access2))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.length()").value(1));
+  }
+
+  @Test
+  void loginRateLimiterBlocksAfterFiveFailedAttempts() throws Exception {
+    String phone = "0982000001";
+    Customer customer = new Customer(
+        "RateLimit User",
+        passwordEncoder.encode("Correct@123"),
+        "ratelimit@test.local",
+        phone,
+        "HCMC",
+        Roles.Customer
+    );
+    customerRepository.save(customer);
+
+    for (int i = 0; i < 5; i++) {
+      mockMvc.perform(post("/auth/login")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{\"phone\":\"" + phone + "\",\"password\":\"wrong-pass\"}"))
+          .andExpect(status().isUnauthorized());
+    }
+
+    // 6th attempt must trigger 429 Too Many Requests even with the right password
+    mockMvc.perform(post("/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"phone\":\"" + phone + "\",\"password\":\"Correct@123\"}"))
+        .andExpect(status().isTooManyRequests());
+
+    loginRateLimiter.resetAll();
+    mockMvc.perform(post("/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"phone\":\"" + phone + "\",\"password\":\"Correct@123\"}"))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void paymentPollingPersistsPaidStatusAndPaymentRecordTransactionally() throws Exception {
+    StoreOwner owner = createOwnerWithShop("0984000001", "Polling Tx Shop");
+    LaundryShop shop = laundryShopRepository.findByStoreOwner(owner);
+    assertNotNull(shop);
+
+    ServiceCategoryDTO catDto = new ServiceCategoryDTO();
+    catDto.setName("Giặt Sấy Tx");
+    catDto.setImageDesc("img");
+    catDto.setDescription("Desc");
+    Long categoryId = storeOwnerService.createServiceCategory(owner, catDto).getData().getId();
+
+    ServiceDTO svcDto = new ServiceDTO();
+    svcDto.setCategoryId(categoryId);
+    svcDto.setName("Giặt Nhanh Tx");
+    svcDto.setDescription("Desc");
+    svcDto.setEstimatedTime("12h");
+    svcDto.setPrice(40000.0);
+    svcDto.setImageDesc("img");
+    Long serviceId = storeOwnerService.createService(owner, svcDto).getData().getId();
+
+    String custPhone = "0984000002";
+    Customer customer = new Customer(
+        "Tx Customer",
+        passwordEncoder.encode("TxPass@123"),
+        "txcust@test.local",
+        custPhone,
+        "HCMC",
+        Roles.Customer
+    );
+    customerRepository.save(customer);
+    String token = loginAndExtractToken(custPhone, "TxPass@123", "accessToken");
+
+    String orderBody = String.format(
+        "{\"laundryShop\":{\"id\":%d},\"serviceCategory\":{\"id\":%d},\"service\":{\"id\":%d},\"orderVolume\":1.0,\"phone\":\"%s\",\"address\":\"10 Nguyen Hue\",\"instructions\":\"\",\"imgProduct\":\"\"}",
+        shop.getId(), categoryId, serviceId, custPhone);
+
+    MvcResult createRes = mockMvc.perform(post("/customer/orders/create")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(orderBody))
+        .andExpect(status().isOk())
+        .andReturn();
+    Long orderId = ((Number) JsonPath.read(createRes.getResponse().getContentAsString(), "$.data.id")).longValue();
+
+    CassoClient.CassoTransaction tx = new CassoClient.CassoTransaction();
+    tx.setAmount(40000.0);
+    tx.setDescription("Thanh toan LAUNDRY" + orderId + " test");
+    tx.setTransactionTime(LocalDateTime.now().minusMinutes(3));
+
+    CassoClient.CassoTransactionData cassoData = new CassoClient.CassoTransactionData();
+    cassoData.setRecords(java.util.List.of(tx));
+
+    CassoClient.CassoTransactionResponse cassoResponse = new CassoClient.CassoTransactionResponse();
+    cassoResponse.setData(cassoData);
+
+    CassoClient mockCasso = Mockito.mock(CassoClient.class);
+    Mockito.when(mockCasso.getTransactions(Mockito.eq(1), Mockito.anyInt())).thenReturn(cassoResponse);
+
+    Object targetPaymentService = AopTestUtils.getUltimateTargetObject(paymentService);
+    Object originalCasso = ReflectionTestUtils.getField(targetPaymentService, "cassoClient");
+    ReflectionTestUtils.setField(targetPaymentService, "cassoClient", mockCasso);
+
+    try {
+      paymentService.pollBankTransactions();
+
+      var updatedOrder = orderRepository.findById(orderId).orElseThrow();
+      assertEquals(com.example.laundry.models.order.PaymentStatus.PAID, updatedOrder.getPaymentStatus());
+
+      var persistedPayment = paymentRepository.findByOrderId(orderId).orElse(null);
+      assertNotNull(persistedPayment);
+      assertEquals("PAID", persistedPayment.getStatus());
+      assertEquals(40000.0, persistedPayment.getAmount());
+      assertEquals("VIETQR_BANK_TRANSFER", persistedPayment.getPaymentMethod());
+    } finally {
+      ReflectionTestUtils.setField(targetPaymentService, "cassoClient", originalCasso);
+    }
+  }
+
+  @Test
+  void healthCheckReturnsUpAndUnknownRouteReturnsNotFound() throws Exception {
+    mockMvc.perform(get("/health"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.status").value("UP"))
+        .andExpect(jsonPath("$.data.database").value("UP"));
+
+    mockMvc.perform(get("/actuator/health"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.status").value("UP"));
+
+    String custPhone = "0985000001";
+    Customer customer = new Customer(
+        "Health Route Customer",
+        passwordEncoder.encode("secret123"),
+        "healthcust@test.local",
+        custPhone,
+        "HCMC",
+        Roles.Customer
+    );
+    customerRepository.save(customer);
+    String custToken = loginAndExtractToken(custPhone, "secret123", "accessToken");
+
+    mockMvc.perform(get("/api/nonexistent-endpoint-check")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + custToken))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.message").value("Không tìm thấy tài nguyên yêu cầu"));
+
+    mockMvc.perform(get("/admin/all")
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + custToken))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void concurrentRefreshTokenRotationOnlyAllowsSingleWinner() throws Exception {
+    String phone = "0983000001";
+    Customer customer = new Customer(
+        "Concurrent User",
+        passwordEncoder.encode("secret123"),
+        "concurrent@test.local",
+        phone,
+        "HCMC",
+        Roles.Customer
+    );
+    customerRepository.save(customer);
+
+    String refreshToken = loginAndExtractToken(phone, "secret123", "refreshToken");
+
+    int threadCount = 5;
+    java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(threadCount);
+    java.util.concurrent.CountDownLatch readyLatch = new java.util.concurrent.CountDownLatch(threadCount);
+    java.util.concurrent.CountDownLatch startLatch = new java.util.concurrent.CountDownLatch(1);
+    java.util.List<java.util.concurrent.Future<Integer>> futures = new java.util.ArrayList<>();
+
+    try {
+      for (int i = 0; i < threadCount; i++) {
+        futures.add(executor.submit(() -> {
+          readyLatch.countDown();
+          startLatch.await(5, java.util.concurrent.TimeUnit.SECONDS);
+          MvcResult res = mockMvc.perform(post("/auth/refresh-token")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
+              .andReturn();
+          return res.getResponse().getStatus();
+        }));
+      }
+
+      assertTrue(readyLatch.await(5, java.util.concurrent.TimeUnit.SECONDS));
+      startLatch.countDown();
+
+      int okCount = 0;
+      int forbiddenCount = 0;
+      for (java.util.concurrent.Future<Integer> future : futures) {
+        int status = future.get(15, java.util.concurrent.TimeUnit.SECONDS);
+        if (status == 200) {
+          okCount++;
+        } else if (status == 403) {
+          forbiddenCount++;
+        }
+      }
+
+      assertEquals(1, okCount, "Exactly 1 concurrent refresh request may succeed");
+      assertEquals(threadCount - 1, forbiddenCount, "All competing refresh requests must be rejected");
+    } finally {
+      executor.shutdownNow();
+    }
   }
 }

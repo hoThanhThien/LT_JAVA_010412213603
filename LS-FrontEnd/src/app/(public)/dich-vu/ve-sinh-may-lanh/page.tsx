@@ -196,8 +196,15 @@ export default function VeSinhMayLanh() {
                       {item.title}
                     </div>
                     <div className="mt-2 text-center">☑️{item.description}</div>
+                    <div className="mt-3 text-center text-lg font-bold text-main">
+                      {item.price}
+                    </div>
                     <div className="flex justify-center items-center">
-                      <ButtonMessage className="mt-5 mx-auto bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer" />
+                      <ButtonMessage
+                        category="Vệ sinh máy lạnh"
+                        service={item.title}
+                        className="mt-5 mx-auto bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer"
+                      />
                     </div>
                   </div>
                 </div>

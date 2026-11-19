@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import accountApiRequests from "@/apiRequests/account";
 export const useAccountMe = (enabled = true) => {
   return useQuery({
@@ -9,7 +9,17 @@ export const useAccountMe = (enabled = true) => {
 };
 
 export const useUpdateMeMutation = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: accountApiRequests.updateMe,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["account-me"] });
+    },
+  });
+};
+
+export const useChangePasswordMutation = () => {
+  return useMutation({
+    mutationFn: accountApiRequests.changePassword,
   });
 };

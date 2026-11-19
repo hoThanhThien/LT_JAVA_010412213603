@@ -18,22 +18,22 @@ export default function DropdownService() {
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link href="/dich-vu/giat-hap-giat-kho" className="hover:text-main">
             Giặt hấp, giặt khô
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link href="/dich-vu/giat-say" className="hover:text-main">
             Giặt sấy
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link href="/dich-vu/ve-sinh-giay" className="hover:text-main">
             Vệ sinh giày
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link
             href="/dich-vu/ve-sinh-giat-sofa-nem-rem-tham"
             className="hover:text-main"
@@ -41,7 +41,7 @@ export default function DropdownService() {
             Vệ sinh sofa, nệm, rèm, thảm
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link href="/dich-vu/ve-sinh-may-lanh" className="hover:text-main">
             Vệ sinh máy lạnh
           </Link>

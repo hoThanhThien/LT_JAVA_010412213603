@@ -27,6 +27,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -148,9 +150,13 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @Transactional
     public ApiResponse<OrderResponse> bookService(Customer customer, OrderDTO orderDTO) {
         if (customer == null || customer.getId() == null) {
             throw new RuntimeException("Customer not found");
+        }
+        if (orderDTO == null) {
+            return new ApiResponse<>("Thiếu thông tin đơn hàng!");
         }
         // Kiem tra customer
         Customer customerId = customerRepository.findById(customer.getId())
@@ -158,8 +164,12 @@ public class CustomerServiceImpl implements CustomerService {
         // Load LaundryShop từ database
         LaundryShop laundryShop = null;
         if (orderDTO.getLaundryShop() != null && orderDTO.getLaundryShop().getId() != null) {
-            laundryShop = laundryShopRepository.findById(Math.toIntExact(orderDTO.getLaundryShop().getId()))
-                    .orElseThrow(() -> new RuntimeException("LaundryShop not found with id: " + orderDTO.getLaundryShop().getId()));
+            long shopIdLong = orderDTO.getLaundryShop().getId();
+            if (shopIdLong <= 0 || shopIdLong > Integer.MAX_VALUE) {
+                return new ApiResponse<>("ID cửa hàng không hợp lệ!");
+            }
+            laundryShop = laundryShopRepository.findById((int) shopIdLong)
+                    .orElseThrow(() -> new RuntimeException("LaundryShop not found with id: " + shopIdLong));
         } else {
             return new ApiResponse<>("Vui lòng chọn cửa hàng giặt là!!!");
         }
@@ -192,23 +202,58 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         Double orderVolume = orderDTO.getOrderVolume();
-        if (orderVolume == null || orderDTO.getOrderVolume() <= 0) {
+        if (orderVolume == null || !Double.isFinite(orderVolume) || orderVolume <= 0) {
             return new ApiResponse<>("Khối lượng đồ không được để trống và phải lớn hơn 0");
+        }
+
+        Double servicePrice = service.getPrice();
+        if (servicePrice == null || !Double.isFinite(servicePrice) || servicePrice <= 0) {
+            return new ApiResponse<>("Giá dịch vụ không hợp lệ!");
+        }
+
+        String resolvedAddress = (orderDTO.getAddress() != null && !orderDTO.getAddress().isBlank())
+                ? orderDTO.getAddress().trim()
+                : customerId.getAddress();
+        if (resolvedAddress == null || resolvedAddress.isBlank()) {
+            return new ApiResponse<>("Vui lòng nhập địa chỉ giao nhận đơn hàng!");
+        }
+
+        boolean customerChanged = false;
+        if (orderDTO.getPhone() != null && !orderDTO.getPhone().isBlank()) {
+            String trimmedPhone = orderDTO.getPhone().trim();
+            if (!UserValidator.isValidPhone(trimmedPhone)) {
+                return new ApiResponse<>("Số điện thoại liên hệ không hợp lệ! Phải có đúng 10 chữ số.");
+            }
+            if ((customerId.getPhone() == null || customerId.getPhone().isBlank())
+                    && !userRepository.existsByPhone(trimmedPhone)) {
+                customerId.setPhone(trimmedPhone);
+                customerChanged = true;
+            }
+        }
+        if (customerId.getAddress() == null || customerId.getAddress().isBlank()) {
+            customerId.setAddress(resolvedAddress);
+            customerChanged = true;
+        }
+        if (customerChanged) {
+            customerRepository.save(customerId);
         }
 
         Order order = new Order();
         order.setCustomer(customerId);
-        order.setUsername(customer.getUsername());
+        order.setUsername(customerId.getUsername());
         order.setLaundryShop(laundryShop);
         order.setServiceCategory(serviceCategory);
         order.setService(service);
-        order.setOrderVolume(orderDTO.getOrderVolume());
+        order.setOrderVolume(orderVolume);
         order.setOrderStatus(OrderStatus.IN_PROGRESS);
         order.setPaymentStatus(com.example.laundry.models.order.PaymentStatus.PENDING);
         order.setInstructions(orderDTO.getInstructions());
         order.setImgProduct(orderDTO.getImgProduct());
-        order.setAddress(orderDTO.getAddress());
-        double totalAmount = orderDTO.getOrderVolume() * service.getPrice();
+        order.setAddress(resolvedAddress);
+        double totalAmount = BigDecimal.valueOf(orderVolume)
+                .multiply(BigDecimal.valueOf(servicePrice))
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue();
         order.setTotalAmount(totalAmount);
 
         Order savedOrder = orderService.save(order);

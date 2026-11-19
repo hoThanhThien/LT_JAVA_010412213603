@@ -134,9 +134,11 @@ function Home() {
                 tận tâm
               </div>
             </div>
-            <button className="bg-black text-white border border-black hover:bg-transparent hover:text-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[70%] ">
-              ĐẶT DỊCH VỤ NGAY
-            </button>
+            <ButtonOrder>
+              <button className="bg-black text-white border border-black hover:bg-transparent hover:text-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[70%] ">
+                ĐẶT DỊCH VỤ NGAY
+              </button>
+            </ButtonOrder>
           </div>
         </div>
       </div>

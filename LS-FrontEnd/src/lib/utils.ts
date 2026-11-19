@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { UseFormSetError } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
 import { EntityError } from "./http";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import authApiRequests from "@/apiRequests/auth";
 import type { SessionResType } from "@/schemaValidations/auth.schema";
 import dayjs from "dayjs";
@@ -36,7 +36,7 @@ export const handleErrorApi = ({
     });
   } else {
     toast.error(error?.payload?.message ?? "Lỗi không xác định", {
-      duration: duration ?? 5000,
+      autoClose: duration ?? 5000,
     });
   }
 };
@@ -97,4 +97,62 @@ export const checkAndRefreshToken = async (param?: {
 };
 export const formatDate = (day: any) => {
   return dayjs(day).format("DD-MM-YYYY");
+};
+
+export const formatCurrency = (amount?: number | null) => {
+  if (amount == null || !Number.isFinite(amount)) return "0 đ";
+  return `${new Intl.NumberFormat("vi-VN").format(amount)} đ`;
+};
+
+const readFileAsDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = (error) => reject(error);
+  });
+
+export const compressImageToBase64 = async (
+  file: File,
+  maxDimension = 800,
+  quality = 0.78
+): Promise<string> => {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Vui lòng chọn tệp hình ảnh hợp lệ");
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    throw new Error("Kích thước ảnh không được vượt quá 10MB");
+  }
+  if (file.type === "image/svg+xml" || file.size <= 120 * 1024) {
+    return readFileAsDataUrl(file);
+  }
+
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new window.Image();
+      image.onload = () => resolve(image);
+      image.onerror = (err) => reject(err);
+      image.src = objectUrl;
+    });
+
+    const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
+    const width = Math.max(1, Math.round(img.width * scale));
+    const height = Math.max(1, Math.round(img.height * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      return readFileAsDataUrl(file);
+    }
+    ctx.drawImage(img, 0, 0, width, height);
+    const outputType = file.type === "image/png" ? "image/webp" : "image/jpeg";
+    return canvas.toDataURL(outputType, quality);
+  } catch {
+    return readFileAsDataUrl(file);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 };

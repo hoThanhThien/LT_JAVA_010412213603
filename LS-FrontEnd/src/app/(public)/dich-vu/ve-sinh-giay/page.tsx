@@ -177,7 +177,10 @@ export default function VeSinhGiay() {
                 ngay!
               </div>
             </div>
-            <ButtonMessage className="bg-black text-white hover:bg-transparent hover:text-black border border-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[50%] " />
+            <ButtonMessage
+              category="Vệ sinh giày"
+              className="bg-black text-white hover:bg-transparent hover:text-black border border-black px-9 py-3 rounded-4xl font-bold cursor-pointer w-[50%] "
+            />
           </div>
         </div>
         <div className="py-12">
@@ -257,8 +260,15 @@ export default function VeSinhGiay() {
                       {item.title}
                     </div>
                     <div className="mt-2 text-center">☑️{item.description}</div>
+                    <div className="mt-3 text-center text-lg font-bold text-main">
+                      {item.price}
+                    </div>
                     <div className="flex justify-center items-center">
-                      <ButtonMessage className="mt-5 mx-auto bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer" />
+                      <ButtonMessage
+                        category="Vệ sinh giày"
+                        service={item.title}
+                        className="mt-5 mx-auto bg-main px-9 py-3 rounded-[28px] font-bold cursor-pointer"
+                      />
                     </div>
                   </div>
                 </div>

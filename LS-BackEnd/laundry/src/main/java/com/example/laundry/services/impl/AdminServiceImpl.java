@@ -233,7 +233,7 @@ public class AdminServiceImpl implements AdminService {
       Page<StoreOwner> storeOwnerPage = storeOwnerRepository.findAll(pageable);
 
       List<StoreOwner> owners = storeOwnerPage.getContent();
-      List<UUID> ownerIds = owners.stream().map(StoreOwner::getId).toList();
+      List<UUID> ownerIds = owners.stream().map(owner -> owner.getId()).toList();
 
       Map<UUID, LaundryShop> shopsByOwnerId = ownerIds.isEmpty()
               ? Collections.emptyMap()

@@ -35,4 +35,12 @@ public class AccountController {
     GetInfoResponse response = accountService.getInfo(new GetInfoRequest(token));
     return ResponseEntity.ok(response);
   }
+
+  @org.springframework.web.bind.annotation.PostMapping("/accounts/change-password")
+  public ResponseEntity<com.example.laundry.utils.ApiResponse<Void>> changePassword(
+          org.springframework.security.core.Authentication authentication,
+          @org.springframework.web.bind.annotation.RequestBody com.example.laundry.dto.ChangePasswordRequest request
+  ) {
+    return ResponseEntity.ok(accountService.changePassword(authentication, request));
+  }
 }

@@ -7,7 +7,7 @@ const CustomerBody = z.object({
   username: z.string(),
   password: z.string().nullable(),
   email: z.string().email().optional(),
-  phone: z.string(),
+  phone: z.string().nullable().optional(),
   address: z.string().optional(),
   role: z.enum(RoleValues),
   avtUser: z.string().nullable().optional(),

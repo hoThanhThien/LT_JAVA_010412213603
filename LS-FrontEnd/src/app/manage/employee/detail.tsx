@@ -1,6 +1,6 @@
 "use client";
 
-import { formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { OrderListType } from "@/schemaValidations/order.schema";
 
 import { Descriptions, Drawer, Image, Tag } from "antd";
@@ -38,11 +38,15 @@ export const Detail = (props: {
       >
         <Descriptions title="Xem chi tiết" bordered column={1}>
           <Descriptions.Item label="Tài khoản">
-            {dataViewDetail?.phone}
+            {dataViewDetail?.phone || dataViewDetail?.email || "Chưa cập nhật"}
           </Descriptions.Item>
 
           <Descriptions.Item label="Họ và tên đăng ký">
             {dataViewDetail?.username}
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Địa chỉ">
+            {dataViewDetail?.address || "Chưa cập nhật"}
           </Descriptions.Item>
 
           <Descriptions.Item label="Ngày tạo đơn">
@@ -52,6 +56,14 @@ export const Detail = (props: {
           <Descriptions.Item label="Dịch vụ">
             {dataViewDetail?.serviceCategoryName} -{" "}
             {dataViewDetail?.serviceName}
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Khối lượng">
+            {dataViewDetail?.orderVolume} kg
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Tổng tiền">
+            {formatCurrency(dataViewDetail?.totalAmount)}
           </Descriptions.Item>
 
           <Descriptions.Item label="Trạng thái">

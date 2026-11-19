@@ -1,0 +1,37 @@
+import authApiRequests from "@/apiRequests/auth";
+import { GoogleLoginBodyType } from "@/schemaValidations/auth.schema";
+import { HttpError } from "@/lib/http";
+import { setAuthCookies } from "@/lib/server-auth";
+
+export async function POST(request: Request) {
+  const body = (await request.json()) as GoogleLoginBodyType;
+  try {
+    const { payload } = await authApiRequests.sGoogleLogin(body);
+    if (!payload?.data) {
+      return Response.json(
+        { message: payload?.message || "Đăng nhập Google thất bại" },
+        { status: 401 }
+      );
+    }
+    const { accessToken, refreshToken, account } = payload.data;
+
+    // Token chỉ nằm trong cookie HttpOnly, không trả về cho trình duyệt
+    await setAuthCookies(accessToken, refreshToken);
+    return Response.json({ message: payload.message, data: { account } });
+  } catch (error) {
+    if (error instanceof HttpError) {
+      return Response.json(error.payload, {
+        status: error.status,
+      });
+    } else {
+      return Response.json(
+        {
+          message: "Có lỗi xảy ra",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+  }
+}

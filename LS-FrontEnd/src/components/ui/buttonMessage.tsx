@@ -1,15 +1,35 @@
-import { useRouter } from "next/navigation";
+"use client";
 
-export default function ButtonMessage(props: { className?: string }) {
-  const router = useRouter();
+import { useAuthStore } from "@/lib/zustand";
+
+export default function ButtonMessage(props: {
+  className?: string;
+  category?: string;
+  service?: string;
+  label?: string;
+}) {
+  const { isAuth, setOpenAuth, setOpenOrder, setBookingPreset } =
+    useAuthStore();
+
   return (
     <button
+      type="button"
       className={props.className}
       onClick={() => {
-        router.push("https://www.messenger.com/t/331186783932984/");
+        if (props.category !== undefined || props.service !== undefined) {
+          setBookingPreset({
+            category: props.category ?? "",
+            service: props.service ?? "",
+          });
+        }
+        if (!isAuth) {
+          setOpenAuth(true);
+        } else {
+          setOpenOrder(true);
+        }
       }}
     >
-      NHẬN TƯ VẤN NGAY
+      {props.label ?? "ĐẶT DỊCH VỤ NGAY"}
     </button>
   );
 }

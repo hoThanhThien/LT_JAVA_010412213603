@@ -4,12 +4,14 @@ import com.example.laundry.client.CassoClient;
 import com.example.laundry.dto.PaymentRequest;
 import com.example.laundry.dto.PaymentResponse;
 import com.example.laundry.models.order.Order;
+import com.example.laundry.models.order.Payment;
 import com.example.laundry.models.order.PaymentStatus;
 import com.example.laundry.models.user.Employee;
 import com.example.laundry.models.user.Roles;
 import com.example.laundry.models.user.User;
 import com.example.laundry.repository.EmployeeRepository;
 import com.example.laundry.repository.OrderRepository;
+import com.example.laundry.repository.PaymentRepository;
 import com.example.laundry.repository.UserRepository;
 import com.example.laundry.security.SecurityUtils;
 import com.example.laundry.services.PaymentService;
@@ -44,6 +46,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
+    @Autowired
+    private PaymentRepository paymentRepository;
+
     private final OrderRepository orderRepository;
     private final CassoClient cassoClient;
     private final VietQRCode vietQRCode;
@@ -59,6 +64,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Value("${account-number}")
     private String accountNumber;
+
+    @Value("${casso.api-key:}")
+    private String cassoApiKey;
 
     private void verifyOrderAccess(Order order) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -152,7 +160,12 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional
     public void pollBankTransactions() {
+        if (cassoApiKey == null || cassoApiKey.isBlank()) {
+            log.debug("Skipping bank transaction polling because casso.api-key is not configured");
+            return;
+        }
 
         List<Order> pendingOrders = orderRepository.findByPaymentStatus(PaymentStatus.PENDING);
 
@@ -176,6 +189,16 @@ public class PaymentServiceImpl implements PaymentService {
                 if (isMatchingTransaction(transaction, transferContent, requiredAmount)) {
                     order.setPaymentStatus(PaymentStatus.PAID);
                     orderRepository.save(order);
+
+                    Payment payment = paymentRepository.findByOrderId(order.getId())
+                            .orElseGet(Payment::new);
+                    payment.setOrder(order);
+                    payment.setPaymentMethod("VIETQR_BANK_TRANSFER");
+                    payment.setAmount(order.getTotalAmount() != null ? order.getTotalAmount() : 0.0);
+                    payment.setStatus(PaymentStatus.PAID.name());
+                    payment.setPaymentDate(new java.util.Date());
+                    paymentRepository.save(payment);
+
                     found = true;
                     break;
                 }

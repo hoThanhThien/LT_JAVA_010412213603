@@ -25,9 +25,21 @@ public class AuthController {
   private JwtUtil jwtUtil;
   @Autowired
   private CustomerService customerService;
+
+  @Autowired
+  private com.example.laundry.repository.UserRepository userRepository;
   @PostMapping("/login")
   public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
     LoginResponse response = authService.login(loginRequest);
+    if (response.getData() == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+    return ResponseEntity.ok(response);
+  }
+
+  @PostMapping("/google")
+  public ResponseEntity<LoginResponse> googleLogin(@RequestBody GoogleLoginRequest request) {
+    LoginResponse response = authService.loginWithGoogle(request);
     if (response.getData() == null) {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
@@ -48,23 +60,26 @@ public class AuthController {
   }
 
   @PostMapping("/refresh-token")
-  public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken(@RequestBody RefreshTokenRequest request) {
+  public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken(
+          @RequestBody RefreshTokenRequest request,
+          jakarta.servlet.http.HttpServletRequest httpRequest) {
     try {
       if (request == null || request.getRefreshToken() == null || request.getRefreshToken().isBlank()) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
       }
-      // Xác thực chữ ký JWT và claim tokenType=refresh trước khi tra DB
-      jwtUtil.validateRefreshToken(request.getRefreshToken());
+      String deviceInfo = httpRequest != null ? httpRequest.getHeader("User-Agent") : null;
+      String ipAddress = extractClientIp(httpRequest);
 
-      //Kiểm tra refresh token xem tồn tại và còn hạn không
-      RefreshToken refreshToken = refreshTokenService.findByToken(request.getRefreshToken());
-      refreshTokenService.verifyExpiration(refreshToken);
-
-      //Tạo access token mới
-      User user = refreshToken.getUser();
+      // Token Rotation: tiêu thụ token cũ atomically và cấp refresh token mới + access token mới
+      RefreshToken rotatedToken = refreshTokenService.rotateRefreshToken(
+              request.getRefreshToken(),
+              deviceInfo,
+              ipAddress
+      );
+      User user = rotatedToken.getUser();
       String newAccessToken = jwtUtil.generateAccessToken(user.getId(), user.getUsername(), user.getRoles());
 
-      return ResponseEntity.ok(new ApiResponse<>("", new RefreshTokenResponse(refreshToken.getToken(), newAccessToken)));
+      return ResponseEntity.ok(new ApiResponse<>("", new RefreshTokenResponse(rotatedToken.getToken(), newAccessToken)));
     }
     catch (Exception e) {
       return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -77,5 +92,88 @@ public class AuthController {
       return ResponseEntity.badRequest().body(response);
     }
     return ResponseEntity.ok(response);
+  }
+
+  @PostMapping("/forgot-password")
+  public ResponseEntity<com.example.laundry.utils.ApiResponse<java.util.Map<String, Object>>> forgotPassword(
+          @RequestBody ForgotPasswordRequest request
+  ) {
+    return ResponseEntity.ok(authService.forgotPassword(request));
+  }
+
+  @PostMapping("/reset-password")
+  public ResponseEntity<com.example.laundry.utils.ApiResponse<Void>> resetPassword(
+          @RequestBody ResetPasswordRequest request
+  ) {
+    return ResponseEntity.ok(authService.resetPassword(request));
+  }
+
+  @GetMapping("/sessions")
+  public ResponseEntity<ApiResponse<java.util.List<java.util.Map<String, Object>>>> getActiveSessions(
+          org.springframework.security.core.Authentication authentication
+  ) {
+    User user = requireAuthenticatedUser(authentication);
+    return ResponseEntity.ok(new ApiResponse<>(
+            "Lấy danh sách phiên đăng nhập thành công",
+            refreshTokenService.getActiveSessions(user)
+    ));
+  }
+
+  @DeleteMapping("/sessions/{id}")
+  public ResponseEntity<ApiResponse<Void>> revokeSession(
+          @PathVariable Long id,
+          org.springframework.security.core.Authentication authentication
+  ) {
+    User user = requireAuthenticatedUser(authentication);
+    boolean revoked = refreshTokenService.revokeSession(user, id);
+    if (!revoked) {
+      throw new org.springframework.web.server.ResponseStatusException(
+              HttpStatus.NOT_FOUND,
+              "Không tìm thấy phiên đăng nhập"
+      );
+    }
+    return ResponseEntity.ok(new ApiResponse<>("Đã thu hồi phiên đăng nhập", null));
+  }
+
+  @DeleteMapping("/sessions")
+  public ResponseEntity<ApiResponse<Void>> revokeAllSessions(
+          org.springframework.security.core.Authentication authentication
+  ) {
+    User user = requireAuthenticatedUser(authentication);
+    refreshTokenService.deleteByUser(user);
+    return ResponseEntity.ok(new ApiResponse<>("Đã thu hồi toàn bộ phiên đăng nhập", null));
+  }
+
+  private User requireAuthenticatedUser(org.springframework.security.core.Authentication authentication) {
+    User user = com.example.laundry.security.SecurityUtils.resolveCurrentUser(
+            authentication,
+            userRepository::findById,
+            principal -> {
+              User byPhone = userRepository.findByPhone(principal);
+              if (byPhone != null) {
+                return byPhone;
+              }
+              User byEmail = userRepository.findByEmail(principal);
+              return byEmail != null ? byEmail : userRepository.findByUsername(principal);
+            }
+    );
+    if (user == null) {
+      throw new org.springframework.web.server.ResponseStatusException(
+              HttpStatus.UNAUTHORIZED,
+              "Yêu cầu đăng nhập"
+      );
+    }
+    return user;
+  }
+
+  private String extractClientIp(jakarta.servlet.http.HttpServletRequest request) {
+    if (request == null) {
+      return null;
+    }
+    String forwardedFor = request.getHeader("X-Forwarded-For");
+    if (forwardedFor != null && !forwardedFor.isBlank()) {
+      return forwardedFor.split(",")[0].trim();
+    }
+    return request.getRemoteAddr();
   }
 }

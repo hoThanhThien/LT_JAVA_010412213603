@@ -4,7 +4,7 @@ import z from "zod";
 export const AccountSchema = z.object({
   id: z.string(),
   username: z.string(),
-  phone: z.string(),
+  phone: z.string().nullable().optional(),
   role: z.string(),
   email: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
@@ -25,6 +25,37 @@ export const AccountRes = z
   .strict();
 
 export type AccountResType = z.TypeOf<typeof AccountRes>;
+
+import {
+  STRONG_PASSWORD_MESSAGE,
+  STRONG_PASSWORD_REGEX,
+} from "@/schemaValidations/auth.schema";
+
+export const ChangePasswordBody = z
+  .object({
+    currentPassword: z.string().optional(),
+    newPassword: z.string().regex(STRONG_PASSWORD_REGEX, STRONG_PASSWORD_MESSAGE),
+    confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu mới"),
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    if (data.newPassword !== data.confirmPassword) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["confirmPassword"],
+        message: "Xác nhận mật khẩu mới không khớp",
+      });
+    }
+  });
+
+export type ChangePasswordBodyType = z.TypeOf<typeof ChangePasswordBody>;
+
+export const ChangePasswordRes = z.object({
+  message: z.string(),
+  data: z.unknown().nullable().optional(),
+});
+
+export type ChangePasswordResType = z.TypeOf<typeof ChangePasswordRes>;
 
 export const UpdateMeBody = z
   .object({
@@ -47,7 +78,7 @@ export const UpdateMeResSchema = z
         username: z.string(),
         password: z.string().nullable().optional(),
         email: z.string().email().nullable().optional(),
-        phone: z.string(),
+        phone: z.string().nullable().optional(),
         address: z.string().nullable().optional(),
         role: z.string().optional(),
         avtUser: z.string().nullable().optional(),

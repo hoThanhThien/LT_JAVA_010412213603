@@ -5,10 +5,14 @@ import "swiper/swiper-bundle.css";
 import { Swiper as SwiperCore } from "swiper/types";
 import Image from "next/image";
 import { useState } from "react";
+import { useAuthStore } from "@/lib/zustand";
 
 export default function Comment() {
+  const { isAuth, setOpenAuth, setOpenOrder, setBookingPreset } =
+    useAuthStore();
   const [swiper, setSwiper] = useState<SwiperCore | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [draftPhoneInput, setDraftPhoneInput] = useState("");
   return (
     <div className="grid lg:grid-cols-2 max-w-7xl mx-auto">
       <div className="lg:col-span-1 lg:col-start-1">
@@ -178,6 +182,17 @@ export default function Comment() {
         <form
           className="bg-white rounded-4xl shadow-2xl py-10 px-20 space-y-10"
           noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (draftPhoneInput.trim()) {
+              setBookingPreset({ phone: draftPhoneInput.trim() });
+            }
+            if (!isAuth) {
+              setOpenAuth(true);
+            } else {
+              setOpenOrder(true);
+            }
+          }}
         >
           <div className="font-bold text-center text-3xl">ĐẶT DỊCH VỤ</div>
           <div className="text-center mx-auto text-sm w-[60%] block text-gray-400">
@@ -202,8 +217,10 @@ export default function Comment() {
             </label>
             <div className="mt-2">
               <input
-                type="text"
-                placeholder="0123456789"
+                type="tel"
+                value={draftPhoneInput}
+                onChange={(e) => setDraftPhoneInput(e.target.value)}
+                placeholder="0901234567"
                 className="block w-full rounded-md bg-white px-3 py-2.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
               />
             </div>
@@ -214,8 +231,10 @@ export default function Comment() {
             </label>
             <div className="mt-2">
               <input
-                type="text"
-                placeholder="0123456789"
+                type="tel"
+                value={draftPhoneInput}
+                onChange={(e) => setDraftPhoneInput(e.target.value)}
+                placeholder="0901234567"
                 className="block w-full rounded-md bg-white px-3 py-2.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-main sm:text-sm/6"
               />
             </div>

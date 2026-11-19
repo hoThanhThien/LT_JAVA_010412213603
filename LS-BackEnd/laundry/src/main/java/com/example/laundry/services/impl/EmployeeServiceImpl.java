@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -46,6 +47,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    @Transactional
     public ApiResponse<OrderResponse> updateOrderStatus(Long orderId, OrderStatus status, Employee employee) {
     if (employee.getShop() == null) {
       return new ApiResponse<>("Nhân viên chưa được phân công vào cửa hàng!", null);

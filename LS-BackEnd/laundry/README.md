@@ -72,6 +72,7 @@ Dữ liệu cửa hàng mẫu đi kèm: shop **HERAMO Quận 1**, 2 danh mục (
 | Method | Endpoint | Yêu cầu Auth | Body / Ghi chú |
 |---|---|---|---|
 | `POST` | `/auth/login` | Không | `{ "phone": "0900000004", "password": "123456" }` -> trả `accessToken`, `refreshToken`, `account` |
+| `POST` | `/auth/google` | Không | `{ "idToken": "<firebase-id-token>", "googleIdToken": "<optional-google-oauth-id-token>" }` -> đăng nhập hoặc tự tạo tài khoản `Customer` theo email Google |
 | `GET` | `/accounts/me` | Có | Trả về thông tin tài khoản đang đăng nhập theo Bearer token |
 | `POST` | `/auth/refresh-token` | Không | `{ "refreshToken": "<refreshToken>" }` -> cấp `accessToken` mới (không dùng `accessToken` cho endpoint này và ngược lại) |
 | `POST` | `/auth/logout` | Tuỳ chọn | `{ "refreshToken": "<refreshToken>", "accessToken": "<accessToken>" }` -> đưa token vào blacklist DB |

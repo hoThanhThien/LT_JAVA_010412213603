@@ -53,6 +53,7 @@ public class JwtUtil {
 
     private String buildToken(UUID userId, String username, Roles role, long duration, String tokenType) {
         var builder = Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject("Laundry Management System")
                 .claim("username", username)
                 .claim("role", role != null ? role.name() : null)

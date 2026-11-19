@@ -1,7 +1,14 @@
 import { cookies } from "next/headers";
-import { REFRESH_COOKIE, refreshAuthCookies } from "@/lib/server-auth";
+import {
+  REFRESH_COOKIE,
+  refreshAuthCookies,
+  verifyCsrfOrigin,
+} from "@/lib/server-auth";
 
-export async function POST() {
+export async function POST(request: Request) {
+  const csrfError = verifyCsrfOrigin(request);
+  if (csrfError) return csrfError;
+
   const cookieStore = await cookies();
   const refreshToken = cookieStore.get(REFRESH_COOKIE)?.value;
   if (!refreshToken) {
