@@ -1,10 +1,9 @@
-import { forwardAuthenticatedRequest } from "@/lib/server-auth";
+import { forwardAuthenticatedJson } from "@/lib/server-auth";
 import storeOwnerApiRequests from "@/apiRequests/storeowner";
 import { StoreOwnerType } from "@/schemaValidations/storeowner.schema";
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as StoreOwnerType;
-  return forwardAuthenticatedRequest((token) =>
+  return forwardAuthenticatedJson<StoreOwnerType, unknown>(request, (body, token) =>
     storeOwnerApiRequests.sUpdateByAdmin(body, token)
   );
 }

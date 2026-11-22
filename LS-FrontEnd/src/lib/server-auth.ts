@@ -35,12 +35,12 @@ export function verifyCsrfOrigin(request: Request): Response | null {
   if (!STATE_CHANGING_METHODS.has(request.method.toUpperCase())) {
     return null;
   }
-  const origin = request.headers.get("origin");
-  if (!origin) {
+  const sourceHeader = request.headers.get("origin") || request.headers.get("referer");
+  if (!sourceHeader) {
     return null;
   }
   try {
-    const originHost = new URL(origin).host;
+    const originHost = new URL(sourceHeader).host;
     const forwardedHost = request.headers
       .get("x-forwarded-host")
       ?.split(",")[0]
@@ -62,6 +62,16 @@ export function verifyCsrfOrigin(request: Request): Response | null {
       { status: 403 }
     );
   }
+}
+
+export async function forwardAuthenticatedJson<TBody, TRes>(
+  request: Request,
+  caller: (body: TBody, accessToken: string) => Promise<{ payload: TRes }>
+): Promise<Response> {
+  const csrfError = verifyCsrfOrigin(request);
+  if (csrfError) return csrfError;
+  const body = (await request.json()) as TBody;
+  return forwardAuthenticatedRequest((token) => caller(body, token));
 }
 
 type ServerHttpErrorLike = {

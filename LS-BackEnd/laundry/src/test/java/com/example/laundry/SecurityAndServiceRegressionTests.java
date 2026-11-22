@@ -180,7 +180,7 @@ class SecurityAndServiceRegressionTests {
       Mockito.verify(mockMailSender).send(mailCaptor.capture());
       String emailBody = mailCaptor.getValue().getText();
       assertNotNull(emailBody);
-      java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\b(\\d{6})\\b").matcher(emailBody);
+      java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("là:\\s*(\\d{6})\\b").matcher(emailBody);
       assertTrue(matcher.find(), "OTP 6 digits should be included in recovery email");
       String otp = matcher.group(1);
 
