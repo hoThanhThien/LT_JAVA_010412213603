@@ -7,9 +7,9 @@ Mã nguồn Spring Boot REST API nằm trong thư mục [`laundry/`](laundry).
 ## 1. Công nghệ & Yêu cầu
 
 - **Java:** 25 (`<java.version>25</java.version>` trong [`laundry/pom.xml`](laundry/pom.xml))
-- **Framework:** Spring Boot 4.1.2 (WebMVC, Spring Security, Spring Data JPA, Spring Mail, Thymeleaf)
+- **Framework:** Spring Boot 4.2.0 (WebMVC, Spring Security, Spring Data JPA, Spring Mail, Thymeleaf)
 - **Database:** MySQL / MariaDB (`mysql-connector-j`) khi chạy ứng dụng; H2 in-memory (`MODE=MySQL`) cho bộ test
-- **Auth & Tích hợp:** `jjwt` 0.12.6, `java-jwt` 4.4.0, Firebase Admin SDK 9.4.3, Lombok
+- **Auth & Tích hợp:** `jjwt` 0.13.0, Firebase Admin SDK 9.12.0, SpringDoc OpenAPI 3.2.1, Lombok
 
 ---
 
